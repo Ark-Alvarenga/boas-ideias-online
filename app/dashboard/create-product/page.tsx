@@ -28,6 +28,8 @@ export default function CreateProductPage() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverUrl, setCoverUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -85,6 +87,26 @@ export default function CreateProductPage() {
     setUploadProgress(0)
   }
 
+  const handleCoverFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (file.type !== "image/png") {
+      setError("A imagem de capa deve ser um arquivo PNG.")
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Tamanho máximo da capa é 10MB.")
+      return
+    }
+
+    setError(null)
+    setCoverFile(file)
+    // Show a local preview immediately
+    const objectUrl = URL.createObjectURL(file)
+    setCoverUrl(objectUrl)
+  }
+
   const handleUpload = async () => {
     if (!pdfFile) {
       setError("Selecione um arquivo PDF antes de enviar.")
@@ -122,6 +144,41 @@ export default function CreateProductPage() {
     }
   }
 
+  const handleCoverUpload = async () => {
+    if (!coverFile) {
+      setError("Selecione uma imagem PNG antes de enviar a capa.")
+      return
+    }
+
+    setIsUploading(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append("file", coverFile)
+
+      const res = await fetch("/api/upload/cover", {
+        method: "POST",
+        body: formData,
+      })
+
+      const json = await res.json()
+
+      if (!res.ok || !json.success) {
+        setError(json.error || "Falha ao enviar capa.")
+        setIsUploading(false)
+        return
+      }
+
+      setCoverUrl(json.url as string)
+    } catch (err) {
+      console.error("Cover upload error", err)
+      setError("Ocorreu um erro ao enviar a capa.")
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
@@ -143,6 +200,7 @@ export default function CreateProductPage() {
           price: Number(formData.price),
           category: formData.category,
           pdfUrl,
+          coverImage: coverUrl ?? undefined,
         }),
       })
 
@@ -335,6 +393,54 @@ export default function CreateProductPage() {
                     </CardContent>
                   </Card>
 
+                  <Card className="border-border/50 bg-muted/40">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium">
+                        Imagem de capa (PNG)
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        Envie uma imagem PNG para ser usada como capa do produto.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <Input
+                        type="file"
+                        accept="image/png"
+                        onChange={handleCoverFileChange}
+                      />
+
+                      {coverFile && (
+                        <div className="rounded-md border border-dashed border-border/60 bg-background p-3 text-xs text-muted-foreground">
+                          <p className="font-medium text-foreground">
+                            {coverFile.name}
+                          </p>
+                          <p>
+                            {(coverFile.size / (1024 * 1024)).toFixed(2)} MB
+                          </p>
+                        </div>
+                      )}
+
+                      <Button
+                        type="button"
+                        onClick={handleCoverUpload}
+                        disabled={!coverFile || isUploading}
+                        className="h-10 w-full"
+                      >
+                        {isUploading ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Enviando capa...
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            <UploadCloud className="h-4 w-4" />
+                            Enviar capa
+                          </span>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+
                   <Card className="border-border/50 bg-card/80">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm font-medium">
@@ -345,6 +451,19 @@ export default function CreateProductPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
+                      <div className="mb-3 overflow-hidden rounded-md border border-border/40 bg-muted/60">
+                        <div className="aspect-[4/3] w-full bg-gradient-to-br from-blue-500/10 to-indigo-500/10">
+                          {coverUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={coverUrl}
+                              alt="Pré-visualização da capa"
+                              className="h-full w-full object-cover"
+                            />
+                          )}
+                        </div>
+                      </div>
+
                       <p className="font-semibold text-foreground">
                         {formData.title || "Título do produto"}
                       </p>

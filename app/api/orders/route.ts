@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     // Try to associate order with logged-in user, if any
     let userObjectId: ObjectId | undefined
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get(authConfig.cookieName)?.value
     if (token) {
       const payload = verifySessionToken(token)
@@ -103,15 +103,34 @@ export async function GET(request: Request) {
     const db = await getDatabase()
     const collection = db.collection<Order>('orders')
 
-    // In production, filter by authenticated user's products
+    // Require authentication and scope orders to the current user (buyer)
+    const cookieStore = await cookies()
+    const token = cookieStore.get(authConfig.cookieName)?.value
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 },
+      )
+    }
+
+    const payload = verifySessionToken(token)
+    if (!payload || !ObjectId.isValid(payload.userId)) {
+      return NextResponse.json(
+        { error: 'Invalid session' },
+        { status: 401 },
+      )
+    }
+
+    const userObjectId = new ObjectId(payload.userId)
+
     const orders = await collection
-      .find({})
+      .find({ userId: userObjectId })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .toArray()
 
-    const total = await collection.countDocuments()
+    const total = await collection.countDocuments({ userId: userObjectId })
 
     return NextResponse.json({
       orders,

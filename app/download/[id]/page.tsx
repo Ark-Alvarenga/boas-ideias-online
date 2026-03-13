@@ -30,7 +30,11 @@ export default function DownloadPage() {
       try {
         const res = await fetch(`/api/download/${orderId}`, {
           cache: "no-store",
+          headers: {
+            Accept: "application/json",
+          },
         })
+
         const json = (await res.json()) as DownloadResponse
         setData(json)
 

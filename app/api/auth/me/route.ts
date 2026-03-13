@@ -4,7 +4,7 @@ import { authConfig, verifySessionToken, getUserById } from '@/lib/auth'
 
 export async function GET() {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get(authConfig.cookieName)?.value
 
     if (!token) {

@@ -4,7 +4,7 @@ import { authConfig } from '@/lib/auth'
 
 export async function POST() {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     cookieStore.set(authConfig.cookieName, '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

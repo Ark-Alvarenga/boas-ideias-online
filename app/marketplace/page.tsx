@@ -125,6 +125,7 @@ export default function MarketplacePage() {
                       category={product.category}
                       slug={product.slug}
                       creator={product.creatorName ?? "Criador(a)"}
+                      coverImage={product.coverImage}
                     />
                   ))}
 

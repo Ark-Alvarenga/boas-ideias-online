@@ -21,7 +21,7 @@ function getStripe(): StripeType {
 /** GET: Return Stripe Connect status and sync onboarding from Stripe. */
 export async function GET() {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get(authConfig.cookieName)?.value
     if (!token) {
       return NextResponse.json(

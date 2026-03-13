@@ -1,14 +1,13 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
-import { Lightbulb, ArrowUpRight, Edit, ExternalLink } from "lucide-react"
+import { Lightbulb, ArrowUpRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { authConfig, verifySessionToken } from "@/lib/auth"
 import { getDatabase } from "@/lib/mongodb"
 import type { Product, User } from "@/lib/types"
-import { authConfig, verifySessionToken } from "@/lib/auth"
 import { ObjectId } from "mongodb"
-import { ProductAffiliateCell } from "@/components/dashboard/product-affiliate-cell"
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies()
@@ -63,9 +62,6 @@ export default async function ProductsPage() {
                 <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
               </Link>
             </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/dashboard/product-affiliates">Afiliados</Link>
-            </Button>
             <Button size="sm" className="shadow-sm" asChild>
               <Link href="/dashboard/create-product">
                 + Novo produto
@@ -107,66 +103,60 @@ export default async function ProductsPage() {
                 .
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {products.map((product) => (
                   <div
-                    key={product._id!.toString()}
-                    className="flex items-center justify-between rounded-xl border border-border/50 bg-background p-4 transition-colors hover:bg-muted/30"
+                    key={product._id?.toString() ?? product.slug}
+                    className="flex h-full flex-col overflow-hidden rounded-xl border border-border/60 bg-background"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-blue-500/15 to-indigo-500/15">
-                        <span className="font-serif text-lg font-semibold text-foreground/30">
-                          {product.title.charAt(0)}
-                        </span>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">
-                          {product.title}
-                        </h3>
-                        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                          <span>R${product.price}</span>
-                          <span className="h-1 w-1 rounded-full bg-border" />
-                          <span>{product.sales} vendas</span>
-                          <span className="h-1 w-1 rounded-full bg-border" />
-                          <span>
-                            Status:{" "}
-                            {product.status === "active"
-                              ? "Ativo"
-                              : product.status === "draft"
-                              ? "Rascunho"
-                              : "Arquivado"}
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+                      {product.coverImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={product.coverImage}
+                          alt={product.title}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center bg-gradient-to-br from-blue-500/15 to-indigo-500/15">
+                          <span className="font-serif text-5xl font-semibold text-foreground/10">
+                            {product.title.charAt(0)}
                           </span>
                         </div>
+                      )}
+                      <div className="absolute left-3 top-3">
+                        <span className="inline-flex rounded-md bg-background/90 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                          PDF Product
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                      <div className="hidden min-w-[140px] sm:block">
-                        <p className="mb-1 text-xs font-medium text-muted-foreground">Afiliados</p>
-                        <ProductAffiliateCell
-                          productSlug={product.slug}
-                          affiliateEnabled={product.affiliateEnabled ?? false}
-                          affiliateCommissionPercent={product.affiliateCommissionPercent ?? 20}
-                        />
+                    <div className="flex flex-1 flex-col p-4">
+                      <h3 className="line-clamp-2 text-sm font-semibold text-foreground">
+                        {product.title}
+                      </h3>
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {product.description}
+                      </p>
+                      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                        <span>R${product.price}</span>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px]">
+                          {product.status === "active"
+                            ? "Ativo"
+                            : product.status === "draft"
+                            ? "Rascunho"
+                            : "Arquivado"}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="mt-3 flex justify-end">
                         <Button
                           variant="outline"
                           size="sm"
                           className="h-8 px-3 text-xs"
-                        >
-                          <Edit className="mr-1 h-3.5 w-3.5" />
-                          Editar
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-3 text-xs"
                           asChild
                         >
-                          <Link href={`/produto/${product.slug}`}>
-                            <ExternalLink className="mr-1 h-3.5 w-3.5" />
-                            Ver
+                          <Link href={`/dashboard/products/${product.slug}`}>
+                            Gerenciar
                           </Link>
                         </Button>
                       </div>

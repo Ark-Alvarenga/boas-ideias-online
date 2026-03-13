@@ -20,7 +20,7 @@ function getStripe(): StripeType {
 
 export async function POST() {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get(authConfig.cookieName)?.value
     if (!token) {
       return NextResponse.json(

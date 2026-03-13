@@ -28,18 +28,28 @@ export function ProductCard({
   price, 
   category, 
   slug, 
-  creator 
+  creator,
+  coverImage,
 }: ProductCardProps) {
   const gradient = categoryGradients[category] || "from-gray-500/15 to-slate-500/15"
   
   return (
     <Card className="group h-full overflow-hidden border-border/50 bg-card transition-all duration-300 hover:border-border hover:shadow-lg hover:shadow-primary/5">
       <div className={`relative aspect-[4/3] overflow-hidden bg-gradient-to-br ${gradient}`}>
-        <div className="flex h-full items-center justify-center">
-          <span className="font-serif text-6xl font-semibold text-foreground/10">
-            {title.charAt(0)}
-          </span>
-        </div>
+        {coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={coverImage}
+            alt={title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <span className="font-serif text-6xl font-semibold text-foreground/10">
+              {title.charAt(0)}
+            </span>
+          </div>
+        )}
         <div className="absolute left-4 top-4">
           <span className="inline-flex rounded-md bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
             {category}

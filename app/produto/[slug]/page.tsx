@@ -86,11 +86,20 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <div className="space-y-10 lg:col-span-3">
               {/* Product Cover */}
               <div className="relative aspect-video overflow-hidden rounded-2xl bg-linear-to-br from-blue-500/15 to-indigo-500/15">
-                <div className="flex h-full items-center justify-center">
-                  <span className="font-serif text-8xl font-semibold text-foreground/10">
-                    {product.title.charAt(0)}
-                  </span>
-                </div>
+                {product.coverImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={product.coverImage}
+                    alt={product.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <span className="font-serif text-8xl font-semibold text-foreground/10">
+                      {product.title.charAt(0)}
+                    </span>
+                  </div>
+                )}
                 <div className="absolute left-5 top-5">
                   <span className="inline-flex rounded-md bg-background/90 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-sm">
                     {product.category}

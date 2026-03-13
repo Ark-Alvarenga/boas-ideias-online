@@ -3,6 +3,8 @@ import type { NextRequest } from 'next/server'
 import { getDatabase } from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
 import type { Order, Product } from '@/lib/types'
+import { cookies } from 'next/headers'
+import { authConfig, verifySessionToken } from '@/lib/auth'
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
@@ -34,14 +36,34 @@ export async function GET(
       )
     }
 
+    // Require authentication
+    const cookieStore = await cookies()
+    const token = cookieStore.get(authConfig.cookieName)?.value
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 },
+      )
+    }
+
+    const payload = verifySessionToken(token)
+    if (!payload || !ObjectId.isValid(payload.userId)) {
+      return NextResponse.json(
+        { error: 'Invalid session' },
+        { status: 401 },
+      )
+    }
+
+    const currentUserId = new ObjectId(payload.userId)
+
     const db = await getDatabase()
     const ordersCollection = db.collection<Order>('orders')
     const productsCollection = db.collection<Product>('products')
 
     // Find the order
-    const order = await ordersCollection.findOne({ 
+    const order = await ordersCollection.findOne({
       _id: new ObjectId(id),
-      status: 'paid'
+      status: 'paid',
     })
 
     if (!order) {
@@ -51,22 +73,30 @@ export async function GET(
       )
     }
 
+    // Ensure the requester is the buyer associated with this order
+    if (!order.userId || !order.userId.equals(currentUserId)) {
+      return NextResponse.json(
+        { error: 'You are not authorized to download this file' },
+        { status: 403 },
+      )
+    }
+
     // Get product details
-    const product = await productsCollection.findOne({ 
-      _id: order.productId 
+    const product = await productsCollection.findOne({
+      _id: order.productId,
     })
 
     if (!product) {
       return NextResponse.json(
         { error: 'Product not found' },
-        { status: 404 }
+        { status: 404 },
       )
     }
 
     if (!product.pdfUrl) {
       return NextResponse.json(
         { error: 'No file available for this product' },
-        { status: 404 }
+        { status: 404 },
       )
     }
 
@@ -75,7 +105,7 @@ export async function GET(
     if (!bucket || !region) {
       return NextResponse.json(
         { error: 'Storage not configured' },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
@@ -92,6 +122,16 @@ export async function GET(
       expiresIn: 60,
     })
 
+    // If the client asked for JSON, return a JSON payload instead of redirect
+    if (request.headers.get('accept')?.includes('application/json')) {
+      return NextResponse.json({
+        success: true,
+        productTitle: product.title,
+        downloadUrl: signedUrl,
+      })
+    }
+
+    // Default: redirect to the signed URL (browser navigation)
     return NextResponse.redirect(signedUrl)
   } catch (error) {
     console.error('Error processing download:', error)

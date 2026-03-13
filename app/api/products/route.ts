@@ -14,21 +14,30 @@ export async function GET(request: Request) {
     const sort = searchParams.get('sort') || 'createdAt'
     const limit = parseInt(searchParams.get('limit') || '20')
     const skip = parseInt(searchParams.get('skip') || '0')
+    const userId = searchParams.get('userId')
 
     const db = await getDatabase()
     const collection = db.collection<Product>('products')
 
     // Build query
-    const query: Record<string, unknown> = { status: 'active' }
-    
+    const query: Record<string, unknown> = {}
+
+    if (userId && ObjectId.isValid(userId)) {
+      // When userId is provided, return that user's products (all statuses)
+      query.creatorId = new ObjectId(userId)
+    } else {
+      // Public marketplace: show all non-archived products from all users
+      query.status = { $ne: 'archived' }
+    }
+
     if (category && category !== 'todos') {
       query.category = category
     }
-    
+
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { description: { $regex: search, $options: 'i' } },
       ]
     }
 
@@ -59,6 +68,7 @@ export async function GET(request: Request) {
     const products = rawProducts.map((product) => ({
       ...product,
       _id: product._id?.toString(),
+      creatorName: product.creatorName,
     }))
 
     const total = await collection.countDocuments(query)
@@ -66,7 +76,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       products,
       total,
-      hasMore: skip + limit < total
+      hasMore: skip + limit < total,
     })
   } catch (error) {
     console.error('Error fetching products:', error)
@@ -94,7 +104,7 @@ export async function POST(request: Request) {
     const productsCollection = db.collection<Product>('products')
     const usersCollection = db.collection<User>('users')
 
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get(authConfig.cookieName)?.value
     if (!token) {
       return NextResponse.json(

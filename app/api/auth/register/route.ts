@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     const result = await users.insertOne(newUser)
 
     const token = createSessionToken(result.insertedId.toString())
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     cookieStore.set(authConfig.cookieName, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

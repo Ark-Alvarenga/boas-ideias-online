@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/mongodb'
+import { cookies } from 'next/headers'
+import { authConfig, verifySessionToken } from '@/lib/auth'
+import { ObjectId } from 'mongodb'
 import type { Product } from '@/lib/types'
 
 interface RouteContext {
@@ -68,10 +71,44 @@ export async function PATCH(
 ) {
   try {
     const { slug } = await context.params
+
+    // Authenticate user
+    const cookieStore = await cookies()
+    const token = cookieStore.get(authConfig.cookieName)?.value
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 },
+      )
+    }
+
+    const payload = verifySessionToken(token)
+    if (!payload || !ObjectId.isValid(payload.userId)) {
+      return NextResponse.json(
+        { error: 'Invalid session' },
+        { status: 401 },
+      )
+    }
     const body = await request.json()
     
     const db = await getDatabase()
     const collection = db.collection<Product>('products')
+
+    // Ensure the current user owns the product
+    const product = await collection.findOne({ slug })
+    if (!product) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 },
+      )
+    }
+
+    if (!product.creatorId || !product.creatorId.equals(new ObjectId(payload.userId))) {
+      return NextResponse.json(
+        { error: 'Not authorized to modify this product' },
+        { status: 403 },
+      )
+    }
 
     const updateData = {
       ...body,
@@ -85,17 +122,10 @@ export async function PATCH(
     delete updateData.sales
     delete updateData.views
 
-    const result = await collection.updateOne(
-      { slug },
-      { $set: updateData }
+    await collection.updateOne(
+      { _id: product._id },
+      { $set: updateData },
     )
-
-    if (result.matchedCount === 0) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      )
-    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -114,22 +144,49 @@ export async function DELETE(
 ) {
   try {
     const { slug } = await context.params
-    
+
+    // Authenticate user
+    const cookieStore = await cookies()
+    const token = cookieStore.get(authConfig.cookieName)?.value
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 },
+      )
+    }
+
+    const payload = verifySessionToken(token)
+    if (!payload || !ObjectId.isValid(payload.userId)) {
+      return NextResponse.json(
+        { error: 'Invalid session' },
+        { status: 401 },
+      )
+    }
+
     const db = await getDatabase()
     const collection = db.collection<Product>('products')
 
-    // Soft delete by changing status
-    const result = await collection.updateOne(
-      { slug },
-      { $set: { status: 'archived', updatedAt: new Date() } }
-    )
-
-    if (result.matchedCount === 0) {
+    // Ensure the current user owns the product
+    const product = await collection.findOne({ slug })
+    if (!product) {
       return NextResponse.json(
         { error: 'Product not found' },
-        { status: 404 }
+        { status: 404 },
       )
     }
+
+    if (!product.creatorId || !product.creatorId.equals(new ObjectId(payload.userId))) {
+      return NextResponse.json(
+        { error: 'Not authorized to delete this product' },
+        { status: 403 },
+      )
+    }
+
+    // Soft delete by changing status
+    await collection.updateOne(
+      { _id: product._id },
+      { $set: { status: 'archived', updatedAt: new Date() } },
+    )
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 import { authConfig, verifySessionToken } from '@/lib/auth'
 import { ObjectId } from 'mongodb'
 
-const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50MB
+const MAX_COVER_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -46,16 +46,16 @@ export async function POST(request: Request) {
       )
     }
 
-    if (file.type !== 'application/pdf') {
+    if (file.type !== 'image/png') {
       return NextResponse.json(
-        { error: 'Only PDF files are allowed' },
+        { error: 'Only PNG files are allowed' },
         { status: 400 },
       )
     }
 
-    if (file.size > MAX_FILE_SIZE_BYTES) {
+    if (file.size > MAX_COVER_SIZE_BYTES) {
       return NextResponse.json(
-        { error: 'File too large (max 50MB)' },
+        { error: 'File too large (max 10MB)' },
         { status: 400 },
       )
     }
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     }
 
     const userId = payload.userId
-    const key = `products/${userId}/${Date.now()}-${randomUUID()}.pdf`
+    const key = `products/${userId}/covers/${Date.now()}-${randomUUID()}.png`
 
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
         Bucket: bucket,
         Key: key,
         Body: buffer,
-        ContentType: 'application/pdf',
+        ContentType: 'image/png',
       }),
     )
 
@@ -96,9 +96,9 @@ export async function POST(request: Request) {
       { status: 200 },
     )
   } catch (error) {
-    console.error('Error uploading PDF to S3:', error)
+    console.error('Error uploading cover image to S3:', error)
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { error: 'Failed to upload cover image' },
       { status: 500 },
     )
   }
