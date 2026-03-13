@@ -10,6 +10,7 @@ export function HeaderAuthActions({
   onLinkClick?: () => void
 }) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -25,6 +26,16 @@ export function HeaderAuthActions({
       cancelled = true
     }
   }, [])
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true)
+      await fetch("/api/auth/logout", { method: "POST" })
+      window.location.href = "/"
+    } catch {
+      setIsLoggingOut(false)
+    }
+  }
 
   if (isLoggedIn === null) {
     return (
@@ -58,6 +69,14 @@ export function HeaderAuthActions({
             <Link href="/dashboard/create-product" onClick={onLinkClick}>
               Vender seu produto
             </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isLoggingOut}
+            onClick={handleLogout}
+          >
+            Sair
           </Button>
         </>
       ) : (
@@ -93,6 +112,7 @@ export function HeaderAuthActionsMobile({
   onLinkClick?: () => void
 }) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -108,6 +128,16 @@ export function HeaderAuthActionsMobile({
       cancelled = true
     }
   }, [])
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true)
+      await fetch("/api/auth/logout", { method: "POST" })
+      window.location.href = "/"
+    } catch {
+      setIsLoggingOut(false)
+    }
+  }
 
   if (isLoggedIn === null) {
     return (
@@ -132,6 +162,14 @@ export function HeaderAuthActionsMobile({
             <Link href="/dashboard/create-product" onClick={onLinkClick}>
               Vender seu produto
             </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isLoggingOut}
+            onClick={handleLogout}
+          >
+            Sair
           </Button>
         </>
       ) : (

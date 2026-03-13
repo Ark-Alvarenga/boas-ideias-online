@@ -191,6 +191,30 @@ export default function CreateProductPage() {
     setError(null)
 
     try {
+      // If there is a cover file selected but it was not uploaded yet (no remote URL),
+      // upload it automatically before creating the product.
+      let finalCoverUrl = coverUrl
+      if (coverFile && (!finalCoverUrl || !finalCoverUrl.startsWith("http"))) {
+        const formData = new FormData()
+        formData.append("file", coverFile)
+
+        const resCover = await fetch("/api/upload/cover", {
+          method: "POST",
+          body: formData,
+        })
+
+        const jsonCover = await resCover.json()
+
+        if (!resCover.ok || !jsonCover.success) {
+          setError(jsonCover.error || "Falha ao enviar capa.")
+          setIsSaving(false)
+          return
+        }
+
+        finalCoverUrl = jsonCover.url as string
+        setCoverUrl(finalCoverUrl)
+      }
+
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -200,7 +224,7 @@ export default function CreateProductPage() {
           price: Number(formData.price),
           category: formData.category,
           pdfUrl,
-          coverImage: coverUrl ?? undefined,
+          coverImage: finalCoverUrl ?? undefined,
         }),
       })
 

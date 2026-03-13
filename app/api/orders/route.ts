@@ -67,10 +67,10 @@ export async function POST(request: Request) {
     // 3. Increment product sales count
     // 4. Send confirmation email
 
-    // For demo, mark as completed immediately
+    // For demo, mark as paid immediately so it appears in dashboards/downloads
     await ordersCollection.updateOne(
       { _id: result.insertedId },
-      { $set: { status: 'completed', updatedAt: new Date() } }
+      { $set: { status: 'paid', updatedAt: new Date() } }
     )
 
     // Increment sales count

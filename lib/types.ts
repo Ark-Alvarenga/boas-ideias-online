@@ -77,6 +77,7 @@ export interface Order {
   status: 'pending' | 'paid' | 'refunded'
   createdAt: Date
   updatedAt: Date
+  stripeSessionId?: string
 }
 
 export interface CreateProductInput {
