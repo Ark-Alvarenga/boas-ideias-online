@@ -15,6 +15,7 @@ import type { Order, Product, User } from "@/lib/types";
 import { authConfig, verifySessionToken } from "@/lib/auth";
 import { ObjectId } from "mongodb";
 import { ConnectStripeCard } from "@/components/dashboard/connect-stripe-card";
+import { ProductsPreview } from "./products-preview/page";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
@@ -56,6 +57,11 @@ export default async function DashboardPage() {
           .find({ _id: { $in: productIds.map((id) => new ObjectId(id)) } })
           .toArray()
       : [];
+
+  const userProducts = await productsCollection
+    .find({ creatorId: user._id })
+    .sort({ createdAt: -1 })
+    .toArray();
 
   const productsById = new Map(
     products.map((product) => [product._id!.toString(), product]),
@@ -122,6 +128,19 @@ export default async function DashboardPage() {
             stripeOnboardingComplete={user.stripeOnboardingComplete}
           />
         </div>
+      
+        <ProductsPreview
+  products={userProducts.map((product) => ({
+    _id: product._id.toString(),
+    slug: product.slug,
+    title: product.title,
+    description: product.description,
+    coverImage: product.coverImage,
+    price: product.price,
+    status: product.status,
+  }))}
+/>
+<p>{userProducts[0].coverImage?.toString()}</p>
 
         <Card className="border-border/50 bg-card shadow-sm">
           <CardHeader className="pb-4">
