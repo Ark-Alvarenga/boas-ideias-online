@@ -1,0 +1,153 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+
+export function HeaderAuthActions({
+  onLinkClick,
+}: {
+  onLinkClick?: () => void
+}) {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((res) => {
+        if (cancelled) return
+        setIsLoggedIn(res.ok)
+      })
+      .catch(() => {
+        if (!cancelled) setIsLoggedIn(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  if (isLoggedIn === null) {
+    return (
+      <div className="hidden items-center gap-3 md:flex">
+        <Button variant="ghost" size="sm" disabled className="opacity-70">
+          ...
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="hidden items-center gap-3 md:flex">
+      {isLoggedIn ? (
+        <>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            asChild
+          >
+            <Link href="/dashboard" onClick={onLinkClick}>
+              Painel
+            </Link>
+          </Button>
+          <Button
+            size="sm"
+            className="bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+            asChild
+          >
+            <Link href="/dashboard/create-product" onClick={onLinkClick}>
+              Vender seu produto
+            </Link>
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            asChild
+          >
+            <Link href="/login" onClick={onLinkClick}>
+              Entrar
+            </Link>
+          </Button>
+          <Button
+            size="sm"
+            className="bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+            asChild
+          >
+            <Link href="/register" onClick={onLinkClick}>
+              Vender seu produto
+            </Link>
+          </Button>
+        </>
+      )}
+    </div>
+  )
+}
+
+export function HeaderAuthActionsMobile({
+  onLinkClick,
+}: {
+  onLinkClick?: () => void
+}) {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((res) => {
+        if (cancelled) return
+        setIsLoggedIn(res.ok)
+      })
+      .catch(() => {
+        if (!cancelled) setIsLoggedIn(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  if (isLoggedIn === null) {
+    return (
+      <div className="mt-4 flex flex-col gap-2 border-t border-border/50 pt-4">
+        <Button variant="outline" size="sm" disabled className="opacity-70">
+          ...
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-4 flex flex-col gap-2 border-t border-border/50 pt-4">
+      {isLoggedIn ? (
+        <>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard" onClick={onLinkClick}>
+              Painel
+            </Link>
+          </Button>
+          <Button size="sm" className="shadow-sm" asChild>
+            <Link href="/dashboard/create-product" onClick={onLinkClick}>
+              Vender seu produto
+            </Link>
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/login" onClick={onLinkClick}>
+              Entrar
+            </Link>
+          </Button>
+          <Button size="sm" className="shadow-sm" asChild>
+            <Link href="/register" onClick={onLinkClick}>
+              Vender seu produto
+            </Link>
+          </Button>
+        </>
+      )}
+    </div>
+  )
+}
