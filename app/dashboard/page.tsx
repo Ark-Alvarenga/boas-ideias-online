@@ -64,7 +64,9 @@ export default async function DashboardPage() {
     .toArray();
 
   const productsById = new Map(
-    products.map((product) => [product._id!.toString(), product]),
+    products
+      .filter((p) => p._id != null)
+      .map((product) => [product._id!.toString(), product]),
   );
 
   return (
@@ -105,7 +107,7 @@ export default async function DashboardPage() {
               <Link href="/dashboard/affiliates">Afiliados</Link>
             </Button>
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
-              {user.name.charAt(0).toUpperCase()}
+              {(user?.name?.charAt(0) ?? "?").toUpperCase()}
             </div>
           </div>
         </div>
@@ -114,7 +116,7 @@ export default async function DashboardPage() {
       <main className="mx-auto max-w-7xl px-6 py-10 lg:px-8 lg:py-12">
         <div className="mb-8">
           <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            Olá, {user.name.split(" ")[0]}!
+            Olá, {user?.name?.split(" ")[0] ?? "Usuário"}!
           </h1>
           <p className="mt-1 text-muted-foreground">
             Aqui você encontra todos os produtos que já comprou e pode baixar
@@ -130,17 +132,16 @@ export default async function DashboardPage() {
         </div>
       
         <ProductsPreview
-  products={userProducts.map((product) => ({
-    _id: product._id.toString(),
-    slug: product.slug,
-    title: product.title,
-    description: product.description,
-    coverImage: product.coverImage,
-    price: product.price,
-    status: product.status,
-  }))}
-/>
-<p>{userProducts[0].coverImage?.toString()}</p>
+          products={userProducts.map((product) => ({
+            _id: product._id?.toString() ?? product.slug,
+            slug: product.slug,
+            title: product.title,
+            description: product.description,
+            coverImage: product.coverImage,
+            price: product.price,
+            status: product.status,
+          }))}
+        />
 
         <Card className="border-border/50 bg-card shadow-sm">
           <CardHeader className="pb-4">
@@ -164,20 +165,20 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {orders.map((order) => {
-                  const product = productsById.get(order.productId.toString());
+                {orders.map((order, index) => {
+                  const product = productsById.get(order.productId?.toString() ?? "");
                   const title = product?.title ?? order.productTitle;
                   const price = product?.price ?? order.productPrice;
 
                   return (
                     <div
-                      key={order._id!.toString()}
+                      key={order._id?.toString() ?? `order-${index}`}
                       className="flex items-center justify-between rounded-xl border border-border/50 bg-background p-4 transition-colors hover:bg-muted/30"
                     >
                       <div className="flex items-center gap-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-blue-500/15 to-indigo-500/15">
                           <span className="font-serif text-lg font-semibold text-foreground/30">
-                            {title.charAt(0)}
+                            {(title ?? "").charAt(0) || "?"}
                           </span>
                         </div>
                         <div>
@@ -200,7 +201,7 @@ export default async function DashboardPage() {
                         className="inline-flex items-center gap-1.5"
                         asChild
                       >
-                        <Link href={`/download/${order._id!.toString()}`}>
+                        <Link href={`/api/download/${order._id?.toString() ?? ""}`}>
                           <Download className="h-3.5 w-3.5" />
                           Baixar PDF
                         </Link>

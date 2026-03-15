@@ -26,8 +26,8 @@ export async function GET(request: Request) {
       // When userId is provided, return that user's products (all statuses)
       query.creatorId = new ObjectId(userId)
     } else {
-      // Public marketplace: show all non-archived products from all users
-      query.status = { $ne: 'archived' }
+      // Public marketplace: only show published (active) products so "Ver mais" links work
+      query.status = 'active'
     }
 
     if (category && category !== 'todos') {
@@ -138,9 +138,14 @@ export async function POST(request: Request) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '')
 
-    // Check if slug already exists
     const existingProduct = await productsCollection.findOne({ slug })
-    const finalSlug = existingProduct ? `${slug}-${Date.now()}` : slug
+    if (existingProduct) {
+      return NextResponse.json(
+        { error: 'A product with this slug already exists.' },
+        { status: 400 },
+      )
+    }
+    const finalSlug = slug
 
     const productStatus = user.stripeOnboardingComplete ? 'active' : 'draft'
 

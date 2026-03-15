@@ -138,15 +138,24 @@ export default async function ProductsPage() {
                       <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                         {product.description}
                       </p>
-                      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span>R${product.price}</span>
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px]">
-                          {product.status === "active"
-                            ? "Ativo"
-                            : product.status === "draft"
-                            ? "Rascunho"
-                            : "Arquivado"}
-                        </span>
+                        {product.status === "active" && (
+                          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                            Active
+                          </span>
+                        )}
+                        {product.status === "archived" && (
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Archived
+                          </span>
+                        )}
+                        {product.status === "draft" && (
+                          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                            Draft
+                          </span>
+                        )}
+                        <span>Vendas: {product.sales ?? 0}</span>
                       </div>
                       <div className="mt-3 flex justify-end">
                         <Button

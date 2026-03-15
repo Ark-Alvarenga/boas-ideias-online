@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff, Archive, Trash2 } from "lucide-react";
+
+const STATUS_LABELS: Record<string, string> = {
+  active: "Publicado",
+  draft: "Rascunho",
+  archived: "Arquivado",
+};
 
 interface ProductEditFormProps {
   slug: string;
@@ -14,7 +20,7 @@ interface ProductEditFormProps {
   initialDescription: string;
   initialPrice: number;
   initialCategory: string;
-  status: string;
+  status: "active" | "draft" | "archived";
   views: number;
   sales: number;
 }
@@ -25,7 +31,7 @@ export function ProductEditForm({
   initialDescription,
   initialPrice,
   initialCategory,
-  status,
+  status: initialStatus,
   views,
   sales,
 }: ProductEditFormProps) {
@@ -34,7 +40,9 @@ export function ProductEditForm({
   const [description, setDescription] = useState(initialDescription);
   const [price, setPrice] = useState(initialPrice.toString());
   const [category, setCategory] = useState(initialCategory);
+  const [status, setStatus] = useState<"active" | "draft" | "archived">(initialStatus);
   const [isSaving, setIsSaving] = useState(false);
+  const [isStatusAction, setIsStatusAction] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -70,6 +78,139 @@ export function ProductEditForm({
       setError("Ocorreu um erro ao salvar o produto.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleUnpublish = async () => {
+    setIsStatusAction(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`/api/products/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "draft" }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setError(json.error || "Não foi possível despublicar.");
+        return;
+      }
+      setStatus("draft");
+      setSuccess("Produto removido do marketplace (rascunho).");
+      router.refresh();
+    } catch (err) {
+      console.error("Unpublish error", err);
+      setError("Erro ao despublicar.");
+    } finally {
+      setIsStatusAction(false);
+    }
+  };
+
+  const handleArchive = async () => {
+    if (!confirm("Arquivar este produto? Ele sairá do marketplace mas continuará visível no seu painel.")) return;
+    setIsStatusAction(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`/api/products/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "archived" }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setError(json.error || "Não foi possível arquivar.");
+        return;
+      }
+      setStatus("archived");
+      setSuccess("Produto arquivado. Não aparece mais no marketplace.");
+      router.refresh();
+    } catch (err) {
+      console.error("Archive error", err);
+      setError("Erro ao arquivar.");
+    } finally {
+      setIsStatusAction(false);
+    }
+  };
+
+  const handleRepublish = async () => {
+    setIsStatusAction(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`/api/products/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setError(json.error || "Não foi possível republicar.");
+        return;
+      }
+      setStatus("active");
+      setSuccess("Produto republicado no marketplace.");
+      router.refresh();
+    } catch (err) {
+      console.error("Republish error", err);
+      setError("Erro ao republicar.");
+    } finally {
+      setIsStatusAction(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    setIsStatusAction(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`/api/products/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setError(json.error || "Não foi possível publicar.");
+        return;
+      }
+      setStatus("active");
+      setSuccess("Produto publicado no marketplace.");
+      router.refresh();
+    } catch (err) {
+      console.error("Publish error", err);
+      setError("Erro ao publicar.");
+    } finally {
+      setIsStatusAction(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (
+      !confirm(
+        "Excluir este produto permanentemente? Esta ação não pode ser desfeita. Produtos com vendas não podem ser excluídos."
+      )
+    )
+      return;
+    setIsStatusAction(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`/api/products/${slug}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error || "Não foi possível excluir o produto.");
+        return;
+      }
+      setSuccess("Produto excluído.");
+      router.push("/dashboard/products");
+      router.refresh();
+    } catch (err) {
+      console.error("Delete error", err);
+      setError("Erro ao excluir o produto.");
+    } finally {
+      setIsStatusAction(false);
     }
   };
 
@@ -159,11 +300,7 @@ export function ProductEditForm({
       <div className="space-y-4 rounded-xl border border-border/60 bg-muted/40 p-4 text-sm text-muted-foreground">
         <p>
           <span className="font-medium text-foreground">Status:</span>{" "}
-          {status === "active"
-            ? "Ativo"
-            : status === "draft"
-            ? "Rascunho"
-            : "Arquivado"}
+          {STATUS_LABELS[status] ?? status}
         </p>
         <p>
           <span className="font-medium text-foreground">Vendas:</span>{" "}
@@ -173,6 +310,88 @@ export function ProductEditForm({
           <span className="font-medium text-foreground">Visualizações:</span>{" "}
           {views}
         </p>
+
+        <div className="border-t border-border/60 pt-4 space-y-2">
+          <p className="font-medium text-foreground">Ações</p>
+          {status === "active" && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2"
+                onClick={handleArchive}
+                disabled={isStatusAction}
+              >
+                {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />}
+                Arquivar (sair do marketplace)
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+                onClick={handleDelete}
+                disabled={isStatusAction}
+              >
+                {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                Excluir permanentemente
+              </Button>
+            </>
+          )}
+          {status === "archived" && (
+            <>
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                className="w-full justify-start gap-2"
+                onClick={handleRepublish}
+                disabled={isStatusAction}
+              >
+                {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+                Republicar (voltar ao marketplace)
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+                onClick={handleDelete}
+                disabled={isStatusAction}
+              >
+                {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                Excluir permanentemente
+              </Button>
+            </>
+          )}
+          {status === "draft" && (
+            <>
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                className="w-full justify-start gap-2"
+                onClick={handlePublish}
+                disabled={isStatusAction}
+              >
+                {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+                Publicar no marketplace
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+                onClick={handleDelete}
+                disabled={isStatusAction}
+              >
+                {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                Excluir permanentemente
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </form>
   );

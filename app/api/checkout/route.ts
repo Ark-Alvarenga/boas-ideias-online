@@ -46,13 +46,19 @@ export async function POST(request: Request) {
 
     const product = await productsCollection.findOne({
       _id: new ObjectId(productId),
-      status: 'active',
     })
 
     if (!product) {
       return NextResponse.json(
         { error: 'Product not found' },
         { status: 404 },
+      )
+    }
+
+    if (product.status !== 'active') {
+      return NextResponse.json(
+        { error: 'This product is not available for purchase.' },
+        { status: 400 },
       )
     }
 
@@ -82,6 +88,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 401 },
+      )
+    }
+
+    if (product.creatorId && product.creatorId.equals(buyer._id!)) {
+      return NextResponse.json(
+        { error: 'You cannot purchase your own product.' },
+        { status: 400 },
       )
     }
 

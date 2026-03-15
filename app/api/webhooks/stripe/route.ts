@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    console.error("STRIPE_WEBHOOK_SECRET is not set");
+    console.error("[Stripe webhook] STRIPE_WEBHOOK_SECRET is not set");
     return NextResponse.json(
       { error: "Webhook not configured" },
       { status: 500 },
@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
 
   const signature = request.headers.get("stripe-signature");
   if (!signature) {
+    console.warn("[Stripe webhook] Missing stripe-signature header");
     return NextResponse.json(
       { error: "Missing Stripe signature" },
       { status: 400 },
@@ -51,7 +52,8 @@ export async function POST(request: NextRequest) {
       webhookSecret,
     );
   } catch (err) {
-    console.error("Error verifying Stripe webhook:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[Stripe webhook] Signature verification failed:", message);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
@@ -63,16 +65,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true });
       }
 
-      const metadata = session.metadata || {};
-      const productId = metadata.productId;
-      const userId = metadata.userId;
+      const metadata = session.metadata ?? {};
+      const productId = typeof metadata.productId === "string" ? metadata.productId : null;
+      const userId = typeof metadata.userId === "string" ? metadata.userId : null;
       const buyerName =
-        metadata.buyerName || session.customer_details?.name || "Cliente";
+        typeof metadata.buyerName === "string"
+          ? metadata.buyerName
+          : (session.customer_details?.name ?? "Cliente");
       const buyerEmail =
-        session.customer_details?.email || session.customer_email;
+        typeof session.customer_details?.email === "string"
+          ? session.customer_details.email
+          : (typeof session.customer_email === "string" ? session.customer_email : "");
 
       if (!productId || !ObjectId.isValid(productId)) {
-        console.error("Missing or invalid productId in metadata");
+        console.error("[Stripe webhook] Missing or invalid productId in metadata, sessionId:", session.id);
         return NextResponse.json({ received: true });
       }
 
@@ -85,14 +91,14 @@ export async function POST(request: NextRequest) {
       });
 
       if (!product) {
-        console.error("Product not found for webhook order");
+        console.error("[Stripe webhook] Product not found for productId:", productId, "sessionId:", session.id);
         return NextResponse.json({ received: true });
       }
 
-      // Prevent duplicate orders on retried webhooks
+      // Idempotency: prevent duplicate orders on retried webhooks
       const existingOrder = await ordersCollection.findOne({
         stripeSessionId: session.id,
-      } as any);
+      });
       if (existingOrder) {
         return NextResponse.json({ received: true });
       }
@@ -101,14 +107,12 @@ export async function POST(request: NextRequest) {
         productId: product._id!,
         productTitle: product.title,
         productPrice: product.price,
-        userId:
-          userId && ObjectId.isValid(userId) ? new ObjectId(userId) : undefined,
-        buyerEmail: buyerEmail || "",
-        buyerName,
+        userId: userId && ObjectId.isValid(userId) ? new ObjectId(userId) : undefined,
+        buyerEmail: buyerEmail ?? "",
+        buyerName: typeof buyerName === "string" ? buyerName : "Cliente",
         status: "paid",
         createdAt: new Date(),
         updatedAt: new Date(),
-        // @ts-expect-error - extended field on Order
         stripeSessionId: session.id,
       };
 
@@ -120,7 +124,7 @@ export async function POST(request: NextRequest) {
         { $inc: { sales: 1 } },
       );
 
-      const affiliateUserId = metadata.affiliateUserId;
+      const affiliateUserId = typeof metadata.affiliateUserId === "string" ? metadata.affiliateUserId : null;
 
       if (
         affiliateUserId &&
@@ -138,6 +142,7 @@ export async function POST(request: NextRequest) {
 
         if (
           affiliate &&
+          product.creatorId &&
           !product.creatorId.equals(new ObjectId(affiliateUserId))
         ) {
           const commissionPercent =
@@ -165,7 +170,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Error handling Stripe webhook:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    console.error("[Stripe webhook] Handler failed:", message, stack ?? "");
     return NextResponse.json(
       { error: "Webhook handler failed" },
       { status: 500 },

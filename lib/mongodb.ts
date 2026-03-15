@@ -1,4 +1,5 @@
 import { MongoClient, Db } from 'mongodb'
+import { ensureIndexes } from './db-indexes'
 
 if (!process.env.MONGODB_URI) {
   throw new Error('Please add your Mongo URI to .env.local')
@@ -13,6 +14,8 @@ let clientPromise: Promise<MongoClient>
 declare global {
   // eslint-disable-next-line no-var
   var _mongoClientPromise: Promise<MongoClient> | undefined
+  // eslint-disable-next-line no-var
+  var _dbIndexesEnsured: boolean | undefined
 }
 
 if (process.env.NODE_ENV === 'development') {
@@ -33,5 +36,10 @@ export default clientPromise
 
 export async function getDatabase(): Promise<Db> {
   const client = await clientPromise
-  return client.db('boas-ideias')
+  const db = client.db('boas-ideias')
+  if (!global._dbIndexesEnsured) {
+    await ensureIndexes(db)
+    global._dbIndexesEnsured = true
+  }
+  return db
 }

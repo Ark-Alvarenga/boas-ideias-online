@@ -9,7 +9,7 @@ interface ProductCardProps {
   description: string
   price: number
   category: string
-  slug: string
+  slug?: string
   creator: string
   coverImage?: string
 }
@@ -73,7 +73,7 @@ export function ProductCard({
             R${price}
           </span>
           <Button size="sm" variant="ghost" className="text-primary hover:text-primary" asChild>
-            <Link href={`/produto/${slug}`}>
+            <Link href={`/produto/${slug || id}`}>
               Ver mais
               <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Link>

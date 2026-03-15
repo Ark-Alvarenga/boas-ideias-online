@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
@@ -21,16 +21,25 @@ import { ObjectId } from "mongodb"
 import { PromoteProductButton } from "@/components/product/promote-product-button"
 
 interface ProductPageProps {
-  params: { slug: string }
+  params: Promise<{ slug: string }> | { slug: string }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const { slug } = params
+  const resolved = await Promise.resolve(params)
+  const slug = resolved?.slug
+
+  if (!slug || typeof slug !== "string" || !slug.trim()) {
+    redirect("/marketplace")
+  }
 
   const db = await getDatabase()
   const collection = db.collection<Product>("products")
 
-  const product = await collection.findOne({ slug, status: "active" })
+  // Only active products are publicly visible; draft/archived return 404
+  let product = await collection.findOne({ slug, status: "active" })
+  if (!product && ObjectId.isValid(slug)) {
+    product = await collection.findOne({ _id: new ObjectId(slug), status: "active" })
+  }
 
   if (!product) {
     return notFound()

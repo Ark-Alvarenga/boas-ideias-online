@@ -61,7 +61,7 @@ export function ProductsPreview({ products }: { products: Product[] }) {
                   ) : (
                     <div className="flex h-full items-center justify-center bg-gradient-to-br from-blue-500/15 to-indigo-500/15">
                       <span className="text-4xl font-semibold text-foreground/10">
-                        {product.title.charAt(0)}
+                        {(product.title ?? "").charAt(0) || "?"}
                       </span>
                     </div>
                   )}

@@ -93,7 +93,7 @@ export async function GET(
       )
     }
 
-    if (!product.pdfUrl) {
+    if (!product.pdfUrl || typeof product.pdfUrl !== 'string') {
       return NextResponse.json(
         { error: 'No file available for this product' },
         { status: 404 },
@@ -109,9 +109,24 @@ export async function GET(
       )
     }
 
-    // Assume pdfUrl is of form https://bucket.s3.region.amazonaws.com/key
-    const url = new URL(product.pdfUrl)
-    const key = url.pathname.replace(/^\/+/, '')
+    let key: string
+    try {
+      const url = new URL(product.pdfUrl)
+      key = url.pathname.replace(/^\/+/, '').trim()
+      if (!key) {
+        console.error('[download] Invalid pdfUrl: empty path')
+        return NextResponse.json(
+          { error: 'No file available for this product' },
+          { status: 404 },
+        )
+      }
+    } catch {
+      console.error('[download] Invalid pdfUrl for product:', order.productId?.toString())
+      return NextResponse.json(
+        { error: 'No file available for this product' },
+        { status: 404 },
+      )
+    }
 
     const command = new GetObjectCommand({
       Bucket: bucket,
@@ -126,7 +141,7 @@ export async function GET(
     if (request.headers.get('accept')?.includes('application/json')) {
       return NextResponse.json({
         success: true,
-        productTitle: product.title,
+        productTitle: product.title ?? 'Download',
         downloadUrl: signedUrl,
       })
     }
@@ -134,7 +149,8 @@ export async function GET(
     // Default: redirect to the signed URL (browser navigation)
     return NextResponse.redirect(signedUrl)
   } catch (error) {
-    console.error('Error processing download:', error)
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('[download] Error:', message)
     return NextResponse.json(
       { error: 'Failed to process download request' },
       { status: 500 }

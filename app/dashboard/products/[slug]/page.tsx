@@ -72,9 +72,11 @@ export default async function DashboardProductDetailPage({
                 <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
               </Link>
             </Button>
-            <Button size="sm" asChild>
-              <Link href={`/produto/${product.slug}`}>Ver página pública</Link>
-            </Button>
+            {product.status === "active" && (
+              <Button size="sm" asChild>
+                <Link href={`/produto/${product.slug}`}>Ver página pública</Link>
+              </Button>
+            )}
           </div>
         </div>
       </header>

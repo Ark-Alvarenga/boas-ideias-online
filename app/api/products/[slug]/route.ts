@@ -3,19 +3,25 @@ import { getDatabase } from '@/lib/mongodb'
 import { cookies } from 'next/headers'
 import { authConfig, verifySessionToken } from '@/lib/auth'
 import { ObjectId } from 'mongodb'
-import type { Product } from '@/lib/types'
+import type { Product, Order } from '@/lib/types'
 
 interface RouteContext {
-  params: { slug: string }
+  params: Promise<{ slug: string }> | { slug: string }
 }
 
-// GET /api/products/[slug] - Get product by slug
+// GET /api/products/[slug] - Get product by slug (Next.js 15+ safe params)
 export async function GET(
   request: Request,
   context: RouteContext
 ) {
   try {
-    const { slug } = context.params
+    const { slug } = await Promise.resolve(context.params)
+    if (!slug || typeof slug !== "string") {
+      return NextResponse.json(
+        { error: "Invalid slug" },
+        { status: 400 }
+      )
+    }
     
     const db = await getDatabase()
     const collection = db.collection<Product>('products')
@@ -64,13 +70,19 @@ export async function GET(
   }
 }
 
-// PATCH /api/products/[slug] - Update product
+// PATCH /api/products/[slug] - Update product (Next.js 15+ safe params)
 export async function PATCH(
   request: Request,
   context: RouteContext
 ) {
   try {
-    const { slug } = await context.params
+    const { slug } = await Promise.resolve(context.params)
+    if (!slug || typeof slug !== "string") {
+      return NextResponse.json(
+        { error: "Invalid slug" },
+        { status: 400 }
+      )
+    }
 
     // Authenticate user
     const cookieStore = await cookies()
@@ -122,10 +134,28 @@ export async function PATCH(
     delete updateData.sales
     delete updateData.views
 
+    // Validate status if present: only allow lifecycle states
+    const allowedStatuses = ['draft', 'active', 'archived'] as const
+    if (updateData.status !== undefined) {
+      if (!allowedStatuses.includes(updateData.status as typeof allowedStatuses[number])) {
+        return NextResponse.json(
+          { error: 'Invalid status. Allowed: draft, active, archived.' },
+          { status: 400 }
+        )
+      }
+    }
+
     await collection.updateOne(
       { _id: product._id },
       { $set: updateData },
     )
+
+    if (updateData.status === 'archived') {
+      console.log('[Product] archived:', slug)
+    }
+    if (updateData.status === 'active') {
+      console.log('[Product] republished:', slug)
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -143,7 +173,13 @@ export async function DELETE(
   context: RouteContext
 ) {
   try {
-    const { slug } = await context.params
+    const { slug } = await Promise.resolve(context.params)
+    if (!slug || typeof slug !== "string") {
+      return NextResponse.json(
+        { error: "Invalid slug" },
+        { status: 400 }
+      )
+    }
 
     // Authenticate user
     const cookieStore = await cookies()
@@ -182,11 +218,20 @@ export async function DELETE(
       )
     }
 
-    // Soft delete by changing status
-    await collection.updateOne(
-      { _id: product._id },
-      { $set: { status: 'archived', updatedAt: new Date() } },
-    )
+    // Safety: do not delete if product has orders (sales)
+    const ordersCollection = db.collection<Order>('orders')
+    const orderCount = await ordersCollection.countDocuments({
+      productId: product._id,
+    })
+    if (orderCount > 0) {
+      return NextResponse.json(
+        { error: 'Product cannot be deleted because it already has sales.' },
+        { status: 400 }
+      )
+    }
+
+    await collection.deleteOne({ _id: product._id })
+    console.log('[Product] deleted:', slug)
 
     return NextResponse.json({ success: true })
   } catch (error) {

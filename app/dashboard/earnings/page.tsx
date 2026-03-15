@@ -43,7 +43,7 @@ export default async function EarningsPage() {
   const myProducts = await productsCollection
     .find({ creatorId: user._id })
     .toArray()
-  const myProductIds = myProducts.map((p) => p._id!)
+  const myProductIds = myProducts.filter((p) => p._id != null).map((p) => p._id!)
 
   const orders = await ordersCollection
     .find({
