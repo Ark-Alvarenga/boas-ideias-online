@@ -170,7 +170,7 @@ export default function CheckoutPage() {
       <Header />
       
       <main className="py-10 lg:py-16">
-        <div className="mx-auto max-w-4xl px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
           <nav className="mb-10">
             <Link 
@@ -196,7 +196,7 @@ export default function CheckoutPage() {
               {error || "Não foi possível encontrar este produto para checkout."}
             </div>
           ) : (
-          <div className="grid gap-10 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-10">
             {/* Checkout Form */}
             <div className="lg:col-span-3">
               <form onSubmit={handleSubmit}>

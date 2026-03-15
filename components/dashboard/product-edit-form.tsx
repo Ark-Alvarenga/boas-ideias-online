@@ -215,7 +215,7 @@ export function ProductEditForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-10 lg:grid-cols-[2fr,1.2fr]">
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr,1.2fr] lg:gap-10">
       <div>
         <FieldGroup>
           <Field>

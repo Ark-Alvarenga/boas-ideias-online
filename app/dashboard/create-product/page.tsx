@@ -257,7 +257,7 @@ export default function CreateProductPage() {
       <Header />
 
       <main className="py-10 lg:py-16">
-        <div className="mx-auto max-w-4xl px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <Card className="border-border/50 bg-card shadow-sm">
             <CardHeader>
               <CardTitle className="text-xl">Criar novo produto</CardTitle>
@@ -267,7 +267,7 @@ export default function CreateProductPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="grid gap-10 lg:grid-cols-[2fr,1.5fr]">
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr,1.5fr] lg:gap-10">
                 <div>
                   <FieldGroup>
                     <Field>
@@ -327,7 +327,7 @@ export default function CreateProductPage() {
                     </p>
                   )}
 
-                  <div className="mt-8 flex gap-3">
+                  <div className="mt-8 flex flex-wrap gap-3">
                     <Button
                       type="submit"
                       disabled={isSaving || !pdfUrl}

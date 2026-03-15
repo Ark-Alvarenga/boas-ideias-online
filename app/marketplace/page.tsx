@@ -66,8 +66,8 @@ export default function MarketplacePage() {
 
       <main>
         {/* Hero section */}
-        <section className="border-b border-border/50 bg-muted/30 py-16 lg:py-20">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <section className="border-b border-border/50 bg-muted/30 py-10 lg:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <p className="text-sm font-semibold uppercase tracking-wider text-primary">
               Marketplace
             </p>
@@ -84,8 +84,8 @@ export default function MarketplacePage() {
         </section>
 
         {/* Filters and Products */}
-        <section className="py-12 lg:py-16">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <section className="py-8 lg:py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <MarketplaceFilters
               onSearch={(value) => setSearch(value || undefined)}
               onCategoryChange={(value) =>
@@ -113,7 +113,7 @@ export default function MarketplacePage() {
                 )}
               </p>
 
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {!isLoading &&
                   products.map((product) => (
                     <ProductCard

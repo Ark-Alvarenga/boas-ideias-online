@@ -78,7 +78,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <Header />
       
       <main className="py-10 lg:py-16">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
           <nav className="mb-10">
             <Link 
@@ -90,7 +90,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </Link>
           </nav>
 
-          <div className="grid gap-16 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-5 lg:gap-16">
             {/* Product Info */}
             <div className="space-y-10 lg:col-span-3">
               {/* Product Cover */}
@@ -189,7 +189,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             {/* Purchase Card */}
             <div className="lg:col-span-2">
-              <div className="sticky top-24">
+              <div className="lg:sticky lg:top-24">
                 <Card className="border-border/50 bg-card shadow-xl shadow-primary/5">
                   <CardContent className="p-6 lg:p-8">
                     <div className="mb-8">
@@ -240,7 +240,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <h2 className="mb-10 font-serif text-2xl font-semibold tracking-tight text-foreground">
               Produtos Relacionados
             </h2>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {relatedProducts.map((relatedProduct) => (
                 <Link
                   key={relatedProduct._id?.toString() ?? relatedProduct.slug}

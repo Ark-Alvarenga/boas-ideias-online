@@ -60,7 +60,7 @@ export default function RegisterPage() {
       <Header />
 
       <main className="py-10 lg:py-16">
-        <div className="mx-auto max-w-md px-6 lg:px-0">
+        <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-0">
           <Card className="border-border/50 bg-card shadow-lg shadow-primary/5">
             <CardHeader>
               <CardTitle className="text-xl">Criar conta</CardTitle>

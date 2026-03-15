@@ -64,7 +64,7 @@ export default async function EarningsPage() {
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/dashboard" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Lightbulb className="h-4 w-4 text-primary-foreground" />
@@ -74,7 +74,7 @@ export default async function EarningsPage() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button variant="ghost" size="sm" className="text-muted-foreground" asChild>
               <Link href="/marketplace">
                 Ver Marketplace
@@ -88,7 +88,7 @@ export default async function EarningsPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-10 lg:px-8 lg:py-12">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
         <div className="mb-8">
           <ConnectStripeCard
             stripeAccountId={user.stripeAccountId}
@@ -96,7 +96,7 @@ export default async function EarningsPage() {
           />
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <Card className="border-border/50 bg-card shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">

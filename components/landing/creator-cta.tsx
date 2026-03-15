@@ -25,7 +25,7 @@ const steps = [
 
 export function CreatorCTA() {
   return (
-    <section className="relative overflow-hidden bg-primary py-24 lg:py-32">
+    <section className="relative overflow-hidden bg-primary py-16 lg:py-32">
       {/* Subtle pattern */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.03]">
         <svg width="100%" height="100%">
@@ -36,7 +36,7 @@ export function CreatorCTA() {
         </svg>
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-serif text-3xl font-semibold tracking-tight text-primary-foreground sm:text-4xl lg:text-5xl">
             Venda seus produtos digitais para milhares de compradores
@@ -46,7 +46,7 @@ export function CreatorCTA() {
           </p>
         </div>
 
-        <div className="mx-auto mt-16 grid max-w-4xl gap-8 sm:grid-cols-3">
+        <div className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-8 sm:mt-16 sm:grid-cols-3">
           {steps.map((item, index) => (
             <div key={index} className="relative text-center">
               <div className="mb-5 inline-flex items-center justify-center">

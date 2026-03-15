@@ -23,8 +23,8 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <section className="bg-background py-24 lg:py-32">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <section className="bg-background py-16 lg:py-32">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
             Depoimentos
@@ -37,7 +37,7 @@ export function TestimonialsSection() {
           </p>
         </div>
 
-        <div className="mt-16 grid gap-8 lg:grid-cols-3">
+        <div className="mt-12 grid grid-cols-1 gap-6 sm:mt-16 sm:gap-8 lg:grid-cols-3">
           {testimonials.map((testimonial, index) => (
             <Card 
               key={index} 

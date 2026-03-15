@@ -70,7 +70,7 @@ export function Header() {
         <HeaderAuthActions />
 
         <button
-          className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted md:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted md:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Menu"
         >
@@ -82,34 +82,36 @@ export function Header() {
         </button>
       </div>
 
-      {mobileMenuOpen && (
-        <div className="border-t border-border/50 bg-background md:hidden">
-          <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-6 py-4">
-            <Link 
-              href="/marketplace" 
-              className="rounded-lg px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Marketplace
-            </Link>
-            <Link 
-              href="/sobre" 
-              className="rounded-lg px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Sobre
-            </Link>
-            <Link 
-              href="/para-criadores" 
-              className="rounded-lg px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Para Criadores
-            </Link>
-            <HeaderAuthActionsMobile onLinkClick={() => setMobileMenuOpen(false)} />
-          </nav>
-        </div>
-      )}
+      <div
+        className={`overflow-hidden border-t border-border/50 bg-background transition-all duration-300 ease-in-out md:hidden ${
+          mobileMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0 border-t-0"
+        }`}
+      >
+        <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4 sm:px-6">
+          <Link 
+            href="/marketplace" 
+            className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Marketplace
+          </Link>
+          <Link 
+            href="/sobre" 
+            className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Sobre
+          </Link>
+          <Link 
+            href="/para-criadores" 
+            className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Para Criadores
+          </Link>
+          <HeaderAuthActionsMobile onLinkClick={() => setMobileMenuOpen(false)} />
+        </nav>
+      </div>
     </header>
   )
 }

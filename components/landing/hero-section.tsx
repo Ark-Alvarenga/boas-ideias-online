@@ -27,8 +27,8 @@ export function HeroSection() {
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-primary/80" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-secondary/10 blur-3xl" />
       
-      <div className="relative mx-auto max-w-7xl px-6 py-24 lg:px-8 lg:py-32">
-        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-32">
+        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
           {/* Left content */}
           <div className="max-w-xl lg:max-w-none">
             {/* Laurel wreath above badge */}
@@ -79,14 +79,14 @@ export function HeroSection() {
             {/* Stats with Greek key separator */}
             <div className="mt-14">
               <GreekKeyBorder className="mb-6 h-3 w-full text-primary-foreground" />
-              <div className="flex items-center gap-8 lg:gap-12">
+              <div className="flex items-center gap-4 sm:gap-8 lg:gap-12">
                 <div>
-                  <p className="text-3xl font-semibold tracking-tight text-secondary">2.500+</p>
+                  <p className="text-2xl font-semibold tracking-tight text-secondary sm:text-3xl">2.500+</p>
                   <p className="mt-1 text-sm text-primary-foreground/70">Produtos digitais</p>
                 </div>
                 <div className="h-12 w-px bg-primary-foreground/20" />
                 <div>
-                  <p className="text-3xl font-semibold tracking-tight text-secondary">15k+</p>
+                  <p className="text-2xl font-semibold tracking-tight text-secondary sm:text-3xl">15k+</p>
                   <p className="mt-1 text-sm text-primary-foreground/70">Criadores ativos</p>
                 </div>
                 <div className="hidden h-12 w-px bg-primary-foreground/20 sm:block" />
@@ -99,7 +99,7 @@ export function HeroSection() {
           </div>
 
           {/* Right - Hero Image */}
-          <div className="relative lg:ml-auto">
+          <div className="relative mx-auto max-w-md lg:mx-0 lg:ml-auto lg:max-w-none">
             {/* Golden glow behind image */}
             <div className="absolute -inset-8 rounded-3xl bg-secondary/20 blur-3xl" />
             

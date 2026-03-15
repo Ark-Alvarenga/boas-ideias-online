@@ -72,7 +72,7 @@ export function ProductCard({
           <span className="text-xl font-semibold text-foreground">
             R${price}
           </span>
-          <Button size="sm" variant="ghost" className="text-primary hover:text-primary" asChild>
+          <Button size="sm" variant="ghost" className="min-h-[44px] text-primary hover:text-primary" asChild>
             <Link href={`/produto/${slug || id}`}>
               Ver mais
               <ArrowRight className="ml-1 h-3.5 w-3.5" />

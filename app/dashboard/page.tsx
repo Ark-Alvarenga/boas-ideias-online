@@ -72,7 +72,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Lightbulb className="h-4 w-4 text-primary-foreground" />
@@ -82,7 +82,7 @@ export default async function DashboardPage() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 overflow-x-auto sm:gap-3">
             <Button
               variant="ghost"
               size="sm"
@@ -94,16 +94,16 @@ export default async function DashboardPage() {
                 <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
               </Link>
             </Button>
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" size="sm" className="shrink-0" asChild>
               <Link href="/dashboard/earnings">
                 <DollarSign className="mr-1 h-3.5 w-3.5" />
                 Ganhos
               </Link>
             </Button>
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" size="sm" className="shrink-0" asChild>
               <Link href="/dashboard/products">Produtos</Link>
             </Button>
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" size="sm" className="shrink-0" asChild>
               <Link href="/dashboard/affiliates">Afiliados</Link>
             </Button>
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-10 lg:px-8 lg:py-12">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
         <div className="mb-8">
           <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
             Olá, {user?.name?.split(" ")[0] ?? "Usuário"}!
@@ -173,7 +173,7 @@ export default async function DashboardPage() {
                   return (
                     <div
                       key={order._id?.toString() ?? `order-${index}`}
-                      className="flex items-center justify-between rounded-xl border border-border/50 bg-background p-4 transition-colors hover:bg-muted/30"
+                      className="flex flex-col gap-3 rounded-xl border border-border/50 bg-background p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex items-center gap-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-blue-500/15 to-indigo-500/15">
@@ -198,7 +198,7 @@ export default async function DashboardPage() {
 
                       <Button
                         size="sm"
-                        className="inline-flex items-center gap-1.5"
+                        className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 sm:w-auto"
                         asChild
                       >
                         <Link href={`/api/download/${order._id?.toString() ?? ""}`}>

@@ -40,7 +40,7 @@ export function MarketplaceFilters({
 }: MarketplaceFiltersProps) {
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <div className="relative max-w-sm flex-1">
+      <div className="relative max-w-none flex-1 sm:max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Buscar produtos..."
@@ -49,9 +49,9 @@ export function MarketplaceFilters({
         />
       </div>
       
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Select defaultValue="todos" onValueChange={onCategoryChange}>
-          <SelectTrigger className="h-10 w-[180px] border-border/50 bg-background shadow-sm">
+          <SelectTrigger className="h-10 w-full border-border/50 bg-background shadow-sm sm:w-[180px]">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
@@ -64,7 +64,7 @@ export function MarketplaceFilters({
         </Select>
 
         <Select defaultValue="relevancia" onValueChange={onSortChange}>
-          <SelectTrigger className="h-10 w-[160px] border-border/50 bg-background shadow-sm">
+          <SelectTrigger className="h-10 w-full border-border/50 bg-background shadow-sm sm:w-[160px]">
             <SelectValue placeholder="Ordenar" />
           </SelectTrigger>
           <SelectContent>

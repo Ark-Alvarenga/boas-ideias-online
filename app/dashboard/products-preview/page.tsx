@@ -17,7 +17,7 @@ export function ProductsPreview({ products }: { products: Product[] }) {
 
   return (
     <Card className="border-border/50 bg-card shadow-sm">
-      <CardHeader className="pb-4 flex items-center justify-between">
+      <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle className="text-lg">Meus produtos</CardTitle>
           <CardDescription>
@@ -45,7 +45,7 @@ export function ProductsPreview({ products }: { products: Product[] }) {
             .
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {previewProducts.map((product) => (
               <div
                 key={product._id ?? product.slug}
