@@ -102,7 +102,55 @@ export async function PATCH(
       )
     }
     const body = await request.json()
-    
+
+    // --- Field allowlist: only accept known updatable fields ---
+    const ALLOWED_FIELDS = ['title', 'description', 'price', 'category', 'status', 'coverImage', 'pdfUrl', 'features'] as const
+    const updateData: Record<string, unknown> = { updatedAt: new Date() }
+
+    for (const key of ALLOWED_FIELDS) {
+      if (body[key] !== undefined) {
+        updateData[key] = body[key]
+      }
+    }
+
+    // Sanitize specific fields
+    if (typeof updateData.title === 'string') {
+      updateData.title = updateData.title.trim().slice(0, 200)
+      if (updateData.title === '') {
+        return NextResponse.json({ error: 'Title cannot be empty.' }, { status: 400 })
+      }
+    }
+    if (typeof updateData.description === 'string') {
+      updateData.description = updateData.description.trim().slice(0, 5000)
+    }
+    if (updateData.price !== undefined) {
+      const numPrice = Number(updateData.price)
+      if (isNaN(numPrice) || numPrice < 0) {
+        return NextResponse.json({ error: 'Invalid price.' }, { status: 400 })
+      }
+      updateData.price = numPrice
+    }
+    if (typeof updateData.category === 'string') {
+      updateData.category = updateData.category.trim().slice(0, 100)
+    }
+    if (updateData.features !== undefined) {
+      if (!Array.isArray(updateData.features) || !updateData.features.every((f: unknown) => typeof f === 'string')) {
+        return NextResponse.json({ error: 'Features must be an array of strings.' }, { status: 400 })
+      }
+      updateData.features = (updateData.features as string[]).map((f: string) => f.trim()).filter(Boolean).slice(0, 20)
+    }
+
+    // Validate status if present: only allow lifecycle states
+    const allowedStatuses = ['draft', 'active', 'archived'] as const
+    if (updateData.status !== undefined) {
+      if (!allowedStatuses.includes(updateData.status as typeof allowedStatuses[number])) {
+        return NextResponse.json(
+          { error: 'Invalid status. Allowed: draft, active, archived.' },
+          { status: 400 }
+        )
+      }
+    }
+
     const db = await getDatabase()
     const collection = db.collection<Product>('products')
 
@@ -122,40 +170,19 @@ export async function PATCH(
       )
     }
 
-    const updateData = {
-      ...body,
-      updatedAt: new Date()
-    }
-
-    // Don't allow updating certain fields
-    delete updateData._id
-    delete updateData.creatorId
-    delete updateData.createdAt
-    delete updateData.sales
-    delete updateData.views
-
-    // Validate status if present: only allow lifecycle states
-    const allowedStatuses = ['draft', 'active', 'archived'] as const
-    if (updateData.status !== undefined) {
-      if (!allowedStatuses.includes(updateData.status as typeof allowedStatuses[number])) {
-        return NextResponse.json(
-          { error: 'Invalid status. Allowed: draft, active, archived.' },
-          { status: 400 }
-        )
-      }
-    }
-
     await collection.updateOne(
       { _id: product._id },
       { $set: updateData },
     )
 
     if (updateData.status === 'archived') {
-      console.log('[Product] archived:', slug)
+      console.log('[Product:PATCH]', JSON.stringify({ action: 'archive', slug, userId: payload.userId, timestamp: new Date().toISOString() }))
     }
     if (updateData.status === 'active') {
-      console.log('[Product] republished:', slug)
+      console.log('[Product:PATCH]', JSON.stringify({ action: 'republish', slug, userId: payload.userId, timestamp: new Date().toISOString() }))
     }
+    
+    console.log('[Product:PATCH]', JSON.stringify({ action: 'update', slug, userId: payload.userId, timestamp: new Date().toISOString() }))
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -231,7 +258,7 @@ export async function DELETE(
     }
 
     await collection.deleteOne({ _id: product._id })
-    console.log('[Product] deleted:', slug)
+    console.log('[Product:DELETE]', JSON.stringify({ action: 'delete', slug, userId: payload.userId, timestamp: new Date().toISOString() }))
 
     return NextResponse.json({ success: true })
   } catch (error) {

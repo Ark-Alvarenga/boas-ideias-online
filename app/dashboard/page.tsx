@@ -15,7 +15,7 @@ import type { Order, Product, User } from "@/lib/types";
 import { authConfig, verifySessionToken } from "@/lib/auth";
 import { ObjectId } from "mongodb";
 import { ConnectStripeCard } from "@/components/dashboard/connect-stripe-card";
-import { ProductsPreview } from "./products-preview/page";
+import { ProductsPreview } from "@/components/dashboard/products-preview";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();

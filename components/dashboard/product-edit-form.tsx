@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PRODUCT_CATEGORIES } from "@/lib/categories";
 import { Loader2, Eye, EyeOff, Archive, Trash2 } from "lucide-react";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -35,6 +37,12 @@ export function ProductEditForm({
   views,
   sales,
 }: ProductEditFormProps) {
+  // Auto-dismiss success messages after 4 seconds
+  const showSuccess = (msg: string) => {
+    setSuccess(msg);
+    setError(null);
+    setTimeout(() => setSuccess(null), 4000);
+  };
   const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
@@ -71,7 +79,7 @@ export function ProductEditForm({
         return;
       }
 
-      setSuccess("Alterações salvas com sucesso.");
+      showSuccess("Alterações salvas com sucesso.");
       router.refresh();
     } catch (err) {
       console.error("Update product error", err);
@@ -97,7 +105,7 @@ export function ProductEditForm({
         return;
       }
       setStatus("draft");
-      setSuccess("Produto removido do marketplace (rascunho).");
+      showSuccess("Produto removido do marketplace (rascunho).");
       router.refresh();
     } catch (err) {
       console.error("Unpublish error", err);
@@ -124,7 +132,7 @@ export function ProductEditForm({
         return;
       }
       setStatus("archived");
-      setSuccess("Produto arquivado. Não aparece mais no marketplace.");
+      showSuccess("Produto arquivado. Não aparece mais no marketplace.");
       router.refresh();
     } catch (err) {
       console.error("Archive error", err);
@@ -150,7 +158,7 @@ export function ProductEditForm({
         return;
       }
       setStatus("active");
-      setSuccess("Produto republicado no marketplace.");
+      showSuccess("Produto republicado no marketplace.");
       router.refresh();
     } catch (err) {
       console.error("Republish error", err);
@@ -176,7 +184,7 @@ export function ProductEditForm({
         return;
       }
       setStatus("active");
-      setSuccess("Produto publicado no marketplace.");
+      showSuccess("Produto publicado no marketplace.");
       router.refresh();
     } catch (err) {
       console.error("Publish error", err);
@@ -257,13 +265,22 @@ export function ProductEditForm({
 
             <Field>
               <FieldLabel htmlFor="category">Categoria</FieldLabel>
-              <Input
-                id="category"
+              <Select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="h-11 border-border/50 bg-background"
+                onValueChange={(value) => setCategory(value)}
                 required
-              />
+              >
+                <SelectTrigger className="h-11 border-border/50 bg-background">
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRODUCT_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
           </div>
         </FieldGroup>

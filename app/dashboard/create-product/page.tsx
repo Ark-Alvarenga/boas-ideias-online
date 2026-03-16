@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { PRODUCT_CATEGORIES } from "@/lib/categories"
 import { Loader2, UploadCloud } from "lucide-react"
 
 interface MeResponse {
@@ -309,14 +311,22 @@ export default function CreateProductPage() {
 
                       <Field>
                         <FieldLabel htmlFor="category">Categoria</FieldLabel>
-                        <Input
-                          id="category"
-                          placeholder="Ex: Curso, Guia, Template"
+                        <Select
                           value={formData.category}
-                          onChange={(e) => handleChange("category", e.target.value)}
-                          className="h-11 border-border/50 bg-background"
+                          onValueChange={(value) => handleChange("category", value)}
                           required
-                        />
+                        >
+                          <SelectTrigger className="h-11 border-border/50 bg-background">
+                            <SelectValue placeholder="Selecione a categoria" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PRODUCT_CATEGORIES.map((cat) => (
+                              <SelectItem key={cat.value} value={cat.value}>
+                                {cat.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </Field>
                     </div>
                   </FieldGroup>

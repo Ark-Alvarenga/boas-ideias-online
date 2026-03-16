@@ -162,7 +162,7 @@ export async function POST(request: Request) {
         buyerName: buyerName || buyer.name,
         ...(affiliateUserId && { affiliateUserId }),
       },
-      success_url: `${origin}/dashboard`,
+      success_url: `${origin}/purchase-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/produto/${product.slug}`,
     }
 
@@ -176,6 +176,15 @@ export async function POST(request: Request) {
     }
 
     const session = await stripeClient.checkout.sessions.create(sessionParams)
+
+    console.log('[Checkout:POST]', JSON.stringify({ 
+      action: 'checkout_session_created', 
+      productId: product._id!.toString(), 
+      userId: buyer._id!.toString(), 
+      amount: unitAmountCents, 
+      sessionId: session.id, 
+      timestamp: new Date().toISOString() 
+    }))
 
     return NextResponse.json(
       {

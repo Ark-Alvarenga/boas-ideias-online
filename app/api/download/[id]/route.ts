@@ -137,6 +137,14 @@ export async function GET(
       expiresIn: 60,
     })
 
+    console.log('[Download:GET]', JSON.stringify({ 
+      action: 'download_url_generated', 
+      orderId: id, 
+      userId: payload.userId, 
+      productId: product._id.toString(), 
+      timestamp: new Date().toISOString() 
+    }))
+
     // If the client asked for JSON, return a JSON payload instead of redirect
     if (request.headers.get('accept')?.includes('application/json')) {
       return NextResponse.json({

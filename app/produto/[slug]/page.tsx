@@ -35,16 +35,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const db = await getDatabase()
   const collection = db.collection<Product>("products")
 
-  // Only active products are publicly visible; draft/archived return 404
-  let product = await collection.findOne({ slug, status: "active" })
-  if (!product && ObjectId.isValid(slug)) {
-    product = await collection.findOne({ _id: new ObjectId(slug), status: "active" })
-  }
-
-  if (!product) {
-    return notFound()
-  }
-
   let currentUser: User | null = null
   try {
     const cookieStore = await cookies()
@@ -59,7 +49,23 @@ export default async function ProductPage({ params }: ProductPageProps) {
   } catch {
     // ignore
   }
+
+  // Fetch product regardless of status
+  let product = await collection.findOne({ slug })
+  if (!product && ObjectId.isValid(slug)) {
+    product = await collection.findOne({ _id: new ObjectId(slug) })
+  }
+
+  if (!product) {
+    return notFound()
+  }
+
   const isCreator = currentUser ? product.creatorId.equals(currentUser._id!) : false
+
+  // Only active products are publicly visible; draft/archived return 404 unless user is the creator
+  if (product.status !== "active" && !isCreator) {
+    return notFound()
+  }
 
   await collection.updateOne({ slug }, { $inc: { views: 1 } })
 
@@ -89,6 +95,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
               Voltar ao Marketplace
             </Link>
           </nav>
+
+          {product.status !== "active" && isCreator && (
+            <div className="mb-10 rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 text-amber-600 flex items-center gap-3">
+              <Shield className="h-5 w-5 shrink-0" />
+              <p className="text-sm font-medium">
+                Você está visualizando este produto em modo <strong>{product.status === "draft" ? "Rascunho" : "Arquivado"}</strong> porque você é o criador. Ele não está visível publicamente.
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-5 lg:gap-16">
             {/* Product Info */}

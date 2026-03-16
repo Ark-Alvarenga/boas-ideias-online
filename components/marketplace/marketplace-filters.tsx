@@ -9,15 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-const categories = [
-  { value: "todos", label: "Todas as categorias" },
-  { value: "cursos", label: "Cursos em PDF" },
-  { value: "guias", label: "Guias" },
-  { value: "templates", label: "Templates" },
-  { value: "prompts", label: "Pacotes de Prompts" },
-  { value: "toolkits", label: "Toolkits" },
-]
+import { PRODUCT_CATEGORIES } from "@/lib/categories"
 
 const sortOptions = [
   { value: "relevancia", label: "Mais relevantes" },
@@ -55,9 +47,10 @@ export function MarketplaceFilters({
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category.value} value={category.value}>
-                {category.label}
+            <SelectItem value="todos">Todas as categorias</SelectItem>
+            {PRODUCT_CATEGORIES.map((cat) => (
+              <SelectItem key={cat.value} value={cat.value}>
+                {cat.label}
               </SelectItem>
             ))}
           </SelectContent>
