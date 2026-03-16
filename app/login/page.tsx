@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { toast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -41,14 +42,30 @@ export default function LoginPage() {
       const json = await res.json()
 
       if (!res.ok || !json.success) {
-        setError(json.error || "Não foi possível entrar.")
+        const message = json.error || "Não foi possível entrar."
+        setError(message)
+        toast({
+          title: "Não foi possível entrar",
+          description: message,
+          variant: "destructive",
+        })
         return
       }
 
+      toast({
+        title: "Login realizado com sucesso",
+        description: "Bem-vindo de volta! Redirecionando para o seu painel.",
+      })
       router.push(next)
     } catch (err) {
       console.error("Login error", err)
-      setError("Ocorreu um erro ao tentar fazer login.")
+      const message = "Ocorreu um erro ao tentar fazer login."
+      setError(message)
+      toast({
+        title: "Não foi possível entrar",
+        description: message,
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }

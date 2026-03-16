@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
-import { loadStripe } from "@stripe/stripe-js"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
@@ -45,24 +44,24 @@ export default function CheckoutPage() {
   })
   const [error, setError] = useState<string | null>(null)
 
-  const stripePromise = loadStripe(
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string,
-  )
-
   useEffect(() => {
     // Require login: if not authenticated, redirect to login with next=/checkout/[slug]
     const checkAuth = async () => {
       try {
         const res = await fetch("/api/auth/me", { cache: "no-store" })
-        if (!res.ok) {
+        // Only redirect on a definitive "not authenticated".
+        // If the server is rate-limiting or temporarily failing, keep the user on the page.
+        if (res.status === 401) {
           const nextPath = `/checkout/${slug}`
           router.push(`/login?next=${encodeURIComponent(nextPath)}`)
           return
         }
+        if (!res.ok) {
+          console.warn("Auth check returned non-OK:", res.status)
+          return
+        }
       } catch (err) {
         console.error("Auth check failed", err)
-        const nextPath = `/checkout/${slug}`
-        router.push(`/login?next=${encodeURIComponent(nextPath)}`)
         return
       } finally {
         setIsCheckingAuth(false)
@@ -134,25 +133,12 @@ export default function CheckoutPage() {
 
       const json = await res.json()
 
-      if (!res.ok || !json.success) {
+      if (!res.ok || !json.success || !json.url) {
         setError(json.error || "Falha ao processar o pedido.")
         return
       }
 
-      const stripe = await stripePromise
-      if (stripe && json.id) {
-        const { error: stripeError } = await stripe.redirectToCheckout({
-          sessionId: json.id as string,
-        })
-        if (stripeError) {
-          console.error("Stripe redirect error", stripeError)
-          setError(stripeError.message || "Erro ao redirecionar para pagamento.")
-        }
-      } else if (json.url) {
-        window.location.href = json.url as string
-      } else {
-        setError("Não foi possível iniciar o checkout.")
-      }
+      window.location.href = json.url as string
     } catch (err) {
       console.error("Checkout error", err)
       setError("Ocorreu um erro ao iniciar o pagamento.")

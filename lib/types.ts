@@ -25,6 +25,7 @@ export interface Product {
   creatorId: ObjectId
   creatorName: string
   features?: string[]
+  featured?: boolean
   status: 'draft' | 'active' | 'archived'
   views: number
   sales: number

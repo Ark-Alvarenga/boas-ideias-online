@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { toast } from "@/hooks/use-toast"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -42,14 +43,30 @@ export default function RegisterPage() {
       const json = await res.json()
 
       if (!res.ok || !json.success) {
-        setError(json.error || "Não foi possível criar sua conta.")
+        const message = json.error || "Não foi possível criar sua conta."
+        setError(message)
+        toast({
+          title: "Não foi possível criar sua conta",
+          description: message,
+          variant: "destructive",
+        })
         return
       }
 
+      toast({
+        title: "Conta criada com sucesso",
+        description: "Bem-vindo! Redirecionando para o seu painel.",
+      })
       router.push(next)
     } catch (err) {
       console.error("Register error", err)
-      setError("Ocorreu um erro ao criar sua conta.")
+      const message = "Ocorreu um erro ao criar sua conta."
+      setError(message)
+      toast({
+        title: "Não foi possível criar sua conta",
+        description: message,
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }

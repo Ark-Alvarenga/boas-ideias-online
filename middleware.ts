@@ -32,8 +32,10 @@ export function middleware(request: NextRequest) {
 
   // --- 1. Rate Limiting ---
   const ip = request.headers.get('x-forwarded-for') ?? 'unknown-ip'
-  // Max 5 requests per second per IP
-  if (!checkRateLimit(ip, 5, 1000)) {
+  // Higher limit for GET (pages often fire many parallel fetches),
+  // stricter for state-changing requests.
+  const limit = request.method === 'GET' ? 60 : 10
+  if (!checkRateLimit(ip, limit, 1000)) {
     return new NextResponse('Too Many Requests', { status: 429 })
   }
 

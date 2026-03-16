@@ -104,7 +104,7 @@ export async function PATCH(
     const body = await request.json()
 
     // --- Field allowlist: only accept known updatable fields ---
-    const ALLOWED_FIELDS = ['title', 'description', 'price', 'category', 'status', 'coverImage', 'pdfUrl', 'features'] as const
+    const ALLOWED_FIELDS = ['title', 'description', 'price', 'category', 'status', 'coverImage', 'pdfUrl', 'features', 'featured'] as const
     const updateData: Record<string, unknown> = { updatedAt: new Date() }
 
     for (const key of ALLOWED_FIELDS) {
@@ -138,6 +138,11 @@ export async function PATCH(
         return NextResponse.json({ error: 'Features must be an array of strings.' }, { status: 400 })
       }
       updateData.features = (updateData.features as string[]).map((f: string) => f.trim()).filter(Boolean).slice(0, 20)
+    }
+    if (updateData.featured !== undefined) {
+      if (typeof updateData.featured !== 'boolean') {
+        return NextResponse.json({ error: 'Featured must be a boolean.' }, { status: 400 })
+      }
     }
 
     // Validate status if present: only allow lifecycle states

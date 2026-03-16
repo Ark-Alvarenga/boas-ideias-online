@@ -9,6 +9,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PRODUCT_CATEGORIES } from "@/lib/categories";
 import { Loader2, Eye, EyeOff, Archive, Trash2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 const STATUS_LABELS: Record<string, string> = {
   active: "Publicado",
@@ -25,6 +26,7 @@ interface ProductEditFormProps {
   status: "active" | "draft" | "archived";
   views: number;
   sales: number;
+  featured?: boolean;
 }
 
 export function ProductEditForm({
@@ -36,6 +38,7 @@ export function ProductEditForm({
   status: initialStatus,
   views,
   sales,
+  featured = false,
 }: ProductEditFormProps) {
   // Auto-dismiss success messages after 4 seconds
   const showSuccess = (msg: string) => {
@@ -49,6 +52,7 @@ export function ProductEditForm({
   const [price, setPrice] = useState(initialPrice.toString());
   const [category, setCategory] = useState(initialCategory);
   const [status, setStatus] = useState<"active" | "draft" | "archived">(initialStatus);
+  const [isFeatured, setIsFeatured] = useState<boolean>(featured);
   const [isSaving, setIsSaving] = useState(false);
   const [isStatusAction, setIsStatusAction] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +73,7 @@ export function ProductEditForm({
           description,
           price: Number(price),
           category,
+          featured: isFeatured,
         }),
       });
 
@@ -80,10 +85,20 @@ export function ProductEditForm({
       }
 
       showSuccess("Alterações salvas com sucesso.");
+      toast({
+        title: "Produto atualizado",
+        description: "Suas alterações foram salvas com sucesso.",
+      });
       router.refresh();
     } catch (err) {
       console.error("Update product error", err);
-      setError("Ocorreu um erro ao salvar o produto.");
+      const message = "Ocorreu um erro ao salvar o produto.";
+      setError(message);
+      toast({
+        title: "Não foi possível salvar o produto",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -106,10 +121,20 @@ export function ProductEditForm({
       }
       setStatus("draft");
       showSuccess("Produto removido do marketplace (rascunho).");
+      toast({
+        title: "Produto despublicado",
+        description: "Seu produto agora está como rascunho.",
+      });
       router.refresh();
     } catch (err) {
       console.error("Unpublish error", err);
-      setError("Erro ao despublicar.");
+      const message = "Erro ao despublicar.";
+      setError(message);
+      toast({
+        title: "Não foi possível despublicar",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setIsStatusAction(false);
     }
@@ -133,10 +158,20 @@ export function ProductEditForm({
       }
       setStatus("archived");
       showSuccess("Produto arquivado. Não aparece mais no marketplace.");
+      toast({
+        title: "Produto arquivado",
+        description: "Seu produto não aparecerá mais no marketplace.",
+      });
       router.refresh();
     } catch (err) {
       console.error("Archive error", err);
-      setError("Erro ao arquivar.");
+      const message = "Erro ao arquivar.";
+      setError(message);
+      toast({
+        title: "Não foi possível arquivar",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setIsStatusAction(false);
     }
@@ -159,10 +194,20 @@ export function ProductEditForm({
       }
       setStatus("active");
       showSuccess("Produto republicado no marketplace.");
+      toast({
+        title: "Produto republicado",
+        description: "Seu produto voltou a aparecer no marketplace.",
+      });
       router.refresh();
     } catch (err) {
       console.error("Republish error", err);
-      setError("Erro ao republicar.");
+      const message = "Erro ao republicar.";
+      setError(message);
+      toast({
+        title: "Não foi possível republicar",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setIsStatusAction(false);
     }
@@ -185,10 +230,20 @@ export function ProductEditForm({
       }
       setStatus("active");
       showSuccess("Produto publicado no marketplace.");
+      toast({
+        title: "Produto publicado",
+        description: "Seu produto agora aparece no marketplace.",
+      });
       router.refresh();
     } catch (err) {
       console.error("Publish error", err);
-      setError("Erro ao publicar.");
+      const message = "Erro ao publicar.";
+      setError(message);
+      toast({
+        title: "Não foi possível publicar",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setIsStatusAction(false);
     }
@@ -212,11 +267,21 @@ export function ProductEditForm({
         return;
       }
       setSuccess("Produto excluído.");
+      toast({
+        title: "Produto excluído",
+        description: "Seu produto foi removido do painel.",
+      });
       router.push("/dashboard/products");
       router.refresh();
     } catch (err) {
       console.error("Delete error", err);
-      setError("Erro ao excluir o produto.");
+      const message = "Erro ao excluir o produto.";
+      setError(message);
+      toast({
+        title: "Não foi possível excluir",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setIsStatusAction(false);
     }
@@ -329,6 +394,20 @@ export function ProductEditForm({
         </p>
 
         <div className="border-t border-border/60 pt-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">
+              <span className="font-medium text-foreground">Destaque na home:</span>{" "}
+              {isFeatured ? "Sim" : "Não"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsFeatured((prev) => !prev)}
+              className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+            >
+              {isFeatured ? "Remover destaque" : "Marcar como destaque"}
+            </button>
+          </div>
+
           <p className="font-medium text-foreground">Ações</p>
           {status === "active" && (
             <>

@@ -1,4 +1,4 @@
-"use client"
+ "use client"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -12,6 +12,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PRODUCT_CATEGORIES } from "@/lib/categories"
 import { Loader2, UploadCloud } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 
 interface MeResponse {
   authenticated: boolean
@@ -131,16 +132,32 @@ export default function CreateProductPage() {
       const json = await res.json()
 
       if (!res.ok || !json.success) {
-        setError(json.error || "Falha ao enviar arquivo.")
+        const message = json.error || "Falha ao enviar arquivo."
+        setError(message)
+        toast({
+          title: "Não foi possível enviar o PDF",
+          description: message,
+          variant: "destructive",
+        })
         setIsUploading(false)
         return
       }
 
       setUploadProgress(100)
       setPdfUrl(json.url as string)
+      toast({
+        title: "PDF enviado com sucesso",
+        description: "Seu arquivo já pode ser vendido no marketplace.",
+      })
     } catch (err) {
       console.error("Upload error", err)
-      setError("Ocorreu um erro ao enviar o arquivo.")
+      const message = "Ocorreu um erro ao enviar o arquivo."
+      setError(message)
+      toast({
+        title: "Não foi possível enviar o PDF",
+        description: message,
+        variant: "destructive",
+      })
     } finally {
       setIsUploading(false)
     }
@@ -167,15 +184,31 @@ export default function CreateProductPage() {
       const json = await res.json()
 
       if (!res.ok || !json.success) {
-        setError(json.error || "Falha ao enviar capa.")
+        const message = json.error || "Falha ao enviar capa."
+        setError(message)
+        toast({
+          title: "Não foi possível enviar a capa",
+          description: message,
+          variant: "destructive",
+        })
         setIsUploading(false)
         return
       }
 
       setCoverUrl(json.url as string)
+      toast({
+        title: "Capa enviada com sucesso",
+        description: "Sua capa já será usada na listagem do marketplace.",
+      })
     } catch (err) {
       console.error("Cover upload error", err)
-      setError("Ocorreu um erro ao enviar a capa.")
+      const message = "Ocorreu um erro ao enviar a capa."
+      setError(message)
+      toast({
+        title: "Não foi possível enviar a capa",
+        description: message,
+        variant: "destructive",
+      })
     } finally {
       setIsUploading(false)
     }
@@ -233,14 +266,30 @@ export default function CreateProductPage() {
       const json = await res.json()
 
       if (!res.ok || !json.success) {
-        setError(json.error || "Não foi possível criar o produto.")
+        const message = json.error || "Não foi possível criar o produto."
+        setError(message)
+        toast({
+          title: "Não foi possível criar o produto",
+          description: message,
+          variant: "destructive",
+        })
         return
       }
 
+      toast({
+        title: "Produto criado com sucesso",
+        description: "Agora você pode gerenciar e publicar seu produto no painel.",
+      })
       router.push("/dashboard/products")
     } catch (err) {
       console.error("Create product error", err)
-      setError("Ocorreu um erro ao salvar o produto.")
+      const message = "Ocorreu um erro ao salvar o produto."
+      setError(message)
+      toast({
+        title: "Não foi possível criar o produto",
+        description: message,
+        variant: "destructive",
+      })
     } finally {
       setIsSaving(false)
     }

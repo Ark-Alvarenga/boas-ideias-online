@@ -12,6 +12,8 @@ interface ProductCardProps {
   slug?: string
   creator: string
   coverImage?: string
+  sales?: number
+  createdAt?: string | Date
 }
 
 const categoryGradients: Record<string, string> = {
@@ -23,6 +25,7 @@ const categoryGradients: Record<string, string> = {
 }
 
 export function ProductCard({ 
+  id,
   title, 
   description, 
   price, 
@@ -30,8 +33,18 @@ export function ProductCard({
   slug, 
   creator,
   coverImage,
+  sales,
+  createdAt,
 }: ProductCardProps) {
   const gradient = categoryGradients[category] || "from-gray-500/15 to-slate-500/15"
+
+  const createdAtDate =
+    typeof createdAt === "string" ? new Date(createdAt) : createdAt
+  const isNew =
+    createdAtDate instanceof Date &&
+    !Number.isNaN(createdAtDate.getTime()) &&
+    Date.now() - createdAtDate.getTime() <= 1000 * 60 * 60 * 24 * 14
+  const isPopular = typeof sales === "number" && sales >= 10
   
   return (
     <Card className="group h-full overflow-hidden border-border/50 bg-card transition-all duration-300 hover:border-border hover:shadow-lg hover:shadow-primary/5">
@@ -50,10 +63,20 @@ export function ProductCard({
             </span>
           </div>
         )}
-        <div className="absolute left-4 top-4">
+        <div className="absolute left-4 top-4 flex flex-wrap gap-2">
           <span className="inline-flex rounded-md bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
             {category}
           </span>
+          {isNew && (
+            <span className="inline-flex rounded-md bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-700 backdrop-blur-sm dark:text-emerald-400">
+              Novo
+            </span>
+          )}
+          {isPopular && (
+            <span className="inline-flex rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary backdrop-blur-sm">
+              Mais vendido
+            </span>
+          )}
         </div>
       </div>
       
@@ -68,7 +91,7 @@ export function ProductCard({
           por <span className="font-medium text-foreground">{creator}</span>
         </p>
         
-        <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4">
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-border/50 pt-4">
           <span className="text-xl font-semibold text-foreground">
             R${price}
           </span>
@@ -78,6 +101,11 @@ export function ProductCard({
               <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Link>
           </Button>
+          {typeof sales === "number" && (
+            <span className="hidden text-sm text-muted-foreground sm:inline">
+              {sales} vendas
+            </span>
+          )}
         </div>
       </CardContent>
     </Card>

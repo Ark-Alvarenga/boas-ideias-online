@@ -160,6 +160,7 @@ export async function POST(request: Request) {
       slug: finalSlug,
       creatorId,
       creatorName: user.name,
+      featured: false,
       status: productStatus,
       views: 0,
       sales: 0,

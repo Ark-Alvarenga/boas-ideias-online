@@ -1,6 +1,7 @@
 "use client"
 
-import { useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Suspense } from "react"
 import { Header } from "@/components/layout/header"
@@ -9,9 +10,62 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { CheckCircle2, Download, ArrowRight } from "lucide-react"
 
+interface OrderLookupResult {
+  success?: boolean
+  orderId?: string
+  productTitle?: string
+  error?: string
+}
+
 function PurchaseSuccessContent() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get("session_id")
+  const router = useRouter()
+
+  const [orderInfo, setOrderInfo] = useState<OrderLookupResult | null>(null)
+  const [isLoadingOrder, setIsLoadingOrder] = useState<boolean>(!!sessionId)
+
+  useEffect(() => {
+    if (!sessionId) {
+      setIsLoadingOrder(false)
+      return
+    }
+
+    let cancelled = false
+
+    const fetchOrder = async () => {
+      try {
+        const res = await fetch(`/api/orders/by-session?session_id=${encodeURIComponent(sessionId)}`, {
+          cache: "no-store",
+        })
+        const data = (await res.json()) as OrderLookupResult
+        if (cancelled) return
+        if (!res.ok || !data.success || !data.orderId) {
+          setOrderInfo({ success: false, error: data.error || "Não foi possível localizar seu pedido ainda." })
+        } else {
+          setOrderInfo(data)
+        }
+      } catch (error) {
+        console.error("Failed to resolve order by session:", error)
+        if (!cancelled) {
+          setOrderInfo({
+            success: false,
+            error: "Não foi possível localizar seu pedido ainda.",
+          })
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingOrder(false)
+        }
+      }
+    }
+
+    void fetchOrder()
+
+    return () => {
+      cancelled = true
+    }
+  }, [sessionId])
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,14 +92,26 @@ function PurchaseSuccessContent() {
                 <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
                   <div className="flex items-start gap-3">
                     <Download className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                    <div>
+                    <div className="space-y-1">
                       <p className="font-medium text-foreground">
                         Seu download está disponível
                       </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Acesse seu painel para baixar o produto. O link de download
-                        estará disponível na seção &quot;Meus produtos comprados&quot;.
-                      </p>
+                      {isLoadingOrder ? (
+                        <p className="text-sm text-muted-foreground">
+                          Localizando seu pedido e preparando o link de download...
+                        </p>
+                      ) : orderInfo?.success && orderInfo.orderId ? (
+                        <p className="text-sm text-muted-foreground">
+                          Você pode baixar diretamente agora ou acessar depois em
+                          &quot;Meus produtos comprados&quot; no painel.
+                        </p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Seu pagamento foi confirmado. Caso o link direto não apareça
+                          em instantes, você poderá baixar pelo painel em
+                          &quot;Meus produtos comprados&quot;.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -57,10 +123,19 @@ function PurchaseSuccessContent() {
                 )}
 
                 <div className="flex flex-col gap-3">
-                  <Button className="h-12 w-full" asChild>
-                    <Link href="/dashboard">
+                  {orderInfo?.success && orderInfo.orderId && (
+                    <Button
+                      className="h-12 w-full"
+                      onClick={() => router.push(`/download/${orderInfo.orderId}`)}
+                    >
                       <Download className="mr-2 h-4 w-4" />
-                      Ir para o Painel — Baixar Produto
+                      Baixar agora
+                    </Button>
+                  )}
+
+                  <Button className="h-11 w-full" variant="outline" asChild>
+                    <Link href="/dashboard">
+                      Ir para o Painel — Meus produtos comprados
                     </Link>
                   </Button>
 

@@ -1,7 +1,9 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
 import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Search, X } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -23,26 +25,60 @@ interface MarketplaceFiltersProps {
   onSearch?: (query: string) => void
   onCategoryChange?: (category: string) => void
   onSortChange?: (sort: string) => void
+  onClear?: () => void
 }
 
 export function MarketplaceFilters({ 
   onSearch,
   onCategoryChange,
-  onSortChange 
+  onSortChange,
+  onClear,
 }: MarketplaceFiltersProps) {
+  const [query, setQuery] = useState("")
+  const [category, setCategory] = useState("todos")
+  const [sort, setSort] = useState("relevancia")
+
+  const hasActiveFilters = useMemo(() => {
+    return query.trim().length > 0 || category !== "todos" || sort !== "relevancia"
+  }, [query, category, sort])
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      onSearch?.(query)
+    }, 300)
+    return () => window.clearTimeout(handle)
+  }, [query, onSearch])
+
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="relative max-w-none flex-1 sm:max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Buscar produtos..."
-          className="h-10 border-border/50 bg-background pl-10 shadow-sm"
-          onChange={(e) => onSearch?.(e.target.value)}
+          value={query}
+          className="h-10 border-border/50 bg-background pl-10 pr-10 shadow-sm"
+          onChange={(e) => setQuery(e.target.value)}
         />
+        {query.trim().length > 0 && (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
+            aria-label="Limpar busca"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
       
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Select defaultValue="todos" onValueChange={onCategoryChange}>
+        <Select
+          value={category}
+          onValueChange={(value) => {
+            setCategory(value)
+            onCategoryChange?.(value)
+          }}
+        >
           <SelectTrigger className="h-10 w-full border-border/50 bg-background shadow-sm sm:w-[180px]">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
@@ -56,7 +92,13 @@ export function MarketplaceFilters({
           </SelectContent>
         </Select>
 
-        <Select defaultValue="relevancia" onValueChange={onSortChange}>
+        <Select
+          value={sort}
+          onValueChange={(value) => {
+            setSort(value)
+            onSortChange?.(value)
+          }}
+        >
           <SelectTrigger className="h-10 w-full border-border/50 bg-background shadow-sm sm:w-[160px]">
             <SelectValue placeholder="Ordenar" />
           </SelectTrigger>
@@ -68,6 +110,25 @@ export function MarketplaceFilters({
             ))}
           </SelectContent>
         </Select>
+
+        {hasActiveFilters && (
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 w-full border-border/50 sm:w-auto"
+            onClick={() => {
+              setQuery("")
+              setCategory("todos")
+              setSort("relevancia")
+              onSearch?.("")
+              onCategoryChange?.("todos")
+              onSortChange?.("relevancia")
+              onClear?.()
+            }}
+          >
+            Limpar filtros
+          </Button>
+        )}
       </div>
     </div>
   )

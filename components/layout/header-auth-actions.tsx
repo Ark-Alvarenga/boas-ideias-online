@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { toast } from "@/hooks/use-toast"
 
 export function HeaderAuthActions({
   onLinkClick,
@@ -30,9 +31,28 @@ export function HeaderAuthActions({
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true)
-      await fetch("/api/auth/logout", { method: "POST" })
+      const res = await fetch("/api/auth/logout", { method: "POST" })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || !json.success) {
+        toast({
+          title: "Não foi possível sair",
+          description: json.error || "Tente novamente em alguns instantes.",
+          variant: "destructive",
+        })
+        setIsLoggingOut(false)
+        return
+      }
+      toast({
+        title: "Sessão encerrada",
+        description: "Você saiu da sua conta com segurança.",
+      })
       window.location.href = "/"
     } catch {
+      toast({
+        title: "Não foi possível sair",
+        description: "Tente novamente em alguns instantes.",
+        variant: "destructive",
+      })
       setIsLoggingOut(false)
     }
   }
@@ -132,9 +152,28 @@ export function HeaderAuthActionsMobile({
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true)
-      await fetch("/api/auth/logout", { method: "POST" })
+      const res = await fetch("/api/auth/logout", { method: "POST" })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || !json.success) {
+        toast({
+          title: "Não foi possível sair",
+          description: json.error || "Tente novamente em alguns instantes.",
+          variant: "destructive",
+        })
+        setIsLoggingOut(false)
+        return
+      }
+      toast({
+        title: "Sessão encerrada",
+        description: "Você saiu da sua conta com segurança.",
+      })
       window.location.href = "/"
     } catch {
+      toast({
+        title: "Não foi possível sair",
+        description: "Tente novamente em alguns instantes.",
+        variant: "destructive",
+      })
       setIsLoggingOut(false)
     }
   }
