@@ -99,7 +99,7 @@ async function handleCheckoutCompleted(
       : (typeof session.customer_email === "string" ? session.customer_email : "");
 
   if (!productId || !ObjectId.isValid(productId)) {
-    console.error("[Stripe webhook] Missing or invalid productId in metadata, sessionId:", session.id);
+    console.error(`[Stripe webhook] [${session.id}] Missing or invalid productId in metadata`);
     return;
   }
 
@@ -114,15 +114,16 @@ async function handleCheckoutCompleted(
   });
 
   if (!product) {
-    console.error("[Stripe webhook] Product not found for productId:", productId, "sessionId:", session.id);
+    console.error(`[Stripe webhook] [${session.id}] Product not found for productId:`, productId);
     return;
   }
 
-  // Idempotency: prevent duplicate orders on retried webhooks
-  const existingOrder = await ordersCollection.findOne({
+  // Final Source of Truth checks if webhook successfully processed this sale already
+  const existingSale = await salesCollection.findOne({
     stripeSessionId: session.id,
   });
-  if (existingOrder) {
+  if (existingSale) {
+    console.log(`[Stripe webhook] [${session.id}] Sale already processed`);
     return;
   }
 
@@ -135,28 +136,52 @@ async function handleCheckoutCompleted(
   // ─── Calculate Financial Split (all in cents) ───
   const totalAmountCents = resolvePriceCents(product);
 
-  // ─── Create Order ───
-  const newOrder: Order = {
-    productId: product._id!,
-    productTitle: product.title,
-    productPriceCents: totalAmountCents,
-    userId: userId && ObjectId.isValid(userId) ? new ObjectId(userId) : undefined,
-    buyerEmail: buyerEmail ?? "",
-    buyerName: typeof buyerName === "string" ? buyerName : "Cliente",
-    status: "paid",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+  // ─── Ensure Order Exists Safely ───
+  let orderId: ObjectId;
+  const existingOrder = await ordersCollection.findOne({
     stripeSessionId: session.id,
-    stripePaymentIntentId: paymentIntentId,
-  };
+  });
 
-  const insertResult = await ordersCollection.insertOne(newOrder);
-  const orderId = insertResult.insertedId;
+  if (existingOrder) {
+    orderId = existingOrder._id!;
+    console.log(`[Stripe webhook] [${session.id}] Recovering from partial failure, order already exists:`, orderId.toString());
+  } else {
+    const newOrder: Order = {
+      productId: product._id!,
+      productTitle: product.title,
+      productPriceCents: totalAmountCents,
+      userId: userId && ObjectId.isValid(userId) ? new ObjectId(userId) : undefined,
+      buyerEmail: buyerEmail ?? "",
+      buyerName: typeof buyerName === "string" ? buyerName : "Cliente",
+      status: "paid",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      stripeSessionId: session.id,
+      stripePaymentIntentId: paymentIntentId,
+    };
 
-  await productsCollection.updateOne(
-    { _id: product._id },
-    { $inc: { sales: 1 } },
-  );
+    try {
+      const insertResult = await ordersCollection.insertOne(newOrder);
+      orderId = insertResult.insertedId;
+
+      await productsCollection.updateOne(
+        { _id: product._id },
+        { $inc: { sales: 1 } },
+      );
+    } catch (err: any) {
+      if (err.code === 11000) {
+        // Safe racing: ignore duplicate keys if multiple webhooks hit simultaneously
+        const raceOrder = await ordersCollection.findOne({ stripeSessionId: session.id });
+        if (raceOrder) {
+          orderId = raceOrder._id!;
+        } else {
+          throw err;
+        }
+      } else {
+        throw err;
+      }
+    }
+  }
 
   // ─── Finish Financial Split ───
   const platformFeePercent = Math.min(
@@ -202,7 +227,7 @@ async function handleCheckoutCompleted(
     }
   }
 
-  const creatorShareCents = totalAmountCents - platformFeeCents - affiliateShareCents;
+  const creatorShareCents = Math.max(0, totalAmountCents - platformFeeCents - affiliateShareCents);
 
   // Resolve creator
   const creatorId = creatorIdStr && ObjectId.isValid(creatorIdStr)
@@ -215,7 +240,7 @@ async function handleCheckoutCompleted(
   const sale: Sale = {
     orderId,
     productId: product._id!,
-    buyerId: userId && ObjectId.isValid(userId) ? new ObjectId(userId) : new ObjectId(),
+    buyerId: userId && ObjectId.isValid(userId) ? new ObjectId(userId) : undefined,
     creatorId,
     affiliateUserId: affiliateRecord ? new ObjectId(affiliateUserId!) : undefined,
     totalAmountCents,
@@ -237,21 +262,26 @@ async function handleCheckoutCompleted(
   // Transfer to creator
   if (creator?.stripeAccountId && creatorShareCents > 0) {
     try {
-      const creatorTransfer = await stripeClient.transfers.create({
-        amount: creatorShareCents,
-        currency: "brl",
-        destination: creator.stripeAccountId,
-        transfer_group: session.id,
-        metadata: {
-          saleType: "creator",
-          orderId: orderId.toString(),
-          productId: product._id!.toString(),
+      const creatorTransfer = await stripeClient.transfers.create(
+        {
+          amount: creatorShareCents,
+          currency: "brl",
+          destination: creator.stripeAccountId,
+          transfer_group: session.id,
+          metadata: {
+            saleType: "creator",
+            orderId: orderId.toString(),
+            productId: product._id!.toString(),
+          },
         },
-      });
+        {
+          idempotencyKey: `transfer_creator_${session.id}`,
+        }
+      );
       sale.stripeTransferIdCreator = creatorTransfer.id;
       sale.creatorPayoutStatus = "paid";
     } catch (err) {
-      console.error("[Stripe webhook] Creator transfer failed:", err);
+      console.error(`[Stripe webhook] [${session.id}] [REQUIRES_MANUAL_INTERVENTION] Creator transfer failed:`, err);
       // Sale is still recorded — transfer can be retried later
       sale.creatorPayoutStatus = "pending";
     }
@@ -267,29 +297,42 @@ async function handleCheckoutCompleted(
     affiliateUser?.stripeOnboardingComplete
   ) {
     try {
-      const affiliateTransfer = await stripeClient.transfers.create({
-        amount: affiliateShareCents,
-        currency: "brl",
-        destination: affiliateUser.stripeAccountId,
-        transfer_group: session.id,
-        metadata: {
-          saleType: "affiliate",
-          orderId: orderId.toString(),
-          productId: product._id!.toString(),
-          affiliateUserId: affiliateUserId!,
+      const affiliateTransfer = await stripeClient.transfers.create(
+        {
+          amount: affiliateShareCents,
+          currency: "brl",
+          destination: affiliateUser.stripeAccountId,
+          transfer_group: session.id,
+          metadata: {
+            saleType: "affiliate",
+            orderId: orderId.toString(),
+            productId: product._id!.toString(),
+            affiliateUserId: affiliateUserId!,
+          },
         },
-      });
+        {
+          idempotencyKey: `transfer_affiliate_${session.id}`,
+        }
+      );
       sale.stripeTransferIdAffiliate = affiliateTransfer.id;
       sale.affiliatePayoutStatus = "paid";
       sale.affiliatePaidAt = new Date();
     } catch (err) {
-      console.error("[Stripe webhook] Affiliate transfer failed:", err);
+      console.error(`[Stripe webhook] [${session.id}] [REQUIRES_MANUAL_INTERVENTION] Affiliate transfer failed:`, err);
       // Mark as pending so it can be retried later
       sale.affiliatePayoutStatus = "pending";
     }
   }
 
-  await salesCollection.insertOne(sale);
+  try {
+    await salesCollection.insertOne(sale);
+  } catch (err: any) {
+    if (err.code === 11000) {
+      console.log(`[Stripe webhook] [${session.id}] Race condition prevented: Sale already exists`);
+      return;
+    }
+    throw err;
+  }
 
   // Link sale back to order
   await ordersCollection.updateOne(
@@ -313,7 +356,7 @@ async function handleCheckoutCompleted(
     await affiliateSalesCollection.insertOne(saleDoc);
   }
 
-  console.log("[Stripe webhook] Sale recorded:", JSON.stringify({
+  console.log(`[Stripe webhook] [${session.id}] Sale recorded:`, JSON.stringify({
     orderId: orderId.toString(),
     saleId: sale._id?.toString(),
     totalAmountCents,

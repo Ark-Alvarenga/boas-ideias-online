@@ -93,7 +93,7 @@ export interface Sale {
   _id?: ObjectId
   orderId: ObjectId
   productId: ObjectId
-  buyerId: ObjectId
+  buyerId?: ObjectId
   creatorId: ObjectId
   affiliateUserId?: ObjectId
 
