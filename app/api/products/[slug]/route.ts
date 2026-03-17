@@ -4,6 +4,8 @@ import { cookies } from 'next/headers'
 import { authConfig, verifySessionToken } from '@/lib/auth'
 import { ObjectId } from 'mongodb'
 import type { Product, Order } from '@/lib/types'
+import { productUpdateSchema } from '@/lib/schema'
+import { resolvePriceCents } from '@/lib/currency'
 
 interface RouteContext {
   params: Promise<{ slug: string }> | { slug: string }
@@ -54,12 +56,17 @@ export async function GET(
     return NextResponse.json({
       product: {
         ...product,
+        priceCents: resolvePriceCents(product),
         _id: product._id?.toString(),
       },
-      relatedProducts: relatedProducts.map((related) => ({
-        ...related,
-        _id: related._id?.toString(),
-      })),
+      relatedProducts: relatedProducts.map((related) => {
+        const { price, ...rest } = related;
+        return {
+          ...rest,
+          priceCents: resolvePriceCents(related),
+          _id: related._id?.toString(),
+        };
+      }),
     })
   } catch (error) {
     console.error('Error fetching product:', error)
@@ -101,73 +108,19 @@ export async function PATCH(
         { status: 401 },
       )
     }
-    const body = await request.json()
-
-    // --- Field allowlist: only accept known updatable fields ---
-    const ALLOWED_FIELDS = ['title', 'description', 'price', 'category', 'status', 'coverImage', 'pdfUrl', 'features', 'featured', 'affiliateEnabled', 'affiliateCommissionPercent'] as const
-    const updateData: Record<string, unknown> = { updatedAt: new Date() }
-
-    for (const key of ALLOWED_FIELDS) {
-      if (body[key] !== undefined) {
-        updateData[key] = body[key]
-      }
+    const rawBody = await request.json()
+    
+    const parseResult = productUpdateSchema.safeParse(rawBody)
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid product data', details: parseResult.error.errors },
+        { status: 400 }
+      )
     }
 
-    // Sanitize specific fields
-    if (typeof updateData.title === 'string') {
-      updateData.title = updateData.title.trim().slice(0, 200)
-      if (updateData.title === '') {
-        return NextResponse.json({ error: 'Title cannot be empty.' }, { status: 400 })
-      }
-    }
-    if (typeof updateData.description === 'string') {
-      updateData.description = updateData.description.trim().slice(0, 5000)
-    }
-    if (updateData.price !== undefined) {
-      const numPrice = Number(updateData.price)
-      if (isNaN(numPrice) || numPrice < 0) {
-        return NextResponse.json({ error: 'Invalid price.' }, { status: 400 })
-      }
-      updateData.price = numPrice
-    }
-    if (typeof updateData.category === 'string') {
-      updateData.category = updateData.category.trim().slice(0, 100)
-    }
-    if (updateData.features !== undefined) {
-      if (!Array.isArray(updateData.features) || !updateData.features.every((f: unknown) => typeof f === 'string')) {
-        return NextResponse.json({ error: 'Features must be an array of strings.' }, { status: 400 })
-      }
-      updateData.features = (updateData.features as string[]).map((f: string) => f.trim()).filter(Boolean).slice(0, 20)
-    }
-    if (updateData.featured !== undefined) {
-      if (typeof updateData.featured !== 'boolean') {
-        return NextResponse.json({ error: 'Featured must be a boolean.' }, { status: 400 })
-      }
-    }
-
-    // Validate status if present: only allow lifecycle states
-    const allowedStatuses = ['draft', 'active', 'archived'] as const
-    if (updateData.status !== undefined) {
-      if (!allowedStatuses.includes(updateData.status as typeof allowedStatuses[number])) {
-        return NextResponse.json(
-          { error: 'Invalid status. Allowed: draft, active, archived.' },
-          { status: 400 }
-        )
-      }
-    }
-
-    // Validate affiliate fields
-    if (updateData.affiliateEnabled !== undefined) {
-      if (typeof updateData.affiliateEnabled !== 'boolean') {
-        return NextResponse.json({ error: 'affiliateEnabled must be a boolean.' }, { status: 400 })
-      }
-    }
-    if (updateData.affiliateCommissionPercent !== undefined) {
-      const pct = Number(updateData.affiliateCommissionPercent)
-      if (isNaN(pct) || pct < 1 || pct > 50) {
-        return NextResponse.json({ error: 'Affiliate commission must be between 1% and 50%.' }, { status: 400 })
-      }
-      updateData.affiliateCommissionPercent = pct
+    const updateData: Record<string, unknown> = { 
+      ...parseResult.data, 
+      updatedAt: new Date() 
     }
 
     const db = await getDatabase()

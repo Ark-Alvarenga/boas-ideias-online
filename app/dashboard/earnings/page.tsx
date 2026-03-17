@@ -52,7 +52,7 @@ export default async function EarningsPage() {
     })
     .toArray()
 
-  const totalSalesCents = orders.reduce((sum, o) => sum + o.productPrice * 100, 0)
+  const totalSalesCents = orders.reduce((sum, o) => sum + o.productPriceCents, 0)
   const totalSales = totalSalesCents / 100
   const platformFeePercent = Math.min(
     100,

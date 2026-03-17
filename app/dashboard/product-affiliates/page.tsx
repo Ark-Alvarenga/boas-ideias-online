@@ -43,8 +43,8 @@ export default async function ProductAffiliatesPage() {
     .sort({ createdAt: -1 })
     .toArray()
 
-  const totalRevenue = sales.reduce((s, x) => s + x.saleAmount, 0)
-  const totalCommission = sales.reduce((s, x) => s + x.commissionAmount, 0)
+  const totalRevenue = sales.reduce((s, x) => s + x.saleAmountCents, 0) / 100
+  const totalCommission = sales.reduce((s, x) => s + x.commissionAmountCents, 0) / 100
   const affiliateUserIds = [...new Set(sales.map((x) => x.affiliateUserId.toString()))]
   const productIds = [...new Set(sales.map((x) => x.productId.toString()))]
 
@@ -66,9 +66,9 @@ export default async function ProductAffiliatesPage() {
   const byAffiliate = sales.reduce(
     (acc, sale) => {
       const id = sale.affiliateUserId.toString()
-      if (!acc[id]) acc[id] = { sales: 0, commission: 0 }
-      acc[id].sales += sale.saleAmount
-      acc[id].commission += sale.commissionAmount
+      if (!acc[id]) acc[id] = { sales: 0, commission: 0, count: 0 }
+      acc[id].sales += sale.saleAmountCents / 100
+      acc[id].commission += sale.commissionAmountCents / 100
       acc[id].count = (acc[id].count ?? 0) + 1
       return acc
     },

@@ -6,7 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { ProductCard } from "@/components/marketplace/product-card";
 import type { Product } from "@/lib/types";
 
-interface ApiProduct extends Product {
+interface ApiProduct extends Omit<Product, "_id" | "creatorName"> {
   _id?: string;
   creatorName?: string;
 }
@@ -88,7 +88,7 @@ export default function ProductsPage() {
                     id={product._id?.toString() ?? product.slug}
                     title={product.title}
                     description={product.description}
-                    price={product.price}
+                    priceCents={product.priceCents}
                     category={product.category}
                     slug={product.slug}
                     creator={product.creatorName ?? "Criador(a)"}

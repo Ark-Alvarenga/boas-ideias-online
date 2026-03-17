@@ -5,6 +5,8 @@ import type { Product, User, Affiliate } from '@/lib/types'
 import { authConfig, verifySessionToken } from '@/lib/auth'
 import { AFFILIATE_REF_COOKIE } from '@/lib/affiliate'
 import { getStripe } from '@/lib/stripe'
+import { checkoutSchema } from '@/lib/schema'
+import { resolvePriceCents } from '@/lib/currency'
 import { cookies } from 'next/headers'
 import { ObjectId } from 'mongodb'
 
@@ -16,15 +18,17 @@ interface CheckoutBody {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as CheckoutBody
-    const { productId, buyerEmail, buyerName } = body
+    const rawBody = await request.json()
+    const parseResult = checkoutSchema.safeParse(rawBody)
 
-    if (!productId) {
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: 'Missing productId' },
+        { error: 'Invalid checkout data', details: parseResult.error.errors },
         { status: 400 },
       )
     }
+
+    const { productId, buyerEmail, buyerName } = parseResult.data
 
     const db = await getDatabase()
     const productsCollection = db.collection<Product>('products')
@@ -124,7 +128,14 @@ export async function POST(request: Request) {
       'http://localhost:3000'
 
     const stripeClient = getStripe()
-    const unitAmountCents = Math.round(product.price * 100)
+    const unitAmountCents = resolvePriceCents(product)
+
+    if (unitAmountCents <= 0) {
+      return NextResponse.json(
+        { error: 'Invalid product price' },
+        { status: 400 },
+      )
+    }
 
     // Separate Charges and Transfers model:
     // Platform collects 100% of the payment.

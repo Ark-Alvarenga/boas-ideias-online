@@ -17,7 +17,8 @@ export interface Product {
   _id?: ObjectId
   title: string
   description: string
-  price: number
+  price?: number // Deprecated: legacy float
+  priceCents: number // New: strict integer cents
   coverImage?: string
   pdfUrl?: string
   slug: string
@@ -62,8 +63,10 @@ export interface AffiliateSale {
   orderId: ObjectId
   affiliateUserId: ObjectId
   creatorUserId: ObjectId
-  saleAmount: number
-  commissionAmount: number
+  saleAmount?: number // Deprecated
+  commissionAmount?: number // Deprecated
+  saleAmountCents: number
+  commissionAmountCents: number
   createdAt: Date
 }
 
@@ -71,7 +74,8 @@ export interface Order {
   _id?: ObjectId
   productId: ObjectId
   productTitle: string
-  productPrice: number
+  productPrice?: number // Deprecated
+  productPriceCents: number
   userId?: ObjectId
   buyerEmail: string
   buyerName: string
@@ -119,7 +123,7 @@ export interface Sale {
 export interface CreateProductInput {
   title: string
   description: string
-  price: number
+  priceCents: number
   category: string
   coverImage?: string
   pdfUrl?: string

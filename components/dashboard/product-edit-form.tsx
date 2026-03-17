@@ -21,7 +21,7 @@ interface ProductEditFormProps {
   slug: string;
   initialTitle: string;
   initialDescription: string;
-  initialPrice: number;
+  initialPriceCents: number;
   initialCategory: string;
   status: "active" | "draft" | "archived";
   views: number;
@@ -33,7 +33,7 @@ export function ProductEditForm({
   slug,
   initialTitle,
   initialDescription,
-  initialPrice,
+  initialPriceCents,
   initialCategory,
   status: initialStatus,
   views,
@@ -49,7 +49,7 @@ export function ProductEditForm({
   const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
-  const [price, setPrice] = useState(initialPrice.toString());
+  const [price, setPrice] = useState((initialPriceCents / 100).toFixed(2));
   const [category, setCategory] = useState(initialCategory);
   const [status, setStatus] = useState<"active" | "draft" | "archived">(initialStatus);
   const [isFeatured, setIsFeatured] = useState<boolean>(featured);
@@ -71,7 +71,7 @@ export function ProductEditForm({
         body: JSON.stringify({
           title,
           description,
-          price: Number(price),
+          priceCents: Math.round(Number(price) * 100),
           category,
           featured: isFeatured,
         }),

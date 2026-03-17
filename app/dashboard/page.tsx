@@ -138,7 +138,7 @@ export default async function DashboardPage() {
             title: product.title,
             description: product.description,
             coverImage: product.coverImage,
-            price: product.price,
+            priceCents: product.priceCents,
             status: product.status,
           }))}
         />

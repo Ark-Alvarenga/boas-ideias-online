@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { formatCentsToBRL } from "@/lib/currency"
 
 interface Product {
   _id?: string
@@ -8,7 +9,7 @@ interface Product {
   title: string
   description: string
   coverImage?: string
-  price: number
+  priceCents: number
   status: "active" | "draft" | "archived"
 }
 
@@ -73,7 +74,7 @@ export function ProductsPreview({ products }: { products: Product[] }) {
                   </h3>
 
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>R${product.price}</span>
+                    <span>R${formatCentsToBRL(product.priceCents)}</span>
 
                     <span className="rounded-full bg-muted px-2 py-0.5">
                       {product.status === "active"

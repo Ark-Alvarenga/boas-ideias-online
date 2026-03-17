@@ -205,7 +205,7 @@ function MarketplaceContent() {
                     id={product._id?.toString() ?? product.slug}
                     title={product.title}
                     description={product.description}
-                    price={product.price}
+                    priceCents={product.priceCents}
                     category={product.category}
                     slug={product.slug}
                     creator={product.creatorName ?? "Criador(a)"}

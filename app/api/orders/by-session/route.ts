@@ -6,6 +6,7 @@ import { getDatabase } from '@/lib/mongodb'
 import type { Order, Product } from '@/lib/types'
 import { authConfig, verifySessionToken } from '@/lib/auth'
 import { getStripe } from '@/lib/stripe'
+import { resolvePriceCents } from '@/lib/currency'
 
 // GET /api/orders/by-session?session_id=cs_...
 // Returns (or lazily creates) the current user's paid order for a given Stripe Checkout session.
@@ -114,7 +115,7 @@ export async function GET(request: Request) {
     const newOrder: Order = {
       productId: product._id!,
       productTitle: product.title,
-      productPrice: product.price,
+      productPriceCents: resolvePriceCents(product),
       userId: currentUserId,
       buyerEmail,
       buyerName,

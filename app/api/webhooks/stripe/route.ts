@@ -4,6 +4,7 @@ import type StripeType from "stripe";
 import { getDatabase } from "@/lib/mongodb";
 import type { Order, Product, Affiliate, AffiliateSale, Sale, User } from "@/lib/types";
 import { getStripe } from "@/lib/stripe";
+import { resolvePriceCents } from "@/lib/currency";
 import { ObjectId } from "mongodb";
 
 export async function POST(request: NextRequest) {
@@ -131,11 +132,14 @@ async function handleCheckoutCompleted(
       ? session.payment_intent
       : (session.payment_intent as any)?.id ?? "";
 
+  // ─── Calculate Financial Split (all in cents) ───
+  const totalAmountCents = resolvePriceCents(product);
+
   // ─── Create Order ───
   const newOrder: Order = {
     productId: product._id!,
     productTitle: product.title,
-    productPrice: product.price,
+    productPriceCents: totalAmountCents,
     userId: userId && ObjectId.isValid(userId) ? new ObjectId(userId) : undefined,
     buyerEmail: buyerEmail ?? "",
     buyerName: typeof buyerName === "string" ? buyerName : "Cliente",
@@ -154,8 +158,7 @@ async function handleCheckoutCompleted(
     { $inc: { sales: 1 } },
   );
 
-  // ─── Calculate Financial Split (all in cents) ───
-  const totalAmountCents = Math.round(product.price * 100);
+  // ─── Finish Financial Split ───
   const platformFeePercent = Math.min(
     100,
     Math.max(0, Number(process.env.PLATFORM_FEE_PERCENT) || 0),
@@ -303,8 +306,8 @@ async function handleCheckoutCompleted(
       orderId,
       affiliateUserId: affiliateRecord.userId,
       creatorUserId: product.creatorId,
-      saleAmount: product.price,
-      commissionAmount: affiliateShareCents / 100,
+      saleAmountCents: totalAmountCents,
+      commissionAmountCents: affiliateShareCents,
       createdAt: new Date(),
     };
     await affiliateSalesCollection.insertOne(saleDoc);

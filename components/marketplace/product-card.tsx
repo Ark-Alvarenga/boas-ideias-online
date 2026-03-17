@@ -2,12 +2,13 @@ import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
+import { formatCentsToBRL } from "@/lib/currency"
 
 interface ProductCardProps {
   id: string
   title: string
   description: string
-  price: number
+  priceCents: number
   category: string
   slug?: string
   creator: string
@@ -28,7 +29,7 @@ export function ProductCard({
   id,
   title, 
   description, 
-  price, 
+  priceCents, 
   category, 
   slug, 
   creator,
@@ -93,7 +94,7 @@ export function ProductCard({
         
         <div className="mt-4 flex items-center justify-between gap-3 border-t border-border/50 pt-4">
           <span className="text-xl font-semibold text-foreground">
-            R${price}
+            R${formatCentsToBRL(priceCents)}
           </span>
           <Button size="sm" variant="ghost" className="min-h-[44px] text-primary hover:text-primary" asChild>
             <Link href={`/produto/${slug || id}`}>

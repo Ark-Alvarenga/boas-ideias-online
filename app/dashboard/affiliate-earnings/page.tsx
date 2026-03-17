@@ -44,15 +44,15 @@ export default async function AffiliateEarningsPage() {
       .collection<AffiliateSale>("affiliateSales")
       .aggregate<{ total: number }>([
         { $match: { affiliateId: { $in: affiliateIds } } },
-        { $group: { _id: null, total: { $sum: "$commissionAmount" } } },
+        { $group: { _id: null, total: { $sum: "$commissionAmountCents" } } },
       ])
       .toArray()
-      .then((r) => r[0]?.total ?? 0),
+      .then((r) => (r[0]?.total ?? 0) / 100),
     db
       .collection<AffiliateSale>("affiliateSales")
-      .aggregate<{ productId: ObjectId; count: number; total: number }>([
+      .aggregate<{ _id: ObjectId; count: number; total: number }>([
         { $match: { affiliateId: { $in: affiliateIds } } },
-        { $group: { _id: "$productId", count: { $sum: 1 }, total: { $sum: "$commissionAmount" } } },
+        { $group: { _id: "$productId", count: { $sum: 1 }, total: { $sum: "$commissionAmountCents" } } },
         { $sort: { total: -1 } },
         { $limit: 5 },
       ])
@@ -68,7 +68,7 @@ export default async function AffiliateEarningsPage() {
   const topProductsWithNames = topProducts.map((p) => ({
     title: productsById.get(p._id.toString())?.title ?? "Produto",
     sales: p.count,
-    earnings: p.total,
+    earnings: p.total / 100,
   }))
 
   const conversionRate = totalClicks > 0 ? ((totalSales / totalClicks) * 100).toFixed(1) : "0"

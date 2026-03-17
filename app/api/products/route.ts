@@ -4,6 +4,8 @@ import { ObjectId } from 'mongodb'
 import type { Product, CreateProductInput, User } from '@/lib/types'
 import { cookies } from 'next/headers'
 import { authConfig, verifySessionToken } from '@/lib/auth'
+import { productCreateSchema } from '@/lib/schema'
+import { resolvePriceCents } from '@/lib/currency'
 
 // GET /api/products - List all products
 export async function GET(request: Request) {
@@ -65,11 +67,15 @@ export async function GET(request: Request) {
       .limit(limit)
       .toArray()
 
-    const products = rawProducts.map((product) => ({
-      ...product,
-      _id: product._id?.toString(),
-      creatorName: product.creatorName,
-    }))
+    const products = rawProducts.map((product) => {
+      const { price, ...rest } = product
+      return {
+        ...rest,
+        priceCents: resolvePriceCents(product),
+        _id: product._id?.toString(),
+        creatorName: product.creatorName,
+      }
+    })
 
     const total = await collection.countDocuments(query)
 
@@ -90,15 +96,18 @@ export async function GET(request: Request) {
 // POST /api/products - Create a new product
 export async function POST(request: Request) {
   try {
-    const body: CreateProductInput = await request.json()
+    const rawBody = await request.json()
+    const parseResult = productCreateSchema.safeParse(rawBody)
     
     // Validate required fields
-    if (!body.title || !body.description || !body.price || !body.category) {
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Invalid product data', details: parseResult.error.errors },
         { status: 400 }
       )
     }
+
+    const body = parseResult.data
 
     const db = await getDatabase()
     const productsCollection = db.collection<Product>('products')
@@ -152,7 +161,7 @@ export async function POST(request: Request) {
     const newProduct: Product = {
       title: body.title,
       description: body.description,
-      price: body.price,
+      priceCents: body.priceCents,
       category: body.category,
       coverImage: body.coverImage,
       pdfUrl: body.pdfUrl,

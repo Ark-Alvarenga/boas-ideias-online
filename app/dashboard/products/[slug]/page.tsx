@@ -9,6 +9,7 @@ import { getDatabase } from "@/lib/mongodb"
 import type { Product, User } from "@/lib/types"
 import { ObjectId } from "mongodb"
 import { ProductEditForm } from "@/components/dashboard/product-edit-form"
+import { resolvePriceCents } from "@/lib/currency"
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies()
@@ -94,7 +95,7 @@ export default async function DashboardProductDetailPage({
               slug={product.slug}
               initialTitle={product.title}
               initialDescription={product.description}
-              initialPrice={product.price}
+              initialPriceCents={resolvePriceCents(product)}
               initialCategory={product.category}
               status={product.status}
               views={product.views}
