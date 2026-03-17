@@ -171,21 +171,21 @@ export default function CreateProductPage() {
     setError(null)
 
     try {
-      const formData = new FormData()
-      formData.append("file", pdfFile)
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
+      // Step 1: Get the presigned URL
+      const urlParams = new URLSearchParams({
+        filename: pdfFile.name,
+        contentType: pdfFile.type,
+        size: pdfFile.size.toString(),
       })
 
-      const json = await res.json()
+      const presignRes = await fetch(`/api/upload-url?${urlParams.toString()}`)
+      const presignData = await presignRes.json()
 
-      if (!res.ok || !json.success) {
-        const message = json.error || "Falha ao enviar arquivo."
+      if (!presignRes.ok || !presignData.success) {
+        const message = presignData.error || "Falha ao obter URL de upload."
         setError(message)
         toast({
-          title: "Não foi possível enviar o PDF",
+          title: "Erro de Servidor",
           description: message,
           variant: "destructive",
         })
@@ -193,8 +193,40 @@ export default function CreateProductPage() {
         return
       }
 
+      setUploadProgress(30)
+      const { url, publicUrl } = presignData
+
+      // Step 2: Upload directly to S3 via the presigned URL
+      // We use XMLHttpRequest here to be able to track upload progress accurately
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        
+        xhr.upload.addEventListener("progress", (event) => {
+          if (event.lengthComputable) {
+            // progress from 30% to 100%
+            const percentComplete = 30 + Math.round((event.loaded / event.total) * 70)
+            setUploadProgress(percentComplete)
+          }
+        })
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve()
+          } else {
+            reject(new Error(`S3 upload failed with status ${xhr.status}`))
+          }
+        })
+
+        xhr.addEventListener("error", () => reject(new Error("Network error during S3 upload")))
+        xhr.addEventListener("abort", () => reject(new Error("Upload aborted")))
+
+        xhr.open("PUT", url, true)
+        xhr.setRequestHeader("Content-Type", pdfFile.type)
+        xhr.send(pdfFile)
+      })
+
       setUploadProgress(100)
-      setPdfUrl(json.url as string)
+      setPdfUrl(publicUrl)
       toast({
         title: "PDF enviado com sucesso",
         description: "Seu arquivo já pode ser vendido no marketplace.",
