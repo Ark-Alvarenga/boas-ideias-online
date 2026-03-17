@@ -118,8 +118,15 @@ export async function PATCH(
       )
     }
 
+    const parsed = parseResult.data
+
+    // Affiliate safety: if disabled, force commission to 0
+    if (parsed.affiliateEnabled === false) {
+      parsed.affiliateCommissionPercent = 0
+    }
+
     const updateData: Record<string, unknown> = { 
-      ...parseResult.data, 
+      ...parsed, 
       updatedAt: new Date() 
     }
 

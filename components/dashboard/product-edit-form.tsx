@@ -1,22 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PRODUCT_CATEGORIES } from "@/lib/categories";
+import { productUpdateSchema } from "@/lib/schema";
+import { useFormValidation, type FieldStatus } from "@/hooks/use-form-validation";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Eye, EyeOff, Archive, Trash2 } from "lucide-react";
+import { Loader2, Eye, Archive, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const STATUS_LABELS: Record<string, string> = {
   active: "Publicado",
   draft: "Rascunho",
   archived: "Arquivado",
 };
+
+/** Returns border class based on field validation status */
+function borderClass(status: FieldStatus | undefined): string {
+  if (status === "invalid") return "border-red-500 focus-visible:ring-red-500/30";
+  if (status === "valid") return "border-green-500 focus-visible:ring-green-500/30";
+  return "border-border/50";
+}
 
 interface ProductEditFormProps {
   slug: string;
@@ -43,7 +53,7 @@ export function ProductEditForm({
   sales,
   featured = false,
   affiliateEnabled = false,
-  affiliateCommissionPercent = 30,
+  affiliateCommissionPercent = 20,
 }: ProductEditFormProps) {
   // Auto-dismiss success messages after 4 seconds
   const showSuccess = (msg: string) => {
@@ -65,11 +75,89 @@ export function ProductEditForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const {
+    fieldErrors,
+    fieldStatus,
+    validateField,
+    setServerErrors,
+    clearFieldError,
+    hasErrors,
+  } = useFormValidation<{
+    title?: string;
+    description?: string;
+    priceCents?: number;
+    category?: string;
+    affiliateCommissionPercent?: number;
+  }>(productUpdateSchema);
+
+  const handleValidateField = useCallback(
+    (field: string, value: unknown) => {
+      if (field === "price") {
+        const cents = value ? Math.round(Number(value) * 100) : undefined;
+        validateField("priceCents", cents);
+      } else {
+        validateField(field as "title" | "description" | "category" | "affiliateCommissionPercent", value);
+      }
+    },
+    [validateField],
+  );
+
+  const handleAffiliateToggle = useCallback(
+    (enabled: boolean) => {
+      setIsAffiliateEnabled(enabled);
+      if (!enabled) {
+        // When disabling affiliate, force commission to 0 and clear errors
+        setCommissionPercent(0);
+        clearFieldError("affiliateCommissionPercent");
+      } else {
+        // When enabling, set a sensible default
+        setCommissionPercent(20);
+        validateField("affiliateCommissionPercent", 20);
+      }
+    },
+    [clearFieldError, validateField],
+  );
+
+  const handleCommissionChange = useCallback(
+    (value: string) => {
+      // Clamp to 0–50
+      let num = Number(value);
+      if (isNaN(num)) num = 0;
+      num = Math.min(50, Math.max(0, num));
+      setCommissionPercent(num);
+      validateField("affiliateCommissionPercent", num);
+    },
+    [validateField],
+  );
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsSaving(true);
     setError(null);
     setSuccess(null);
+
+    // Client-side validation before submitting
+    const priceCents = Math.round(Number(price) * 100);
+    let hasClientErrors = false;
+
+    if (!validateField("title", title)) hasClientErrors = true;
+    if (!validateField("description", description)) hasClientErrors = true;
+    if (!validateField("priceCents", priceCents)) hasClientErrors = true;
+    if (!validateField("category", category)) hasClientErrors = true;
+
+    if (isAffiliateEnabled) {
+      if (!validateField("affiliateCommissionPercent", commissionPercent)) hasClientErrors = true;
+    }
+
+    if (hasClientErrors) {
+      setIsSaving(false);
+      toast({
+        title: "Corrija os erros antes de continuar",
+        description: "Verifique os campos destacados em vermelho.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const res = await fetch(`/api/products/${slug}`, {
@@ -78,18 +166,28 @@ export function ProductEditForm({
         body: JSON.stringify({
           title,
           description,
-          priceCents: Math.round(Number(price) * 100),
+          priceCents,
           category,
           featured: isFeatured,
           affiliateEnabled: isAffiliateEnabled,
-          affiliateCommissionPercent: commissionPercent,
+          affiliateCommissionPercent: isAffiliateEnabled ? commissionPercent : 0,
         }),
       });
 
       const json = await res.json();
 
       if (!res.ok || !json.success) {
-        setError(json.error || "Não foi possível salvar as alterações.");
+        // Map server errors to fields
+        if (json.details && Array.isArray(json.details)) {
+          setServerErrors(json.details);
+          toast({
+            title: "Corrija os erros antes de continuar",
+            description: "O servidor retornou erros de validação.",
+            variant: "destructive",
+          });
+        } else {
+          setError(json.error || "Não foi possível salvar as alterações.");
+        }
         return;
       }
 
@@ -296,34 +394,55 @@ export function ProductEditForm({
     }
   };
 
+  // Suppress unused variable lint – kept for potential future use
+  void handleUnpublish;
+
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr,1.2fr] lg:gap-10">
       <div>
         <FieldGroup>
-          <Field>
+          <Field data-invalid={fieldStatus.title === "invalid" || undefined}>
             <FieldLabel htmlFor="title">Título</FieldLabel>
             <Input
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="h-11 border-border/50 bg-background"
+              onChange={(e) => {
+                setTitle(e.target.value);
+                handleValidateField("title", e.target.value);
+              }}
+              onBlur={() => handleValidateField("title", title)}
+              className={cn("h-11 bg-background", borderClass(fieldStatus.title))}
               required
             />
+            {fieldErrors.title ? (
+              <FieldError>{fieldErrors.title}</FieldError>
+            ) : (
+              <FieldDescription>Mínimo de 3 caracteres</FieldDescription>
+            )}
           </Field>
 
-          <Field>
+          <Field data-invalid={fieldStatus.description === "invalid" || undefined}>
             <FieldLabel htmlFor="description">Descrição</FieldLabel>
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="min-h-32 border-border/50 bg-background"
+              onChange={(e) => {
+                setDescription(e.target.value);
+                handleValidateField("description", e.target.value);
+              }}
+              onBlur={() => handleValidateField("description", description)}
+              className={cn("min-h-32 bg-background", borderClass(fieldStatus.description))}
               required
             />
+            {fieldErrors.description ? (
+              <FieldError>{fieldErrors.description}</FieldError>
+            ) : (
+              <FieldDescription>Mínimo de 10 caracteres</FieldDescription>
+            )}
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field>
+            <Field data-invalid={fieldStatus.priceCents === "invalid" || undefined}>
               <FieldLabel htmlFor="price">Preço (R$)</FieldLabel>
               <Input
                 id="price"
@@ -331,20 +450,32 @@ export function ProductEditForm({
                 min={0}
                 step="0.01"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="h-11 border-border/50 bg-background"
+                onChange={(e) => {
+                  setPrice(e.target.value);
+                  handleValidateField("price", e.target.value);
+                }}
+                onBlur={() => handleValidateField("price", price)}
+                className={cn("h-11 bg-background", borderClass(fieldStatus.priceCents))}
                 required
               />
+              {fieldErrors.priceCents ? (
+                <FieldError>{fieldErrors.priceCents}</FieldError>
+              ) : (
+                <FieldDescription>Valor em reais. Ex: 29.90</FieldDescription>
+              )}
             </Field>
 
-            <Field>
+            <Field data-invalid={fieldStatus.category === "invalid" || undefined}>
               <FieldLabel htmlFor="category">Categoria</FieldLabel>
               <Select
                 value={category}
-                onValueChange={(value) => setCategory(value)}
+                onValueChange={(value) => {
+                  setCategory(value);
+                  handleValidateField("category", value);
+                }}
                 required
               >
-                <SelectTrigger className="h-11 border-border/50 bg-background">
+                <SelectTrigger className={cn("h-11 bg-background", borderClass(fieldStatus.category))}>
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
@@ -355,6 +486,11 @@ export function ProductEditForm({
                   ))}
                 </SelectContent>
               </Select>
+              {fieldErrors.category ? (
+                <FieldError>{fieldErrors.category}</FieldError>
+              ) : (
+                <FieldDescription>Selecione uma categoria</FieldDescription>
+              )}
             </Field>
           </div>
 
@@ -368,23 +504,32 @@ export function ProductEditForm({
               </div>
               <Switch
                 checked={isAffiliateEnabled}
-                onCheckedChange={setIsAffiliateEnabled}
+                onCheckedChange={handleAffiliateToggle}
               />
             </div>
 
             {isAffiliateEnabled && (
-              <Field className="border-t border-border/40 pt-4">
+              <Field
+                className="border-t border-border/40 pt-4"
+                data-invalid={fieldStatus.affiliateCommissionPercent === "invalid" || undefined}
+              >
                 <FieldLabel htmlFor="commission">Comissão do Afiliado (%)</FieldLabel>
                 <Input
                   id="commission"
                   type="number"
                   min={0}
-                  max={100}
+                  max={50}
                   value={commissionPercent}
-                  onChange={(e) => setCommissionPercent(Number(e.target.value))}
-                  className="h-11 max-w-xs border-border/50 bg-background"
+                  onChange={(e) => handleCommissionChange(e.target.value)}
+                  onBlur={() => validateField("affiliateCommissionPercent", commissionPercent)}
+                  className={cn("h-11 max-w-xs bg-background", borderClass(fieldStatus.affiliateCommissionPercent))}
                   required={isAffiliateEnabled}
                 />
+                {fieldErrors.affiliateCommissionPercent ? (
+                  <FieldError>{fieldErrors.affiliateCommissionPercent}</FieldError>
+                ) : (
+                  <FieldDescription>Comissão entre 1% e 50%</FieldDescription>
+                )}
               </Field>
             )}
           </div>
@@ -404,7 +549,7 @@ export function ProductEditForm({
         <div className="mt-6 flex gap-3">
           <Button
             type="submit"
-            disabled={isSaving}
+            disabled={isSaving || hasErrors}
             className="h-11"
           >
             {isSaving ? (
@@ -532,4 +677,3 @@ export function ProductEditForm({
     </form>
   );
 }
-

@@ -1,6 +1,6 @@
  "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import Link from "next/link"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Header } from "@/components/layout/header"
@@ -28,7 +28,7 @@ interface CheckoutProduct {
   creatorName: string
 }
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const params = useParams<{ slug: string }>()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -331,5 +331,19 @@ export default function CheckoutPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <p className="text-muted-foreground">Carregando checkout...</p>
+        </div>
+      }
+    >
+      <CheckoutContent />
+    </Suspense>
   )
 }

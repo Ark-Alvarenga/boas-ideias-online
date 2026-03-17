@@ -97,8 +97,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const rawBody = await request.json()
-    const parseResult = productCreateSchema.safeParse(rawBody)
-    
+
+    console.log('Raw body:', rawBody)
+    const priceCents =
+      rawBody.priceCents ??
+      (rawBody.price ? Math.round(Number(rawBody.price) * 100) : undefined)
+    const parseResult = productCreateSchema.safeParse({ ...rawBody, priceCents, })
+
     // Validate required fields
     if (!parseResult.success) {
       return NextResponse.json(

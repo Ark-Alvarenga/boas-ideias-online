@@ -1,6 +1,6 @@
  "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
@@ -8,11 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PRODUCT_CATEGORIES } from "@/lib/categories"
+import { productCreateSchema } from "@/lib/schema"
+import { useFormValidation, type FieldStatus } from "@/hooks/use-form-validation"
 import { Loader2, UploadCloud } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
 
 interface MeResponse {
   authenticated: boolean
@@ -21,6 +24,13 @@ interface MeResponse {
     name: string
     email: string
   }
+}
+
+/** Returns border class based on field validation status */
+function borderClass(status: FieldStatus | undefined): string {
+  if (status === "invalid") return "border-red-500 focus-visible:ring-red-500/30"
+  if (status === "valid") return "border-green-500 focus-visible:ring-green-500/30"
+  return "border-border/50"
 }
 
 export default function CreateProductPage() {
@@ -42,6 +52,22 @@ export default function CreateProductPage() {
     price: "",
     category: "",
   })
+
+  const {
+    fieldErrors,
+    fieldStatus,
+    validateField,
+    validateAll,
+    setServerErrors,
+    hasErrors,
+  } = useFormValidation<{
+    title: string
+    description: string
+    priceCents: number
+    category: string
+    pdfUrl?: string
+    coverImage?: string
+  }>(productCreateSchema)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -67,9 +93,33 @@ export default function CreateProductPage() {
     void checkAuth()
   }, [router])
 
-  const handleChange = (field: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+  const handleChange = useCallback(
+    (field: keyof typeof formData, value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }))
+
+      // Validate using Zod schema (single source of truth)
+      if (field === "price") {
+        const cents = value ? Math.round(Number(value) * 100) : undefined
+        validateField("priceCents", cents)
+      } else {
+        validateField(field as "title" | "description" | "category", value)
+      }
+    },
+    [validateField],
+  )
+
+  const handleBlur = useCallback(
+    (field: keyof typeof formData) => {
+      const value = formData[field]
+      if (field === "price") {
+        const cents = value ? Math.round(Number(value) * 100) : undefined
+        validateField("priceCents", cents)
+      } else {
+        validateField(field as "title" | "description" | "category", value)
+      }
+    },
+    [formData, validateField],
+  )
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -214,11 +264,42 @@ export default function CreateProductPage() {
     }
   }
 
+  // Check if form can be submitted
+  const isFormIncomplete =
+    !formData.title ||
+    !formData.description ||
+    !formData.price ||
+    !formData.category ||
+    !pdfUrl
+
+  const canSubmit = !isFormIncomplete && !hasErrors && !isSaving
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
     if (!pdfUrl) {
       setError("Envie o PDF antes de salvar o produto.")
+      return
+    }
+
+    // Full validation using Zod schema
+    const priceCents = Math.round(Number(formData.price) * 100)
+    const dataToValidate = {
+      title: formData.title,
+      description: formData.description,
+      priceCents,
+      category: formData.category,
+      pdfUrl,
+      coverImage: coverUrl ?? undefined,
+    }
+
+    const isValid = validateAll(dataToValidate)
+    if (!isValid) {
+      toast({
+        title: "Corrija os erros antes de continuar",
+        description: "Verifique os campos destacados em vermelho.",
+        variant: "destructive",
+      })
       return
     }
 
@@ -266,13 +347,23 @@ export default function CreateProductPage() {
       const json = await res.json()
 
       if (!res.ok || !json.success) {
-        const message = json.error || "Não foi possível criar o produto."
-        setError(message)
-        toast({
-          title: "Não foi possível criar o produto",
-          description: message,
-          variant: "destructive",
-        })
+        // Map server errors to fields
+        if (json.details && Array.isArray(json.details)) {
+          setServerErrors(json.details)
+          toast({
+            title: "Corrija os erros antes de continuar",
+            description: "O servidor retornou erros de validação.",
+            variant: "destructive",
+          })
+        } else {
+          const message = json.error || "Não foi possível criar o produto."
+          setError(message)
+          toast({
+            title: "Não foi possível criar o produto",
+            description: message,
+            variant: "destructive",
+          })
+        }
         return
       }
 
@@ -321,30 +412,42 @@ export default function CreateProductPage() {
               <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr,1.5fr] lg:gap-10">
                 <div>
                   <FieldGroup>
-                    <Field>
+                    <Field data-invalid={fieldStatus.title === "invalid" || undefined}>
                       <FieldLabel htmlFor="title">Título</FieldLabel>
                       <Input
                         id="title"
                         value={formData.title}
                         onChange={(e) => handleChange("title", e.target.value)}
-                        className="h-11 border-border/50 bg-background"
+                        onBlur={() => handleBlur("title")}
+                        className={cn("h-11 bg-background", borderClass(fieldStatus.title))}
                         required
                       />
+                      {fieldErrors.title ? (
+                        <FieldError>{fieldErrors.title}</FieldError>
+                      ) : (
+                        <FieldDescription>Mínimo de 3 caracteres</FieldDescription>
+                      )}
                     </Field>
 
-                    <Field>
+                    <Field data-invalid={fieldStatus.description === "invalid" || undefined}>
                       <FieldLabel htmlFor="description">Descrição</FieldLabel>
                       <Textarea
                         id="description"
                         value={formData.description}
                         onChange={(e) => handleChange("description", e.target.value)}
-                        className="min-h-32 border-border/50 bg-background"
+                        onBlur={() => handleBlur("description")}
+                        className={cn("min-h-32 bg-background", borderClass(fieldStatus.description))}
                         required
                       />
+                      {fieldErrors.description ? (
+                        <FieldError>{fieldErrors.description}</FieldError>
+                      ) : (
+                        <FieldDescription>Mínimo de 10 caracteres</FieldDescription>
+                      )}
                     </Field>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <Field>
+                      <Field data-invalid={fieldStatus.priceCents === "invalid" || undefined}>
                         <FieldLabel htmlFor="price">Preço (R$)</FieldLabel>
                         <Input
                           id="price"
@@ -353,19 +456,25 @@ export default function CreateProductPage() {
                           step="0.01"
                           value={formData.price}
                           onChange={(e) => handleChange("price", e.target.value)}
-                          className="h-11 border-border/50 bg-background"
+                          onBlur={() => handleBlur("price")}
+                          className={cn("h-11 bg-background", borderClass(fieldStatus.priceCents))}
                           required
                         />
+                        {fieldErrors.priceCents ? (
+                          <FieldError>{fieldErrors.priceCents}</FieldError>
+                        ) : (
+                          <FieldDescription>Valor em reais. Ex: 29.90</FieldDescription>
+                        )}
                       </Field>
 
-                      <Field>
+                      <Field data-invalid={fieldStatus.category === "invalid" || undefined}>
                         <FieldLabel htmlFor="category">Categoria</FieldLabel>
                         <Select
                           value={formData.category}
                           onValueChange={(value) => handleChange("category", value)}
                           required
                         >
-                          <SelectTrigger className="h-11 border-border/50 bg-background">
+                          <SelectTrigger className={cn("h-11 bg-background", borderClass(fieldStatus.category))}>
                             <SelectValue placeholder="Selecione a categoria" />
                           </SelectTrigger>
                           <SelectContent>
@@ -376,6 +485,11 @@ export default function CreateProductPage() {
                             ))}
                           </SelectContent>
                         </Select>
+                        {fieldErrors.category ? (
+                          <FieldError>{fieldErrors.category}</FieldError>
+                        ) : (
+                          <FieldDescription>Selecione uma categoria</FieldDescription>
+                        )}
                       </Field>
                     </div>
                   </FieldGroup>
@@ -389,7 +503,7 @@ export default function CreateProductPage() {
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Button
                       type="submit"
-                      disabled={isSaving || !pdfUrl}
+                      disabled={!canSubmit}
                       className="h-11"
                     >
                       {isSaving ? (
@@ -582,4 +696,3 @@ export default function CreateProductPage() {
     </div>
   )
 }
-
