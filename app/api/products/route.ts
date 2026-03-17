@@ -84,10 +84,11 @@ export async function GET(request: Request) {
       total,
       hasMore: skip + limit < total,
     })
-  } catch (error) {
-    console.error('Error fetching products:', error)
+  } catch (error: any) {
+    console.error('🔥 PRODUCTS ERROR:', error)
+
     return NextResponse.json(
-      { error: 'Failed to fetch products' },
+      { error: error?.message || error },
       { status: 500 }
     )
   }
