@@ -76,7 +76,7 @@ export interface Order {
   productTitle: string
   productPrice?: number // Deprecated
   productPriceCents: number
-  userId?: ObjectId
+  userId: ObjectId
   buyerEmail: string
   buyerName: string
   status: 'pending' | 'paid' | 'refunded'
@@ -93,7 +93,7 @@ export interface Sale {
   _id?: ObjectId
   orderId: ObjectId
   productId: ObjectId
-  buyerId?: ObjectId
+  buyerId: ObjectId
   creatorId: ObjectId
   affiliateUserId?: ObjectId
 

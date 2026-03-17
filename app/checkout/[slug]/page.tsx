@@ -52,8 +52,8 @@ export default function CheckoutPage() {
         // Only redirect on a definitive "not authenticated".
         // If the server is rate-limiting or temporarily failing, keep the user on the page.
         if (res.status === 401) {
-          const nextPath = `/checkout/${slug}`
-          router.push(`/login?next=${encodeURIComponent(nextPath)}`)
+          const redirectPath = `/checkout/${slug}`
+          router.push(`/login?redirect=${encodeURIComponent(redirectPath)}`)
           return
         }
         if (!res.ok) {

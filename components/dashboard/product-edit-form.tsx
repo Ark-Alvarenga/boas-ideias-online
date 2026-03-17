@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PRODUCT_CATEGORIES } from "@/lib/categories";
+import { Switch } from "@/components/ui/switch";
 import { Loader2, Eye, EyeOff, Archive, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -27,6 +28,8 @@ interface ProductEditFormProps {
   views: number;
   sales: number;
   featured?: boolean;
+  affiliateEnabled?: boolean;
+  affiliateCommissionPercent?: number;
 }
 
 export function ProductEditForm({
@@ -39,6 +42,8 @@ export function ProductEditForm({
   views,
   sales,
   featured = false,
+  affiliateEnabled = false,
+  affiliateCommissionPercent = 30,
 }: ProductEditFormProps) {
   // Auto-dismiss success messages after 4 seconds
   const showSuccess = (msg: string) => {
@@ -53,6 +58,8 @@ export function ProductEditForm({
   const [category, setCategory] = useState(initialCategory);
   const [status, setStatus] = useState<"active" | "draft" | "archived">(initialStatus);
   const [isFeatured, setIsFeatured] = useState<boolean>(featured);
+  const [isAffiliateEnabled, setIsAffiliateEnabled] = useState<boolean>(affiliateEnabled);
+  const [commissionPercent, setCommissionPercent] = useState<number>(affiliateCommissionPercent);
   const [isSaving, setIsSaving] = useState(false);
   const [isStatusAction, setIsStatusAction] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +81,8 @@ export function ProductEditForm({
           priceCents: Math.round(Number(price) * 100),
           category,
           featured: isFeatured,
+          affiliateEnabled: isAffiliateEnabled,
+          affiliateCommissionPercent: commissionPercent,
         }),
       });
 
@@ -347,6 +356,37 @@ export function ProductEditForm({
                 </SelectContent>
               </Select>
             </Field>
+          </div>
+
+          <div className="rounded-xl border border-border/60 bg-muted/20 p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-foreground">Programa de Afiliados</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Permita que outras pessoas vendam este produto em troca de uma comissão.
+                </p>
+              </div>
+              <Switch
+                checked={isAffiliateEnabled}
+                onCheckedChange={setIsAffiliateEnabled}
+              />
+            </div>
+
+            {isAffiliateEnabled && (
+              <Field className="border-t border-border/40 pt-4">
+                <FieldLabel htmlFor="commission">Comissão do Afiliado (%)</FieldLabel>
+                <Input
+                  id="commission"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={commissionPercent}
+                  onChange={(e) => setCommissionPercent(Number(e.target.value))}
+                  className="h-11 max-w-xs border-border/50 bg-background"
+                  required={isAffiliateEnabled}
+                />
+              </Field>
+            )}
           </div>
         </FieldGroup>
 

@@ -150,7 +150,7 @@ async function handleCheckoutCompleted(
       productId: product._id!,
       productTitle: product.title,
       productPriceCents: totalAmountCents,
-      userId: userId && ObjectId.isValid(userId) ? new ObjectId(userId) : undefined,
+      userId: new ObjectId(userId!),
       buyerEmail: buyerEmail ?? "",
       buyerName: typeof buyerName === "string" ? buyerName : "Cliente",
       status: "paid",
@@ -240,7 +240,7 @@ async function handleCheckoutCompleted(
   const sale: Sale = {
     orderId,
     productId: product._id!,
-    buyerId: userId && ObjectId.isValid(userId) ? new ObjectId(userId) : undefined,
+    buyerId: new ObjectId(userId!),
     creatorId,
     affiliateUserId: affiliateRecord ? new ObjectId(affiliateUserId!) : undefined,
     totalAmountCents,

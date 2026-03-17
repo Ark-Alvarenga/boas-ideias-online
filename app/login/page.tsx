@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast"
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const next = searchParams.get("next") || "/dashboard"
+  const redirectPath = searchParams.get("redirect") || searchParams.get("next") || "/dashboard"
 
   const [formData, setFormData] = useState({
     email: "",
@@ -54,9 +54,9 @@ export default function LoginPage() {
 
       toast({
         title: "Login realizado com sucesso",
-        description: "Bem-vindo de volta! Redirecionando para o seu painel.",
+        description: "Bem-vindo de volta! Redirecionando...",
       })
-      router.push(next)
+      router.push(redirectPath)
     } catch (err) {
       console.error("Login error", err)
       const message = "Ocorreu um erro ao tentar fazer login."
@@ -133,7 +133,7 @@ export default function LoginPage() {
                 <p className="mt-4 text-center text-sm text-muted-foreground">
                   Não tem conta?{" "}
                   <Link
-                    href={`/register?next=${encodeURIComponent(next)}`}
+                    href={`/register?redirect=${encodeURIComponent(redirectPath)}`}
                     className="font-medium text-primary underline-offset-4 hover:underline"
                   >
                     Criar conta

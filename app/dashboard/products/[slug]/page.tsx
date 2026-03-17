@@ -101,6 +101,8 @@ export default async function DashboardProductDetailPage({
               views={product.views}
               sales={product.sales}
               featured={product.featured}
+              affiliateEnabled={product.affiliateEnabled}
+              affiliateCommissionPercent={product.affiliateCommissionPercent}
             />
           </CardContent>
         </Card>

@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast"
 export default function RegisterPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const next = searchParams.get("next") || "/dashboard"
+  const redirectPath = searchParams.get("redirect") || searchParams.get("next") || "/dashboard"
 
   const [formData, setFormData] = useState({
     name: "",
@@ -55,9 +55,9 @@ export default function RegisterPage() {
 
       toast({
         title: "Conta criada com sucesso",
-        description: "Bem-vindo! Redirecionando para o seu painel.",
+        description: "Bem-vindo! Redirecionando...",
       })
-      router.push(next)
+      router.push(redirectPath)
     } catch (err) {
       console.error("Register error", err)
       const message = "Ocorreu um erro ao criar sua conta."
@@ -145,7 +145,7 @@ export default function RegisterPage() {
                 <p className="mt-4 text-center text-sm text-muted-foreground">
                   Já tem conta?{" "}
                   <Link
-                    href={`/login?next=${encodeURIComponent(next)}`}
+                    href={`/login?redirect=${encodeURIComponent(redirectPath)}`}
                     className="font-medium text-primary underline-offset-4 hover:underline"
                   >
                     Entrar
