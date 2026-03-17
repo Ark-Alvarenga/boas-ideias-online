@@ -5,22 +5,7 @@ import type StripeType from 'stripe'
 import { getDatabase } from '@/lib/mongodb'
 import type { Order, Product } from '@/lib/types'
 import { authConfig, verifySessionToken } from '@/lib/auth'
-
-let stripe: StripeType | null = null
-
-function getStripe(): StripeType {
-  if (!stripe) {
-    const Stripe = require('stripe') as typeof StripeType
-    const secretKey = process.env.STRIPE_SECRET_KEY
-    if (!secretKey) {
-      throw new Error('STRIPE_SECRET_KEY is not set')
-    }
-    stripe = new Stripe(secretKey, {
-      apiVersion: '2024-06-20',
-    })
-  }
-  return stripe
-}
+import { getStripe } from '@/lib/stripe'
 
 // GET /api/orders/by-session?session_id=cs_...
 // Returns (or lazily creates) the current user's paid order for a given Stripe Checkout session.

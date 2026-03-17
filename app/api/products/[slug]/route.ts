@@ -104,7 +104,7 @@ export async function PATCH(
     const body = await request.json()
 
     // --- Field allowlist: only accept known updatable fields ---
-    const ALLOWED_FIELDS = ['title', 'description', 'price', 'category', 'status', 'coverImage', 'pdfUrl', 'features', 'featured'] as const
+    const ALLOWED_FIELDS = ['title', 'description', 'price', 'category', 'status', 'coverImage', 'pdfUrl', 'features', 'featured', 'affiliateEnabled', 'affiliateCommissionPercent'] as const
     const updateData: Record<string, unknown> = { updatedAt: new Date() }
 
     for (const key of ALLOWED_FIELDS) {
@@ -154,6 +154,20 @@ export async function PATCH(
           { status: 400 }
         )
       }
+    }
+
+    // Validate affiliate fields
+    if (updateData.affiliateEnabled !== undefined) {
+      if (typeof updateData.affiliateEnabled !== 'boolean') {
+        return NextResponse.json({ error: 'affiliateEnabled must be a boolean.' }, { status: 400 })
+      }
+    }
+    if (updateData.affiliateCommissionPercent !== undefined) {
+      const pct = Number(updateData.affiliateCommissionPercent)
+      if (isNaN(pct) || pct < 1 || pct > 50) {
+        return NextResponse.json({ error: 'Affiliate commission must be between 1% and 50%.' }, { status: 400 })
+      }
+      updateData.affiliateCommissionPercent = pct
     }
 
     const db = await getDatabase()

@@ -79,6 +79,41 @@ export interface Order {
   createdAt: Date
   updatedAt: Date
   stripeSessionId?: string
+  stripePaymentIntentId?: string
+  saleId?: ObjectId
+}
+
+export type AffiliatePayoutStatus = 'not_applicable' | 'pending' | 'paid'
+
+export interface Sale {
+  _id?: ObjectId
+  orderId: ObjectId
+  productId: ObjectId
+  buyerId: ObjectId
+  creatorId: ObjectId
+  affiliateUserId?: ObjectId
+
+  // All amounts in integer CENTS (BRL centavos)
+  totalAmountCents: number
+  platformFeeCents: number
+  affiliateShareCents: number
+  creatorShareCents: number
+
+  // Stripe references
+  stripeSessionId: string
+  stripePaymentIntentId: string
+  stripeTransferIdCreator?: string
+  stripeTransferIdAffiliate?: string
+
+  // Status
+  status: 'completed' | 'refunded' | 'partially_refunded'
+
+  // Payout tracking
+  creatorPayoutStatus: 'pending' | 'paid'
+  affiliatePayoutStatus: AffiliatePayoutStatus
+  affiliatePaidAt?: Date
+
+  createdAt: Date
 }
 
 export interface CreateProductInput {

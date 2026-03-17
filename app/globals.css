@@ -133,4 +133,15 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Global Cursor Pointer Fix for clickable elements */
+  button,
+  a,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"],
+  summary,
+  select {
+    @apply cursor-pointer;
+  }
 }

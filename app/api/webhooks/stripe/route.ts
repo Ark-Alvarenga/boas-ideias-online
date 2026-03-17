@@ -2,24 +2,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import type StripeType from "stripe";
 import { getDatabase } from "@/lib/mongodb";
-import type { Order, Product, Affiliate, AffiliateSale } from "@/lib/types";
+import type { Order, Product, Affiliate, AffiliateSale, Sale, User } from "@/lib/types";
+import { getStripe } from "@/lib/stripe";
 import { ObjectId } from "mongodb";
-
-let stripe: StripeType | null = null;
-
-function getStripe(): StripeType {
-  if (!stripe) {
-    const Stripe = require("stripe") as typeof StripeType;
-    const secretKey = process.env.STRIPE_SECRET_KEY;
-    if (!secretKey) {
-      throw new Error("STRIPE_SECRET_KEY is not set");
-    }
-    stripe = new Stripe(secretKey, {
-      apiVersion: "2024-06-20",
-    });
-  }
-  return stripe;
-}
 
 export async function POST(request: NextRequest) {
   const stripeClient = getStripe();
@@ -58,114 +43,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as StripeType.Checkout.Session;
+    switch (event.type) {
+      case "checkout.session.completed":
+        await handleCheckoutCompleted(event.data.object as StripeType.Checkout.Session, stripeClient);
+        break;
 
-      if (session.payment_status !== "paid") {
-        return NextResponse.json({ received: true });
-      }
+      case "charge.refunded":
+        await handleChargeRefunded(event.data.object as StripeType.Charge);
+        break;
 
-      const metadata = session.metadata ?? {};
-      const productId = typeof metadata.productId === "string" ? metadata.productId : null;
-      const userId = typeof metadata.userId === "string" ? metadata.userId : null;
-      const buyerName =
-        typeof metadata.buyerName === "string"
-          ? metadata.buyerName
-          : (session.customer_details?.name ?? "Cliente");
-      const buyerEmail =
-        typeof session.customer_details?.email === "string"
-          ? session.customer_details.email
-          : (typeof session.customer_email === "string" ? session.customer_email : "");
+      case "account.updated":
+        await handleAccountUpdated(event.data.object as StripeType.Account);
+        break;
 
-      if (!productId || !ObjectId.isValid(productId)) {
-        console.error("[Stripe webhook] Missing or invalid productId in metadata, sessionId:", session.id);
-        return NextResponse.json({ received: true });
-      }
-
-      const db = await getDatabase();
-      const productsCollection = db.collection<Product>("products");
-      const ordersCollection = db.collection<Order>("orders");
-
-      const product = await productsCollection.findOne({
-        _id: new ObjectId(productId),
-      });
-
-      if (!product) {
-        console.error("[Stripe webhook] Product not found for productId:", productId, "sessionId:", session.id);
-        return NextResponse.json({ received: true });
-      }
-
-      // Idempotency: prevent duplicate orders on retried webhooks
-      const existingOrder = await ordersCollection.findOne({
-        stripeSessionId: session.id,
-      });
-      if (existingOrder) {
-        return NextResponse.json({ received: true });
-      }
-
-      const newOrder: Order = {
-        productId: product._id!,
-        productTitle: product.title,
-        productPrice: product.price,
-        userId: userId && ObjectId.isValid(userId) ? new ObjectId(userId) : undefined,
-        buyerEmail: buyerEmail ?? "",
-        buyerName: typeof buyerName === "string" ? buyerName : "Cliente",
-        status: "paid",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        stripeSessionId: session.id,
-      };
-
-      const insertResult = await ordersCollection.insertOne(newOrder);
-      const orderId = insertResult.insertedId;
-
-      await productsCollection.updateOne(
-        { _id: product._id },
-        { $inc: { sales: 1 } },
-      );
-
-      const affiliateUserId = typeof metadata.affiliateUserId === "string" ? metadata.affiliateUserId : null;
-
-      if (
-        affiliateUserId &&
-        ObjectId.isValid(affiliateUserId) &&
-        product.affiliateEnabled
-      ) {
-        const affiliatesCollection = db.collection<Affiliate>("affiliates");
-        const affiliateSalesCollection =
-          db.collection<AffiliateSale>("affiliateSales");
-
-        const affiliate = await affiliatesCollection.findOne({
-          userId: new ObjectId(affiliateUserId),
-          productId: product._id!,
-        });
-
-        if (
-          affiliate &&
-          product.creatorId &&
-          !product.creatorId.equals(new ObjectId(affiliateUserId))
-        ) {
-          const commissionPercent =
-            affiliate.commissionPercent ??
-            product.affiliateCommissionPercent ??
-            0;
-
-          const commissionAmount = (product.price * commissionPercent) / 100;
-
-          const saleDoc: AffiliateSale = {
-            affiliateId: affiliate._id!,
-            productId: product._id!,
-            orderId: orderId,
-            affiliateUserId: affiliate.userId,
-            creatorUserId: product.creatorId,
-            saleAmount: product.price,
-            commissionAmount,
-            createdAt: new Date(),
-          };
-
-          await affiliateSalesCollection.insertOne(saleDoc);
-        }
-      }
+      default:
+        // Unhandled event type — acknowledge silently
+        break;
     }
 
     return NextResponse.json({ received: true });
@@ -179,3 +72,328 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// Handle checkout.session.completed
+// ─────────────────────────────────────────────────────────────
+async function handleCheckoutCompleted(
+  session: StripeType.Checkout.Session,
+  stripeClient: StripeType,
+) {
+  if (session.payment_status !== "paid") {
+    return;
+  }
+
+  const metadata = session.metadata ?? {};
+  const productId = typeof metadata.productId === "string" ? metadata.productId : null;
+  const userId = typeof metadata.userId === "string" ? metadata.userId : null;
+  const creatorIdStr = typeof metadata.creatorId === "string" ? metadata.creatorId : null;
+  const buyerName =
+    typeof metadata.buyerName === "string"
+      ? metadata.buyerName
+      : (session.customer_details?.name ?? "Cliente");
+  const buyerEmail =
+    typeof session.customer_details?.email === "string"
+      ? session.customer_details.email
+      : (typeof session.customer_email === "string" ? session.customer_email : "");
+
+  if (!productId || !ObjectId.isValid(productId)) {
+    console.error("[Stripe webhook] Missing or invalid productId in metadata, sessionId:", session.id);
+    return;
+  }
+
+  const db = await getDatabase();
+  const productsCollection = db.collection<Product>("products");
+  const ordersCollection = db.collection<Order>("orders");
+  const salesCollection = db.collection<Sale>("sales");
+  const usersCollection = db.collection<User>("users");
+
+  const product = await productsCollection.findOne({
+    _id: new ObjectId(productId),
+  });
+
+  if (!product) {
+    console.error("[Stripe webhook] Product not found for productId:", productId, "sessionId:", session.id);
+    return;
+  }
+
+  // Idempotency: prevent duplicate orders on retried webhooks
+  const existingOrder = await ordersCollection.findOne({
+    stripeSessionId: session.id,
+  });
+  if (existingOrder) {
+    return;
+  }
+
+  // Resolve payment intent ID
+  const paymentIntentId =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : (session.payment_intent as any)?.id ?? "";
+
+  // ─── Create Order ───
+  const newOrder: Order = {
+    productId: product._id!,
+    productTitle: product.title,
+    productPrice: product.price,
+    userId: userId && ObjectId.isValid(userId) ? new ObjectId(userId) : undefined,
+    buyerEmail: buyerEmail ?? "",
+    buyerName: typeof buyerName === "string" ? buyerName : "Cliente",
+    status: "paid",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    stripeSessionId: session.id,
+    stripePaymentIntentId: paymentIntentId,
+  };
+
+  const insertResult = await ordersCollection.insertOne(newOrder);
+  const orderId = insertResult.insertedId;
+
+  await productsCollection.updateOne(
+    { _id: product._id },
+    { $inc: { sales: 1 } },
+  );
+
+  // ─── Calculate Financial Split (all in cents) ───
+  const totalAmountCents = Math.round(product.price * 100);
+  const platformFeePercent = Math.min(
+    100,
+    Math.max(0, Number(process.env.PLATFORM_FEE_PERCENT) || 0),
+  );
+  const platformFeeCents = Math.round((totalAmountCents * platformFeePercent) / 100);
+
+  // Resolve affiliate
+  const affiliateUserId = typeof metadata.affiliateUserId === "string" ? metadata.affiliateUserId : null;
+  let affiliateShareCents = 0;
+  let affiliateUser: User | null = null;
+  let affiliateRecord: Affiliate | null = null;
+
+  if (
+    affiliateUserId &&
+    ObjectId.isValid(affiliateUserId) &&
+    product.affiliateEnabled
+  ) {
+    const affiliatesCollection = db.collection<Affiliate>("affiliates");
+    affiliateRecord = await affiliatesCollection.findOne({
+      userId: new ObjectId(affiliateUserId),
+      productId: product._id!,
+    });
+
+    if (
+      affiliateRecord &&
+      product.creatorId &&
+      !product.creatorId.equals(new ObjectId(affiliateUserId))
+    ) {
+      const commissionPercent =
+        affiliateRecord.commissionPercent ??
+        product.affiliateCommissionPercent ??
+        0;
+      affiliateShareCents = Math.round((totalAmountCents * commissionPercent) / 100);
+
+      // Look up affiliate user to check Stripe account status
+      affiliateUser = await usersCollection.findOne({
+        _id: new ObjectId(affiliateUserId),
+      });
+    } else {
+      affiliateRecord = null; // Creator can't be affiliate of own product
+    }
+  }
+
+  const creatorShareCents = totalAmountCents - platformFeeCents - affiliateShareCents;
+
+  // Resolve creator
+  const creatorId = creatorIdStr && ObjectId.isValid(creatorIdStr)
+    ? new ObjectId(creatorIdStr)
+    : product.creatorId;
+
+  const creator = await usersCollection.findOne({ _id: creatorId });
+
+  // ─── Create Sale Document ───
+  const sale: Sale = {
+    orderId,
+    productId: product._id!,
+    buyerId: userId && ObjectId.isValid(userId) ? new ObjectId(userId) : new ObjectId(),
+    creatorId,
+    affiliateUserId: affiliateRecord ? new ObjectId(affiliateUserId!) : undefined,
+    totalAmountCents,
+    platformFeeCents,
+    affiliateShareCents,
+    creatorShareCents,
+    stripeSessionId: session.id,
+    stripePaymentIntentId: paymentIntentId,
+    status: "completed",
+    creatorPayoutStatus: "pending",
+    affiliatePayoutStatus: affiliateRecord
+      ? (affiliateUser?.stripeAccountId && affiliateUser?.stripeOnboardingComplete ? "paid" : "pending")
+      : "not_applicable",
+    createdAt: new Date(),
+  };
+
+  // ─── Create Stripe Transfers ───
+
+  // Transfer to creator
+  if (creator?.stripeAccountId && creatorShareCents > 0) {
+    try {
+      const creatorTransfer = await stripeClient.transfers.create({
+        amount: creatorShareCents,
+        currency: "brl",
+        destination: creator.stripeAccountId,
+        transfer_group: session.id,
+        metadata: {
+          saleType: "creator",
+          orderId: orderId.toString(),
+          productId: product._id!.toString(),
+        },
+      });
+      sale.stripeTransferIdCreator = creatorTransfer.id;
+      sale.creatorPayoutStatus = "paid";
+    } catch (err) {
+      console.error("[Stripe webhook] Creator transfer failed:", err);
+      // Sale is still recorded — transfer can be retried later
+      sale.creatorPayoutStatus = "pending";
+    }
+  } else {
+    sale.creatorPayoutStatus = "pending";
+  }
+
+  // Transfer to affiliate (only if they have a connected Stripe account)
+  if (
+    affiliateRecord &&
+    affiliateShareCents > 0 &&
+    affiliateUser?.stripeAccountId &&
+    affiliateUser?.stripeOnboardingComplete
+  ) {
+    try {
+      const affiliateTransfer = await stripeClient.transfers.create({
+        amount: affiliateShareCents,
+        currency: "brl",
+        destination: affiliateUser.stripeAccountId,
+        transfer_group: session.id,
+        metadata: {
+          saleType: "affiliate",
+          orderId: orderId.toString(),
+          productId: product._id!.toString(),
+          affiliateUserId: affiliateUserId!,
+        },
+      });
+      sale.stripeTransferIdAffiliate = affiliateTransfer.id;
+      sale.affiliatePayoutStatus = "paid";
+      sale.affiliatePaidAt = new Date();
+    } catch (err) {
+      console.error("[Stripe webhook] Affiliate transfer failed:", err);
+      // Mark as pending so it can be retried later
+      sale.affiliatePayoutStatus = "pending";
+    }
+  }
+
+  await salesCollection.insertOne(sale);
+
+  // Link sale back to order
+  await ordersCollection.updateOne(
+    { _id: orderId },
+    { $set: { saleId: sale._id } },
+  );
+
+  // Also record in legacy affiliateSales collection for backward compatibility
+  if (affiliateRecord && affiliateShareCents > 0) {
+    const affiliateSalesCollection = db.collection<AffiliateSale>("affiliateSales");
+    const saleDoc: AffiliateSale = {
+      affiliateId: affiliateRecord._id!,
+      productId: product._id!,
+      orderId,
+      affiliateUserId: affiliateRecord.userId,
+      creatorUserId: product.creatorId,
+      saleAmount: product.price,
+      commissionAmount: affiliateShareCents / 100,
+      createdAt: new Date(),
+    };
+    await affiliateSalesCollection.insertOne(saleDoc);
+  }
+
+  console.log("[Stripe webhook] Sale recorded:", JSON.stringify({
+    orderId: orderId.toString(),
+    saleId: sale._id?.toString(),
+    totalAmountCents,
+    platformFeeCents,
+    creatorShareCents,
+    affiliateShareCents,
+    affiliatePayoutStatus: sale.affiliatePayoutStatus,
+    creatorTransfer: sale.stripeTransferIdCreator ?? "none",
+    affiliateTransfer: sale.stripeTransferIdAffiliate ?? "none",
+  }));
+}
+
+// ─────────────────────────────────────────────────────────────
+// Handle charge.refunded
+// ─────────────────────────────────────────────────────────────
+async function handleChargeRefunded(charge: StripeType.Charge) {
+  const paymentIntentId =
+    typeof charge.payment_intent === "string"
+      ? charge.payment_intent
+      : (charge.payment_intent as any)?.id;
+
+  if (!paymentIntentId) {
+    console.warn("[Stripe webhook] charge.refunded missing payment_intent");
+    return;
+  }
+
+  const db = await getDatabase();
+  const salesCollection = db.collection<Sale>("sales");
+  const ordersCollection = db.collection<Order>("orders");
+
+  const sale = await salesCollection.findOne({ stripePaymentIntentId: paymentIntentId });
+  if (!sale) {
+    console.warn("[Stripe webhook] No sale found for refunded payment_intent:", paymentIntentId);
+    return;
+  }
+
+  const refundStatus = charge.refunded ? "refunded" : "partially_refunded";
+
+  await salesCollection.updateOne(
+    { _id: sale._id },
+    { $set: { status: refundStatus } },
+  );
+
+  await ordersCollection.updateOne(
+    { _id: sale.orderId },
+    { $set: { status: "refunded", updatedAt: new Date() } },
+  );
+
+  console.log("[Stripe webhook] Refund processed:", JSON.stringify({
+    saleId: sale._id?.toString(),
+    paymentIntentId,
+    status: refundStatus,
+  }));
+}
+
+// ─────────────────────────────────────────────────────────────
+// Handle account.updated
+// ─────────────────────────────────────────────────────────────
+async function handleAccountUpdated(account: StripeType.Account) {
+  const db = await getDatabase();
+  const usersCollection = db.collection<User>("users");
+
+  const isComplete = account.details_submitted && account.charges_enabled;
+
+  const result = await usersCollection.updateOne(
+    { stripeAccountId: account.id },
+    {
+      $set: {
+        stripeOnboardingComplete: isComplete,
+        updatedAt: new Date(),
+      },
+    }
+  );
+
+  if (result.matchedCount > 0) {
+    console.log("[Stripe webhook] Account updated:", JSON.stringify({
+      stripeAccountId: account.id,
+      stripeOnboardingComplete: isComplete,
+      charges_enabled: account.charges_enabled,
+      details_submitted: account.details_submitted,
+    }));
+  } else {
+    console.warn("[Stripe webhook] Account updated, but no matching user found:", account.id);
+  }
+}
+

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, X } from "lucide-react"
@@ -22,6 +22,9 @@ const sortOptions = [
 ]
 
 interface MarketplaceFiltersProps {
+  initialQuery?: string
+  initialCategory?: string
+  initialSort?: string
   onSearch?: (query: string) => void
   onCategoryChange?: (category: string) => void
   onSortChange?: (sort: string) => void
@@ -29,25 +32,41 @@ interface MarketplaceFiltersProps {
 }
 
 export function MarketplaceFilters({ 
+  initialQuery,
+  initialCategory,
+  initialSort,
   onSearch,
   onCategoryChange,
   onSortChange,
   onClear,
 }: MarketplaceFiltersProps) {
-  const [query, setQuery] = useState("")
-  const [category, setCategory] = useState("todos")
-  const [sort, setSort] = useState("relevancia")
+  const [query, setQuery] = useState(initialQuery || "")
+  const [category, setCategory] = useState(initialCategory || "todos")
+  const [sort, setSort] = useState(initialSort || "relevancia")
+
+  useEffect(() => {
+    setQuery(initialQuery || "")
+    setCategory(initialCategory || "todos")
+    setSort(initialSort || "relevancia")
+  }, [initialQuery, initialCategory, initialSort])
 
   const hasActiveFilters = useMemo(() => {
     return query.trim().length > 0 || category !== "todos" || sort !== "relevancia"
   }, [query, category, sort])
 
+  const onSearchRef = useRef(onSearch)
+  useEffect(() => {
+    onSearchRef.current = onSearch
+  }, [onSearch])
+
   useEffect(() => {
     const handle = window.setTimeout(() => {
-      onSearch?.(query)
+      if (query !== (initialQuery || "")) {
+        onSearchRef.current?.(query)
+      }
     }, 300)
     return () => window.clearTimeout(handle)
-  }, [query, onSearch])
+  }, [query, initialQuery])
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

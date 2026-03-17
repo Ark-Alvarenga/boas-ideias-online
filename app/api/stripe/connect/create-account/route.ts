@@ -5,18 +5,7 @@ import type { User } from '@/lib/types'
 import { authConfig, verifySessionToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
 import { ObjectId } from 'mongodb'
-
-let stripe: StripeType | null = null
-
-function getStripe(): StripeType {
-  if (!stripe) {
-    const Stripe = require('stripe') as typeof StripeType
-    const secretKey = process.env.STRIPE_SECRET_KEY
-    if (!secretKey) throw new Error('STRIPE_SECRET_KEY is not set')
-    stripe = new Stripe(secretKey, { apiVersion: '2024-06-20' })
-  }
-  return stripe
-}
+import { getStripe } from '@/lib/stripe'
 
 export async function POST() {
   try {

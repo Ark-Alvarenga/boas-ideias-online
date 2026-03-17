@@ -4,24 +4,9 @@ import { getDatabase } from '@/lib/mongodb'
 import type { Product, User, Affiliate } from '@/lib/types'
 import { authConfig, verifySessionToken } from '@/lib/auth'
 import { AFFILIATE_REF_COOKIE } from '@/lib/affiliate'
+import { getStripe } from '@/lib/stripe'
 import { cookies } from 'next/headers'
 import { ObjectId } from 'mongodb'
-
-let stripe: StripeType | null = null
-
-function getStripe(): StripeType {
-  if (!stripe) {
-    const Stripe = require('stripe') as typeof StripeType
-    const secretKey = process.env.STRIPE_SECRET_KEY
-    if (!secretKey) {
-      throw new Error('STRIPE_SECRET_KEY is not set')
-    }
-    stripe = new Stripe(secretKey, {
-      apiVersion: '2024-06-20',
-    })
-  }
-  return stripe
-}
 
 interface CheckoutBody {
   productId: string
@@ -108,6 +93,15 @@ export async function POST(request: Request) {
       )
     }
 
+    // Block checkout if creator has not completed Stripe onboarding
+    if (!creator.stripeAccountId || !creator.stripeOnboardingComplete) {
+      return NextResponse.json(
+        { error: 'This product is not available for purchase yet. The creator has not completed payment setup.' },
+        { status: 400 },
+      )
+    }
+
+    // Check for affiliate cookie
     let affiliateUserId: string | null = null
     const affiliateRefCookie = cookieStore.get(AFFILIATE_REF_COOKIE)?.value
     if (affiliateRefCookie && ObjectId.isValid(affiliateRefCookie)) {
@@ -131,14 +125,10 @@ export async function POST(request: Request) {
 
     const stripeClient = getStripe()
     const unitAmountCents = Math.round(product.price * 100)
-    const platformFeePercent = Math.min(
-      100,
-      Math.max(0, Number(process.env.PLATFORM_FEE_PERCENT) || 0),
-    )
-    const platformFeeCents = Math.round(
-      (unitAmountCents * platformFeePercent) / 100,
-    )
 
+    // Separate Charges and Transfers model:
+    // Platform collects 100% of the payment.
+    // Transfers to creator (and optionally affiliate) happen in the webhook.
     const sessionParams: StripeType.Checkout.SessionCreateParams = {
       mode: 'payment',
       payment_method_types: ['card'],
@@ -160,19 +150,11 @@ export async function POST(request: Request) {
         productId: product._id!.toString(),
         userId: buyer._id!.toString(),
         buyerName: buyerName || buyer.name,
+        creatorId: product.creatorId.toString(),
         ...(affiliateUserId && { affiliateUserId }),
       },
       success_url: `${origin}/purchase-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/produto/${product.slug}`,
-    }
-
-    if (creator.stripeAccountId && platformFeeCents < unitAmountCents) {
-      sessionParams.payment_intent_data = {
-        application_fee_amount: platformFeeCents,
-        transfer_data: {
-          destination: creator.stripeAccountId,
-        },
-      }
     }
 
     const session = await stripeClient.checkout.sessions.create(sessionParams)
@@ -202,4 +184,3 @@ export async function POST(request: Request) {
     )
   }
 }
-
