@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 import { authConfig, verifySessionToken } from '@/lib/auth'
 import { ObjectId } from 'mongodb'
 
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB limit as requested
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50MB limit as requested
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     const size = parseInt(sizeStr, 10)
     if (isNaN(size) || size > MAX_FILE_SIZE_BYTES) {
       return NextResponse.json(
-        { error: 'File size exceeds 10MB limit' },
+        { error: 'File size exceeds 50MB limit' },
         { status: 400 }
       )
     }
