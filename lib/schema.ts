@@ -39,6 +39,7 @@ export const checkoutSchema = z.object({
   productId: z.string().min(1, "ID do produto inválido"),
   buyerName: z.string().optional(),
   buyerEmail: z.string().email("E-mail inválido").optional().or(z.literal('')),
+  ref: z.string().optional(),
 })
 
 export const affiliateJoinSchema = z.object({

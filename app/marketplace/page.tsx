@@ -13,6 +13,8 @@ interface ApiProduct
   extends Omit<Product, "_id" | "creatorId" | "creatorName"> {
   _id?: string;
   creatorName?: string;
+  affiliateEnabled?: boolean;
+  affiliateCommissionPercent?: number;
 }
 
 function MarketplaceContent() {
@@ -216,6 +218,8 @@ function MarketplaceContent() {
                     coverImage={product.coverImage}
                     sales={product.sales}
                     createdAt={product.createdAt}
+                    affiliateEnabled={product.affiliateEnabled}
+                    affiliateCommissionPercent={product.affiliateCommissionPercent}
                   />
                 ))}
 

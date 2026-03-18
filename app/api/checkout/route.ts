@@ -15,6 +15,7 @@ interface CheckoutBody {
   productId: string
   buyerName?: string
   buyerEmail?: string
+  ref?: string
 }
 
 export async function POST(request: Request) {
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { productId, buyerEmail, buyerName } = parseResult.data
+    const { productId, buyerEmail, buyerName, ref } = parseResult.data
 
     const db = await getDatabase()
     const productsCollection = db.collection<Product>('products')
@@ -106,9 +107,9 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check for affiliate cookie
+    // Check for affiliate ref (from body directly, or fallback to cookie from middleware)
     let affiliateUserId: string | null = null
-    const affiliateRefCookie = cookieStore.get(AFFILIATE_REF_COOKIE)?.value
+    const affiliateRefCookie = ref || cookieStore.get(AFFILIATE_REF_COOKIE)?.value
     if (affiliateRefCookie && ObjectId.isValid(affiliateRefCookie)) {
       const affiliateUserIdObj = new ObjectId(affiliateRefCookie)
       if (!affiliateUserIdObj.equals(buyer._id!)) {

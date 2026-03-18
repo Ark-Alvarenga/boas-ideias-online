@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { AFFILIATE_REF_COOKIE } from '@/lib/affiliate'
+import { ObjectId } from 'mongodb' // To validate if ref looks like an ID
 
 // Simple in-memory rate limiting (works per-isolate edge/node)
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>()
@@ -62,17 +64,23 @@ export function middleware(request: NextRequest) {
   }
 
   // --- 3. Affiliate Links ---
+  // Catch '?ref=xxx' on *any* page load (e.g. /checkout/[slug]?ref=xxx)
+  // and set the cookie directly so it's not lost.
   const ref = searchParams.get('ref')
-  const productMatch = pathname.match(/^\/produto\/([^/]+)$/)
-  if (productMatch && ref) {
-    const slug = productMatch[1]
-    const url = new URL('/api/affiliate/click', request.url)
-    url.searchParams.set('ref', ref)
-    url.searchParams.set('slug', slug)
-    return NextResponse.redirect(url)
+  let response = NextResponse.next()
+
+  if (ref && /^[a-fA-F0-9]{24}$/.test(ref)) {
+    // Only set if valid ObjectId format
+    response.cookies.set(AFFILIATE_REF_COOKIE, ref, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+    })
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {

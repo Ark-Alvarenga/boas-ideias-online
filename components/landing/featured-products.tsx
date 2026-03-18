@@ -3,17 +3,18 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, Sparkles, Zap } from "lucide-react"
+import { ArrowRight, Sparkles } from "lucide-react"
+import { ProductCard } from "@/components/marketplace/product-card"
 import type { Product } from "@/lib/types"
 import { toast } from "@/hooks/use-toast"
 
 interface FeaturedProductCard
   extends Pick<
     Product,
-    "title" | "description" | "price" | "category" | "slug" | "creatorName" | "coverImage"
+    "title" | "description" | "priceCents" | "category" | "slug" | "creatorName" | "coverImage" | "affiliateEnabled" | "affiliateCommissionPercent" | "sales" | "createdAt"
   > {
   _id?: string
+  price?: number
 }
 
 export function FeaturedProducts() {
@@ -112,52 +113,21 @@ export function FeaturedProducts() {
 
           {hasProducts &&
             products.map((product) => (
-              <Link key={product._id ?? product.slug} href={`/produto/${product.slug}`}>
-                <Card className="group h-full overflow-hidden border-border/50 bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
-                  <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-primary/10 via-muted/40 to-transparent">
-                    {product.coverImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={product.coverImage}
-                        alt={product.title}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <span className="font-serif text-5xl font-semibold text-foreground/10">
-                          {product.title.charAt(0)}
-                        </span>
-                      </div>
-                    )}
-                    <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-                      <span className="inline-flex rounded-md bg-background/95 px-2.5 py-1 text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-                        {product.category}
-                      </span>
-                    </div>
-                  </div>
-                  <CardContent className="p-5">
-                    <h3 className="line-clamp-2 font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
-                      {product.title}
-                    </h3>
-                    {/* Price immediately under title */}
-                    <p className="mt-2 text-xl font-bold tracking-tight text-foreground">
-                      R${product.price}
-                    </p>
-                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                      {product.description}
-                    </p>
-                    <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4">
-                      <span className="text-xs text-muted-foreground">
-                        por <span className="font-medium text-foreground">{product.creatorName}</span>
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
-                        <Zap className="h-3 w-3" />
-                        Acesso Imediato
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <ProductCard
+                key={product._id ?? product.slug}
+                id={product._id ?? product.slug}
+                title={product.title}
+                description={product.description}
+                priceCents={product.priceCents ?? (product.price ? Math.round(product.price * 100) : 0)}
+                category={product.category}
+                slug={product.slug}
+                creator={product.creatorName ?? "Criador(a)"}
+                coverImage={product.coverImage}
+                sales={product.sales}
+                createdAt={product.createdAt}
+                affiliateEnabled={product.affiliateEnabled}
+                affiliateCommissionPercent={product.affiliateCommissionPercent}
+              />
             ))}
         </div>
       </div>

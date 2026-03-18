@@ -227,7 +227,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     <div className="mb-2">
                       <p className="mb-1 text-sm text-muted-foreground">Preço</p>
                       <span className="text-4xl font-bold tracking-tight text-foreground">
-                        R${product.price}
+                        {(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                       </span>
                     </div>
 

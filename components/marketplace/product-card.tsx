@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Zap } from "lucide-react"
 import { formatCentsToBRL } from "@/lib/currency"
+import { PromoteProductButton } from "@/components/product/promote-product-button"
 
 interface ProductCardProps {
   id: string
@@ -15,6 +16,8 @@ interface ProductCardProps {
   coverImage?: string
   sales?: number
   createdAt?: string | Date
+  affiliateEnabled?: boolean
+  affiliateCommissionPercent?: number
 }
 
 const categoryGradients: Record<string, string> = {
@@ -36,6 +39,8 @@ export function ProductCard({
   coverImage,
   sales,
   createdAt,
+  affiliateEnabled,
+  affiliateCommissionPercent,
 }: ProductCardProps) {
   const gradient = categoryGradients[category] || "from-gray-500/15 to-slate-500/15"
 
@@ -102,17 +107,31 @@ export function ProductCard({
           )}
         </p>
         
-        <div className="mt-4 flex items-center justify-between gap-3 border-t border-border/50 pt-4">
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-            <Zap className="h-3 w-3 text-primary" />
-            Acesso imediato
-          </span>
-          <Button size="sm" className="min-h-[44px] shadow-sm" asChild>
-            <Link href={`/produto/${slug || id}`}>
-              Comprar agora
-              <ArrowRight className="ml-1 h-3.5 w-3.5" />
-            </Link>
-          </Button>
+        <div className="mt-4 flex flex-col gap-3 border-t border-border/50 pt-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+              <Zap className="h-3 w-3 text-primary" />
+              Acesso imediato
+            </span>
+            <Button size="sm" className="min-h-[44px] shadow-sm flex-1" asChild>
+              <Link href={`/produto/${slug || id}`}>
+                Comprar agora
+                <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </div>
+          {affiliateEnabled && (
+            <div className="-mx-2 -mb-2 mt-1">
+              <PromoteProductButton
+                productId={id}
+                productSlug={slug || ""}
+                affiliateEnabled={true}
+                isCreator={false} // Will be handled inside the button via API if they are creator
+                customText={`Promover e ganhar ${affiliateCommissionPercent ?? 0}%`}
+                compact
+              />
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

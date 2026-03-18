@@ -9,6 +9,8 @@ interface PromoteProductButtonProps {
   productSlug: string
   affiliateEnabled: boolean
   isCreator: boolean
+  customText?: string
+  compact?: boolean
 }
 
 export function PromoteProductButton({
@@ -16,6 +18,8 @@ export function PromoteProductButton({
   productSlug,
   affiliateEnabled,
   isCreator,
+  customText,
+  compact,
 }: PromoteProductButtonProps) {
   const [loading, setLoading] = useState(false)
   const [joined, setJoined] = useState(false)
@@ -51,11 +55,11 @@ export function PromoteProductButton({
   }
 
   return (
-    <div className="mt-4">
+    <div className={compact ? "w-full" : "mt-4"}>
       <Button
         variant="outline"
         size="sm"
-        className="w-full sm:w-auto"
+        className={compact ? "w-full min-h-[44px]" : "w-full sm:w-auto"}
         onClick={handleClick}
         disabled={loading}
       >
@@ -66,7 +70,12 @@ export function PromoteProductButton({
         ) : (
           <Share2 className="mr-2 h-4 w-4" />
         )}
-        {loading ? "Entrando..." : joined ? "Link copiado!" : "Promover este produto"}
+        {loading 
+          ? "Entrando..." 
+          : joined 
+            ? "Link copiado!" 
+            : (customText || "Promover este produto")
+        }
       </Button>
       {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
       {joined && link && (
