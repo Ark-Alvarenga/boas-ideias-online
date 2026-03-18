@@ -137,6 +137,27 @@ async function handleCheckoutCompleted(
       ? session.payment_intent
       : (session.payment_intent as any)?.id ?? "";
 
+  // ─── Fetch the charge ID from the PaymentIntent ───
+  // For BRL transfers in Brazil, Stripe requires source_transaction
+  // to be a charge ID (ch_...), NOT a payment intent ID (pi_...).
+  let chargeId: string | undefined;
+  if (paymentIntentId) {
+    try {
+      const paymentIntent = await stripeClient.paymentIntents.retrieve(paymentIntentId, {
+        expand: ["latest_charge"],
+      });
+      const latestCharge = paymentIntent.latest_charge;
+      if (typeof latestCharge === "string") {
+        chargeId = latestCharge;
+      } else if (latestCharge && typeof latestCharge === "object" && "id" in latestCharge) {
+        chargeId = (latestCharge as { id: string }).id;
+      }
+      console.log(`[Stripe webhook] [${session.id}] Resolved charge ID: ${chargeId ?? "NONE"} from PaymentIntent: ${paymentIntentId}`);
+    } catch (err) {
+      console.error(`[Stripe webhook] [${session.id}] Failed to retrieve PaymentIntent for charge ID:`, err);
+    }
+  }
+
   // ─── Calculate Financial Split (all in cents) ───
   const totalAmountCents = resolvePriceCents(product);
 
@@ -265,13 +286,17 @@ async function handleCheckoutCompleted(
 
   // Transfer to creator
   if (creator?.stripeAccountId && creatorShareCents > 0) {
+    if (!chargeId) {
+      console.error(`[Stripe webhook] [${session.id}] [REQUIRES_MANUAL_INTERVENTION] Cannot create creator transfer: no charge ID resolved from PaymentIntent ${paymentIntentId}`);
+      sale.creatorPayoutStatus = "pending";
+    } else {
     try {
       const creatorTransfer = await stripeClient.transfers.create(
         {
           amount: creatorShareCents,
           currency: "brl",
           destination: creator.stripeAccountId,
-          source_transaction: paymentIntentId || undefined,
+          source_transaction: chargeId,
           transfer_group: transferGroup,
           metadata: {
             saleType: "creator",
@@ -290,13 +315,14 @@ async function handleCheckoutCompleted(
         amount: creatorShareCents,
         destination: creator.stripeAccountId,
         transferGroup,
-        sourceTransaction: paymentIntentId,
+        sourceTransaction: chargeId,
       }));
     } catch (err) {
       console.error(`[Stripe webhook] [${session.id}] [REQUIRES_MANUAL_INTERVENTION] Creator transfer failed:`, err);
       // Sale is still recorded — transfer can be retried later
       sale.creatorPayoutStatus = "pending";
     }
+    } // end chargeId check
   } else {
     sale.creatorPayoutStatus = "pending";
   }
@@ -308,33 +334,38 @@ async function handleCheckoutCompleted(
     affiliateUser?.stripeAccountId &&
     affiliateUser?.stripeOnboardingComplete
   ) {
-    try {
-      const affiliateTransfer = await stripeClient.transfers.create(
-        {
-          amount: affiliateShareCents,
-          currency: "brl",
-          destination: affiliateUser.stripeAccountId,
-          source_transaction: paymentIntentId || undefined,
-          transfer_group: transferGroup,
-          metadata: {
-            saleType: "affiliate",
-            orderId: orderId.toString(),
-            productId: product._id!.toString(),
-            affiliateUserId: affiliateUserId!,
-          },
-        },
-        {
-          idempotencyKey: `transfer_affiliate_${session.id}`,
-        }
-      );
-      sale.stripeTransferIdAffiliate = affiliateTransfer.id;
-      sale.affiliatePayoutStatus = "paid";
-      sale.affiliatePaidAt = new Date();
-    } catch (err) {
-      console.error(`[Stripe webhook] [${session.id}] [REQUIRES_MANUAL_INTERVENTION] Affiliate transfer failed:`, err);
-      // Mark as pending so it can be retried later
+    if (!chargeId) {
+      console.error(`[Stripe webhook] [${session.id}] [REQUIRES_MANUAL_INTERVENTION] Cannot create affiliate transfer: no charge ID`);
       sale.affiliatePayoutStatus = "pending";
-    }
+    } else {
+      try {
+        const affiliateTransfer = await stripeClient.transfers.create(
+          {
+            amount: affiliateShareCents,
+            currency: "brl",
+            destination: affiliateUser.stripeAccountId,
+            source_transaction: chargeId,
+            transfer_group: transferGroup,
+            metadata: {
+              saleType: "affiliate",
+              orderId: orderId.toString(),
+              productId: product._id!.toString(),
+              affiliateUserId: affiliateUserId!,
+            },
+          },
+          {
+            idempotencyKey: `transfer_affiliate_${session.id}`,
+          }
+        );
+        sale.stripeTransferIdAffiliate = affiliateTransfer.id;
+        sale.affiliatePayoutStatus = "paid";
+        sale.affiliatePaidAt = new Date();
+      } catch (err) {
+        console.error(`[Stripe webhook] [${session.id}] [REQUIRES_MANUAL_INTERVENTION] Affiliate transfer failed:`, err);
+        // Mark as pending so it can be retried later
+        sale.affiliatePayoutStatus = "pending";
+      }
+    } // end chargeId check
   }
 
   try {
