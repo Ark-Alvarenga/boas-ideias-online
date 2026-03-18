@@ -22,8 +22,7 @@ export default function ContatoPage() {
             <ul className="mt-2 space-y-3 text-sm text-muted-foreground">
               <li>
                 <span className="font-medium text-foreground">E-mail:</span>{" "}
-                suporte@boasideias.online{" "}
-                <span className="text-xs text-muted-foreground">(placeholder – ajuste para o endereço real)</span>
+                <a href="mailto:suporte@boasideias.online" className="text-primary hover:underline">suporte@boasideias.online</a>
               </li>
               <li>
                 <span className="font-medium text-foreground">Horário de atendimento:</span> dias úteis, das 9h às 18h
@@ -32,12 +31,10 @@ export default function ContatoPage() {
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-dashed border-border/60 bg-muted/40 p-6">
-            <h2 className="text-base font-semibold text-foreground">Formulário de contato</h2>
+          <div className="rounded-2xl border border-border/60 bg-muted/40 p-6">
+            <h2 className="text-base font-semibold text-foreground">Prazo de Resposta</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Aqui você pode futuramente adicionar um formulário funcional para que os usuários enviem mensagens
-              diretamente pelo site. Por enquanto, use este texto como placeholder e direcione o contato para o e-mail
-              acima.
+              Nossa equipe se esforça para responder todas as solicitações em até 24 horas úteis. Para dúvidas relacionadas a compras, por favor, inclua o recibo do Stripe ou o e-mail utilizado na transação.
             </p>
           </div>
         </section>

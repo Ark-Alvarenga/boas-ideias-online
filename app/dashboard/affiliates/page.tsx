@@ -27,6 +27,8 @@ async function getCurrentUser(): Promise<User | null> {
   return user ?? null
 }
 
+import { getBaseUrl } from "@/lib/utils"
+
 async function getAffiliateData(userId: ObjectId) {
   const db = await getDatabase()
   const affiliates = await db.collection<Affiliate>("affiliates").find({ userId }).toArray()
@@ -50,7 +52,7 @@ async function getAffiliateData(userId: ObjectId) {
   const clicksMap = new Map(clicksAgg.map((c) => [c._id.toString(), c.count]))
   const salesMap = new Map(salesAgg.map((s) => [s._id.toString(), { count: s.count, total: s.total }]))
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+  const baseUrl = getBaseUrl()
   const rows = affiliates.map((aff) => {
     const product = productsById.get(aff.productId.toString())
     const slug = product?.slug ?? ""

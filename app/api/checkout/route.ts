@@ -11,6 +11,8 @@ import { cookies } from 'next/headers'
 import { ObjectId } from 'mongodb'
 import { randomUUID } from 'crypto'
 
+import { getBaseUrl } from '@/lib/utils'
+
 interface CheckoutBody {
   productId: string
   buyerName?: string
@@ -125,9 +127,7 @@ export async function POST(request: Request) {
     }
 
     const origin =
-      request.headers.get('origin') ??
-      process.env.NEXT_PUBLIC_APP_URL ??
-      'http://localhost:3000'
+      request.headers.get('origin') ?? getBaseUrl()
 
     const stripeClient = getStripe()
     const unitAmountCents = resolvePriceCents(product)

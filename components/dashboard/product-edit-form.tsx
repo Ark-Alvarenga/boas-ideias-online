@@ -494,11 +494,23 @@ export function ProductEditForm({
             </Field>
           </div>
 
-          <div className="rounded-xl border border-border/60 bg-muted/20 p-5">
+          <div className={cn(
+            "rounded-xl border p-5 transition-colors",
+            isAffiliateEnabled 
+              ? "border-primary/30 bg-primary/5" 
+              : "border-border/60 bg-muted/20"
+          )}>
             <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-foreground">Programa de Afiliados</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium text-foreground">Programa de Afiliados</h3>
+                  {isAffiliateEnabled && (
+                    <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                      Ativado
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
                   Permita que outras pessoas vendam este produto em troca de uma comissão.
                 </p>
               </div>

@@ -99,7 +99,7 @@ export async function POST(request: Request) {
   try {
     const rawBody = await request.json()
 
-    console.log('Raw body:', rawBody)
+
     const priceCents =
       rawBody.priceCents ??
       (rawBody.price ? Math.round(Number(rawBody.price) * 100) : undefined)

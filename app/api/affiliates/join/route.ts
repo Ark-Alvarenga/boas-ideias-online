@@ -4,6 +4,7 @@ import type { Product, User, Affiliate } from '@/lib/types'
 import { authConfig, verifySessionToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
 import { ObjectId } from 'mongodb'
+import { getBaseUrl } from '@/lib/utils'
 
 interface JoinBody {
   productId: string
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
       productId: productObjectId,
     })
     if (existing) {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+      const baseUrl = getBaseUrl()
       const affiliateLink = `${baseUrl}/produto/${product.slug}?ref=${payload.userId}`
       return NextResponse.json({
         success: true,
@@ -97,7 +98,7 @@ export async function POST(request: Request) {
 
     await affiliatesCollection.insertOne(newAffiliate)
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const baseUrl = getBaseUrl()
     const affiliateLink = `${baseUrl}/produto/${product.slug}?ref=${payload.userId}`
 
     return NextResponse.json({

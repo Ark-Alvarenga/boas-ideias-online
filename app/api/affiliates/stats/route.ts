@@ -4,6 +4,7 @@ import type { Affiliate, AffiliateClick, AffiliateSale, Product } from '@/lib/ty
 import { authConfig, verifySessionToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
 import { ObjectId } from 'mongodb'
+import { getBaseUrl } from '@/lib/utils'
 
 export async function GET() {
   try {
@@ -67,7 +68,7 @@ export async function GET() {
       salesPerAffiliate.map((s) => [s._id.toString(), { count: s.count, totalCommission: s.totalCommission }]),
     )
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const baseUrl = getBaseUrl()
     const rows = affiliates.map((aff) => {
       const product = productsById.get(aff.productId.toString())
       const slug = product?.slug ?? ''

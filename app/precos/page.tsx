@@ -46,8 +46,7 @@ export default function PrecosPage() {
           <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-foreground">Dúvidas sobre taxas?</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Este conteúdo é informativo e pode ser ajustado de acordo com o modelo de negócios final. Use esta seção
-              como placeholder até que as regras de monetização sejam definidas.
+              A Boas Ideias Online processa os pagamentos através do Stripe. As taxas da plataforma e do parceiro de pagamento são descontadas automaticamente no momento da venda. Nenhuma cobrança extra será feita.
             </p>
           </div>
         </section>

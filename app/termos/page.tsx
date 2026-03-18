@@ -11,8 +11,7 @@ export default function TermosDeUsoPage() {
             Termos de Uso
           </h1>
           <p className="mt-4 max-w-2xl text-base text-muted-foreground">
-            Este texto é um esboço geral de termos de uso para a plataforma Boas Ideias. Adapte com o apoio de um
-            profissional jurídico antes de usar em produção.
+            Ao acessar e utilizar a plataforma Boas Ideias Online, você concorda com as diretrizes e regras estabelecidas neste documento.
           </p>
         </section>
 
@@ -37,15 +36,15 @@ export default function TermosDeUsoPage() {
           <div>
             <h2 className="text-base font-semibold text-foreground">3. Conteúdo dos criadores</h2>
             <p className="mt-2">
-              Os produtos publicados são de responsabilidade dos criadores. A plataforma pode remover conteúdos que
-              violem direitos de terceiros, legislação aplicável ou estas condições de uso.
+              Os produtos publicados são de exclusiva responsabilidade dos criadores. A plataforma Boas Ideias atua como intermediadora e se reserva o direito de remover conteúdos que
+              violem direitos de terceiros, propriedade intelectual, legislação aplicável ou estas condições de uso.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-dashed border-border/60 bg-muted/40 p-4">
-            <p className="text-xs text-muted-foreground">
-              Este documento é apenas um placeholder ilustrativo. Substitua-o por termos de uso revisados
-              juridicamente, adequados ao seu modelo de negócio e à legislação aplicável.
+          <div>
+            <h2 className="text-base font-semibold text-foreground">4. Política de Reembolso</h2>
+            <p className="mt-2">
+              A Boas Ideias obedece à legislação vigente (Art. 49 do CDC), garantindo prazo de 7 dias de arrependimento para compras de infoprodutos, processados diretamente pela plataforma.
             </p>
           </div>
         </section>

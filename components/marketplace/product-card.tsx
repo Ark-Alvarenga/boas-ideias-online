@@ -70,7 +70,7 @@ export function ProductCard({
           </div>
         )}
         <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-          <span className="inline-flex rounded-md bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
+          <span className="inline-flex rounded-md bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur-sm capitalize">
             {category}
           </span>
           {isNew && (

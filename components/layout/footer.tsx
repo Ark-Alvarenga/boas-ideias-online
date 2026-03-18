@@ -32,9 +32,14 @@ export function Footer() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <Lightbulb className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
-                Boas Ideias
-              </span>
+              <div className="flex flex-col">
+                <span className="font-serif text-lg font-semibold leading-tight tracking-tight text-foreground">
+                  Boas Ideias
+                </span>
+                <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+                  Online
+                </span>
+              </div>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
               O marketplace onde criadores transformam conhecimento em produtos digitais de valor.

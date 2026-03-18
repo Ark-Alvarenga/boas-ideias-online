@@ -139,7 +139,7 @@ export default async function ProductsPage() {
                         {product.description}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span>R${product.price}</span>
+                        <span>{(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                         {product.status === "active" && (
                           <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
                             Active

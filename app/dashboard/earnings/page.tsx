@@ -11,7 +11,7 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { getDatabase } from "@/lib/mongodb"
-import type { Order, Product, User } from "@/lib/types"
+import type { Order, Product, Sale, User } from "@/lib/types"
 import { authConfig, verifySessionToken } from "@/lib/auth"
 import { ObjectId } from "mongodb"
 import { ConnectStripeCard } from "@/components/dashboard/connect-stripe-card"
@@ -45,21 +45,36 @@ export default async function EarningsPage() {
     .toArray()
   const myProductIds = myProducts.filter((p) => p._id != null).map((p) => p._id!)
 
-  const orders = await ordersCollection
-    .find({
-      productId: { $in: myProductIds },
-      status: "paid",
-    })
+  const salesCollection = db.collection<Sale>("sales")
+  const recentSalesRaw = await salesCollection
+    .find({ creatorId: user._id, status: { $in: ["completed", "refunded", "partially_refunded"] } })
+    .sort({ createdAt: -1 })
     .toArray()
 
-  const totalSalesCents = orders.reduce((sum, o) => sum + o.productPriceCents, 0)
+  const validSales = recentSalesRaw.filter(s => s.status === "completed")
+
+  const totalSalesCents = validSales.reduce((sum, s) => sum + s.totalAmountCents, 0)
   const totalSales = totalSalesCents / 100
   const platformFeePercent = Math.min(
     100,
     Math.max(0, Number(process.env.PLATFORM_FEE_PERCENT) || 0),
   )
-  const platformFeeAmount = totalSales * (platformFeePercent / 100)
-  const estimatedEarnings = totalSales - platformFeeAmount
+  const estimatedEarnings = validSales.reduce((sum, s) => sum + s.creatorShareCents, 0) / 100
+
+  // Fetch product titles for recent transactions (Top 10)
+  const recentValidSales = validSales.slice(0, 10)
+  const recentProductIds = [...new Set(recentValidSales.map(s => s.productId))]
+  const recentProducts = await productsCollection.find({ _id: { $in: recentProductIds } }).toArray()
+  const productsMap = new Map(recentProducts.map(p => [p._id!.toString(), p.title]))
+
+  const recentTransactions = recentValidSales.map(s => ({
+    id: s._id!.toString(),
+    title: productsMap.get(s.productId.toString()) || "Produto Desconhecido",
+    netEarnings: s.creatorShareCents / 100,
+    date: s.createdAt
+  }))
+
+  const totalOrderCount = validSales.length
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -108,7 +123,7 @@ export default async function EarningsPage() {
                 R$ {totalSales.toFixed(2)}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {orders.length} venda(s) nos seus produtos
+                {totalOrderCount} venda(s) nos seus produtos
               </p>
             </CardContent>
           </Card>
@@ -149,6 +164,60 @@ export default async function EarningsPage() {
                 <p className="text-sm text-muted-foreground">
                   Conecte sua conta Stripe acima para receber pagamentos.
                 </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-8 border-t border-border/50 pt-8">
+          <Card className="border-border/50 bg-card shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-foreground">
+                Últimas Entradas (Líquido)
+              </CardTitle>
+              <CardDescription>
+                Histórico detalhado das suas vendas mais recentes com os descontos de plataforma e afiliados aplicados.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {recentTransactions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/40 py-10 text-center">
+                  <p className="text-sm font-medium text-foreground">Nenhuma venda ainda</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Publicize seu produto e aguarde sua primeira venda para ver o histórico.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border/50 text-left text-muted-foreground">
+                        <th className="pb-3 pr-4 font-medium">Data</th>
+                        <th className="pb-3 pr-4 font-medium">Produto</th>
+                        <th className="pb-3 px-4 text-right font-medium">Ganhos</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {recentTransactions.map((tx) => (
+                        <tr key={tx.id} className="transition-colors hover:bg-muted/30">
+                          <td className="py-3 pr-4 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                            {new Date(tx.date).toLocaleDateString("pt-BR", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric"
+                            })}
+                          </td>
+                          <td className="py-3 pr-4 font-medium text-foreground">
+                            {tx.title}
+                          </td>
+                          <td className="py-3 px-4 text-right font-semibold text-emerald-600 dark:text-emerald-500 tabular-nums">
+                            R$ {tx.netEarnings.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </CardContent>
           </Card>

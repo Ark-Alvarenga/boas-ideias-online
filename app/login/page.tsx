@@ -15,6 +15,7 @@ function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectPath = searchParams.get("redirect") || searchParams.get("next") || "/dashboard"
+  const isDashboardRedirect = redirectPath.startsWith("/dashboard")
 
   const [formData, setFormData] = useState({
     email: "",
@@ -86,6 +87,11 @@ function LoginContent() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit}>
+                {isDashboardRedirect && (
+                  <div className="mb-6 rounded-md bg-blue-500/10 p-3 text-sm text-blue-600 dark:text-blue-400">
+                    Faça login para gerenciar seus produtos e acessar o dashboard.
+                  </div>
+                )}
                 <FieldGroup>
                   <Field>
                     <FieldLabel htmlFor="email">Email</FieldLabel>

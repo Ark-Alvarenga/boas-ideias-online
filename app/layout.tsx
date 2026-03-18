@@ -15,9 +15,25 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Boas Ideias Online | Marketplace de Produtos Digitais',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://boasideias.online'),
+  title: {
+    default: 'Boas Ideias Online | Marketplace de Produtos Digitais',
+    template: '%s | Boas Ideias Online'
+  },
   description: 'Transforme conhecimento em renda. O marketplace onde criadores vendem cursos, guias e recursos digitais para empreendedores.',
   generator: 'v0.app',
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    title: 'Boas Ideias Online',
+    description: 'O marketplace onde criadores vendem cursos, guias e recursos digitais.',
+    siteName: 'Boas Ideias Online',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Boas Ideias Online',
+    description: 'O marketplace onde criadores vendem cursos, guias e recursos digitais.',
+  },
   icons: {
     icon: [
       {

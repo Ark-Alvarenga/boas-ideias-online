@@ -145,7 +145,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 {/* Mobile-only price (visible without scrolling to sidebar) */}
                 <div className="mt-4 flex items-center gap-4 lg:hidden">
                   <span className="text-3xl font-bold tracking-tight text-foreground">
-                    R${product.price}
+                    {(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </span>
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                     <Zap className="h-3 w-3" />
@@ -313,7 +313,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-xs text-muted-foreground">Preço</p>
-            <p className="text-xl font-bold tracking-tight text-foreground">R${product.price}</p>
+            <p className="text-xl font-bold tracking-tight text-foreground">{(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
           </div>
           <Button size="lg" className="shadow-sm" asChild>
             <Link href={`/checkout/${product.slug}`}>

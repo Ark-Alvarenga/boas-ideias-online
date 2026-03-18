@@ -240,7 +240,7 @@ function CheckoutContent() {
                       ) : (
                         <>
                           <Lock className="mr-2 h-4 w-4" />
-                          Pagar R${product.price}
+                          Pagar {(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                         </>
                       )}
                     </Button>
@@ -286,7 +286,7 @@ function CheckoutContent() {
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span className="text-foreground">R${product.price}</span>
+                      <span className="text-foreground">{(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Desconto</span>
@@ -299,7 +299,7 @@ function CheckoutContent() {
                   <div className="flex items-baseline justify-between">
                     <span className="font-semibold text-foreground">Total</span>
                     <span className="text-2xl font-semibold tracking-tight text-foreground">
-                      R${product.price}
+                      {(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </span>
                   </div>
 

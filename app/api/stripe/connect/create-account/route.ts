@@ -6,6 +6,7 @@ import { authConfig, verifySessionToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
 import { ObjectId } from 'mongodb'
 import { getStripe } from '@/lib/stripe'
+import { getBaseUrl } from '@/lib/utils'
 
 export async function POST() {
   try {
@@ -40,8 +41,7 @@ export async function POST() {
     }
 
     const stripeClient = getStripe()
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const baseUrl = getBaseUrl()
 
     let stripeAccountId = user.stripeAccountId
 

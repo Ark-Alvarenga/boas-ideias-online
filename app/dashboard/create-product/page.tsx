@@ -569,11 +569,17 @@ export default function CreateProductPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <Input
-                        type="file"
-                        accept="application/pdf"
-                        onChange={handleFileChange}
-                      />
+                      <div className="relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-background py-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50">
+                        <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
+                        <p className="text-sm font-medium text-foreground">Clique para selecionar</p>
+                        <p className="text-xs text-muted-foreground">ou arraste o arquivo até aqui</p>
+                        <Input
+                          type="file"
+                          accept="application/pdf"
+                          onChange={handleFileChange}
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                        />
+                      </div>
 
                       {pdfFile && (
                         <div className="rounded-md border border-dashed border-border/60 bg-background p-3 text-xs text-muted-foreground">
@@ -632,11 +638,17 @@ export default function CreateProductPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <Input
-                        type="file"
-                        accept="image/png"
-                        onChange={handleCoverFileChange}
-                      />
+                      <div className="relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-background py-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50">
+                        <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
+                        <p className="text-sm font-medium text-foreground">Clique para selecionar</p>
+                        <p className="text-xs text-muted-foreground">ou arraste a Imagem até aqui</p>
+                        <Input
+                          type="file"
+                          accept="image/png"
+                          onChange={handleCoverFileChange}
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                        />
+                      </div>
 
                       {coverFile && (
                         <div className="rounded-md border border-dashed border-border/60 bg-background p-3 text-xs text-muted-foreground">

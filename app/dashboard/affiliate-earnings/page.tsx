@@ -37,7 +37,7 @@ export default async function AffiliateEarningsPage() {
   const affiliates = await db.collection<Affiliate>("affiliates").find({ userId }).toArray()
   const affiliateIds = affiliates.map((a) => a._id!)
 
-  const [totalClicks, totalSales, totalEarnings, topProducts] = await Promise.all([
+  const [totalClicks, totalSales, totalEarnings, topProducts, recentAffiliateSales] = await Promise.all([
     db.collection<AffiliateClick>("affiliateClicks").countDocuments({ affiliateId: { $in: affiliateIds } }),
     db.collection<AffiliateSale>("affiliateSales").countDocuments({ affiliateId: { $in: affiliateIds } }),
     db
@@ -57,18 +57,35 @@ export default async function AffiliateEarningsPage() {
         { $limit: 5 },
       ])
       .toArray(),
+    db
+      .collection<AffiliateSale>("affiliateSales")
+      .find({ affiliateId: { $in: affiliateIds } })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .toArray(),
   ])
 
-  const productIds = topProducts.map((p) => p._id)
+  const productIdsToFetch = new Set([
+    ...topProducts.map((p) => p._id.toString()),
+    ...recentAffiliateSales.map((s) => s.productId.toString())
+  ])
+
   const products =
-    productIds.length > 0
-      ? await db.collection<Product>("products").find({ _id: { $in: productIds } }).toArray()
+    productIdsToFetch.size > 0
+      ? await db.collection<Product>("products").find({ _id: { $in: Array.from(productIdsToFetch).map(id => new ObjectId(id)) } }).toArray()
       : []
   const productsById = new Map(products.map((p) => [p._id!.toString(), p]))
   const topProductsWithNames = topProducts.map((p) => ({
     title: productsById.get(p._id.toString())?.title ?? "Produto",
     sales: p.count,
     earnings: p.total / 100,
+  }))
+
+  const recentTransactions = recentAffiliateSales.map(s => ({
+    id: s._id!.toString(),
+    title: productsById.get(s.productId.toString())?.title ?? "Produto Desconhecido",
+    earnings: s.commissionAmountCents / 100,
+    date: s.createdAt
   }))
 
   const conversionRate = totalClicks > 0 ? ((totalSales / totalClicks) * 100).toFixed(1) : "0"
@@ -171,6 +188,60 @@ export default async function AffiliateEarningsPage() {
             )}
           </CardContent>
         </Card>
+
+        <div className="mt-8 border-t border-border/50 pt-8">
+          <Card className="border-border/50 bg-card shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-foreground">
+                Últimas Indicações Convertidas
+              </CardTitle>
+              <CardDescription>
+                Histórico recente das suas comissões geradas por indicação.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {recentTransactions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/40 py-10 text-center">
+                  <p className="text-sm font-medium text-foreground">Ainda sem comissões</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Divulgue seus links de parceiro para começar a ganhar.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border/50 text-left text-muted-foreground">
+                        <th className="pb-3 pr-4 font-medium">Data</th>
+                        <th className="pb-3 pr-4 font-medium">Produto</th>
+                        <th className="pb-3 px-4 text-right font-medium">Sua Comissão</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {recentTransactions.map((tx) => (
+                        <tr key={tx.id} className="transition-colors hover:bg-muted/30">
+                          <td className="py-3 pr-4 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                            {new Date(tx.date).toLocaleDateString("pt-BR", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric"
+                            })}
+                          </td>
+                          <td className="py-3 pr-4 font-medium text-foreground">
+                            {tx.title}
+                          </td>
+                          <td className="py-3 px-4 text-right font-semibold text-emerald-600 dark:text-emerald-500 tabular-nums">
+                            R$ {tx.earnings.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   )
