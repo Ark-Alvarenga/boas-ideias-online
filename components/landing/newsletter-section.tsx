@@ -17,8 +17,8 @@ export function NewsletterSection() {
   }
 
   return (
-    <section className="border-t border-border/50 bg-muted/30 py-16 lg:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="border-t border-border/50 bg-muted/30 py-16 lg:py-24">
+      <div className="section-container">
         <div className="mx-auto max-w-xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
             Newsletter
@@ -44,10 +44,10 @@ export function NewsletterSection() {
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-11 flex-1 border-border bg-background"
+                  className="h-12 flex-1 border-border bg-background text-base"
                   required
                 />
-                <Button type="submit" className="h-11 px-6 shadow-sm">
+                <Button type="submit" size="xl" className="shadow-sm">
                   Inscrever-se
                 </Button>
               </div>

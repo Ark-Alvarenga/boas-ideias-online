@@ -25,8 +25,8 @@ const benefits = [
 
 export function BenefitsSection() {
   return (
-    <section className="border-y border-border/50 bg-muted/30 py-16 lg:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="section-y border-y border-border/50 bg-muted/30">
+      <div className="section-container">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
             Por que escolher
@@ -39,11 +39,11 @@ export function BenefitsSection() {
           </p>
         </div>
 
-        <div className="mx-auto mt-16 grid max-w-5xl gap-8 sm:grid-cols-2 lg:gap-12">
+        <div className="mx-auto mt-14 grid max-w-5xl gap-6 sm:grid-cols-2">
           {benefits.map((benefit, index) => (
             <div 
               key={index}
-              className="group relative flex gap-5"
+              className="group flex gap-5 rounded-xl border border-border/50 bg-card p-6 transition-colors hover:border-border hover:shadow-sm"
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/15">
                 <benefit.icon className="h-5 w-5 text-primary" />

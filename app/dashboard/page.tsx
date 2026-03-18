@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { Lightbulb, ArrowUpRight, Download, DollarSign } from "lucide-react";
+import { ArrowUpRight, Download, DollarSign, Package, Users as UsersIcon, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,6 +10,8 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 import { getDatabase } from "@/lib/mongodb";
 import type { Order, Product, User } from "@/lib/types";
 import { authConfig, verifySessionToken } from "@/lib/auth";
@@ -32,6 +34,13 @@ async function getCurrentUser(): Promise<User | null> {
   });
   return user ?? null;
 }
+
+const dashboardTabs = [
+  { label: "Painel", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Produtos", href: "/dashboard/products", icon: Package },
+  { label: "Ganhos", href: "/dashboard/earnings", icon: DollarSign },
+  { label: "Afiliados", href: "/dashboard/affiliates", icon: UsersIcon },
+];
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -71,49 +80,50 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Lightbulb className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
-              Meu painel
-            </span>
-          </Link>
+      <Header />
 
-          <div className="flex items-center gap-2 overflow-x-auto sm:gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground"
-              asChild
-            >
-              <Link href="/marketplace">
-                Ver Marketplace
-                <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" className="shrink-0" asChild>
-              <Link href="/dashboard/earnings">
-                <DollarSign className="mr-1 h-3.5 w-3.5" />
-                Ganhos
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" className="shrink-0" asChild>
-              <Link href="/dashboard/products">Produtos</Link>
-            </Button>
-            <Button variant="outline" size="sm" className="shrink-0" asChild>
-              <Link href="/dashboard/affiliates">Afiliados</Link>
-            </Button>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
-              {(user?.name?.charAt(0) ?? "?").toUpperCase()}
+      {/* Secondary dashboard navigation */}
+      <nav className="border-b border-border/50 bg-background">
+        <div className="section-container">
+          <div className="flex items-center gap-1 overflow-x-auto py-2">
+            {dashboardTabs.map((tab) => {
+              const isActive = tab.href === "/dashboard";
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  className={`inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  {tab.label}
+                </Link>
+              );
+            })}
+            <div className="ml-auto flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+                asChild
+              >
+                <Link href="/marketplace">
+                  Ver Marketplace
+                  <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+                {(user?.name?.charAt(0) ?? "?").toUpperCase()}
+              </div>
             </div>
           </div>
         </div>
-      </header>
+      </nav>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+      <main className="section-container py-8 sm:py-10 lg:py-12">
         <div className="mb-8">
           <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
             Olá, {user?.name?.split(" ")[0] ?? "Usuário"}!
@@ -173,7 +183,7 @@ export default async function DashboardPage() {
                   return (
                     <div
                       key={order._id?.toString() ?? `order-${index}`}
-                      className="flex flex-col gap-3 rounded-xl border border-border/50 bg-background p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex flex-col gap-3 rounded-xl border border-border/50 bg-background p-4 transition-colors hover:border-border hover:shadow-sm sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex items-center gap-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-blue-500/15 to-indigo-500/15">
@@ -214,6 +224,8 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </main>
+
+      <Footer />
     </div>
   );
 }

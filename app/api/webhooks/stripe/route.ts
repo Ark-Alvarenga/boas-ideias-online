@@ -97,6 +97,10 @@ async function handleCheckoutCompleted(
     typeof session.customer_details?.email === "string"
       ? session.customer_details.email
       : (typeof session.customer_email === "string" ? session.customer_email : "");
+  const transferGroup =
+    typeof metadata.transferGroup === "string"
+      ? metadata.transferGroup
+      : session.id; // fallback for sessions created before this change
 
   if (!productId || !ObjectId.isValid(productId)) {
     console.error(`[Stripe webhook] [${session.id}] Missing or invalid productId in metadata`);
@@ -267,7 +271,8 @@ async function handleCheckoutCompleted(
           amount: creatorShareCents,
           currency: "brl",
           destination: creator.stripeAccountId,
-          transfer_group: session.id,
+          source_transaction: paymentIntentId || undefined,
+          transfer_group: transferGroup,
           metadata: {
             saleType: "creator",
             orderId: orderId.toString(),
@@ -280,6 +285,13 @@ async function handleCheckoutCompleted(
       );
       sale.stripeTransferIdCreator = creatorTransfer.id;
       sale.creatorPayoutStatus = "paid";
+      console.log(`[Stripe webhook] [${session.id}] Creator transfer created:`, JSON.stringify({
+        transferId: creatorTransfer.id,
+        amount: creatorShareCents,
+        destination: creator.stripeAccountId,
+        transferGroup,
+        sourceTransaction: paymentIntentId,
+      }));
     } catch (err) {
       console.error(`[Stripe webhook] [${session.id}] [REQUIRES_MANUAL_INTERVENTION] Creator transfer failed:`, err);
       // Sale is still recorded — transfer can be retried later
@@ -302,7 +314,8 @@ async function handleCheckoutCompleted(
           amount: affiliateShareCents,
           currency: "brl",
           destination: affiliateUser.stripeAccountId,
-          transfer_group: session.id,
+          source_transaction: paymentIntentId || undefined,
+          transfer_group: transferGroup,
           metadata: {
             saleType: "affiliate",
             orderId: orderId.toString(),

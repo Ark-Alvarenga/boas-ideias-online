@@ -9,6 +9,7 @@ import { checkoutSchema } from '@/lib/schema'
 import { resolvePriceCents } from '@/lib/currency'
 import { cookies } from 'next/headers'
 import { ObjectId } from 'mongodb'
+import { randomUUID } from 'crypto'
 
 interface CheckoutBody {
   productId: string
@@ -140,6 +141,13 @@ export async function POST(request: Request) {
     // Separate Charges and Transfers model:
     // Platform collects 100% of the payment.
     // Transfers to creator (and optionally affiliate) happen in the webhook.
+    //
+    // A unique transfer_group is generated upfront and set on the
+    // PaymentIntent so that every transfer created in the webhook
+    // shares the same group — this lets Stripe link the original
+    // charge to all downstream transfers.
+    const transferGroup = `tg_${randomUUID()}`
+
     const sessionParams: StripeType.Checkout.SessionCreateParams = {
       mode: 'payment',
       payment_method_types: ['card'],
@@ -157,11 +165,15 @@ export async function POST(request: Request) {
         },
       ],
       customer_email: buyerEmail || buyer.email,
+      payment_intent_data: {
+        transfer_group: transferGroup,
+      },
       metadata: {
         productId: product._id!.toString(),
         userId: buyer._id!.toString(),
         buyerName: buyerName || buyer.name,
         creatorId: product.creatorId.toString(),
+        transferGroup,
         ...(affiliateUserId && { affiliateUserId }),
       },
       success_url: `${origin}/purchase-success?session_id={CHECKOUT_SESSION_ID}`,
@@ -174,8 +186,10 @@ export async function POST(request: Request) {
       action: 'checkout_session_created', 
       productId: product._id!.toString(), 
       userId: buyer._id!.toString(), 
+      creatorStripeAccountId: creator.stripeAccountId,
       amount: unitAmountCents, 
       sessionId: session.id, 
+      transferGroup,
       timestamp: new Date().toISOString() 
     }))
 

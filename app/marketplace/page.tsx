@@ -116,8 +116,8 @@ function MarketplaceContent() {
   return (
     <>
       {/* Hero section */}
-      <section className="border-b border-border/50 bg-muted/30 py-10 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className="border-b border-border/50 bg-muted/30 py-12 lg:py-20">
+        <div className="section-container">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
             Marketplace
           </p>
@@ -132,28 +132,31 @@ function MarketplaceContent() {
       </section>
 
       {/* Filters and Products */}
-      <section className="py-8 lg:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <MarketplaceFilters
-            initialQuery={search}
-            initialCategory={category}
-            initialSort={sort}
-            onSearch={(value) => {
-              updateFilters({ search: value || null, page: null });
-            }}
-            onCategoryChange={(value) => {
-              updateFilters({ category: value === "todos" ? null : value, page: null });
-            }}
-            onSortChange={(value) => {
-              updateFilters({ sort: value === "relevancia" ? null : value, page: null });
-            }}
-            onClear={() => {
-              updateFilters({ search: null, category: null, sort: null, page: null });
-            }}
-          />
+      <section className="section-y">
+        <div className="section-container">
+          {/* Filters in a subtle card */}
+          <div className="rounded-xl border border-border/50 bg-card p-4 shadow-sm">
+            <MarketplaceFilters
+              initialQuery={search}
+              initialCategory={category}
+              initialSort={sort}
+              onSearch={(value) => {
+                updateFilters({ search: value || null, page: null });
+              }}
+              onCategoryChange={(value) => {
+                updateFilters({ category: value === "todos" ? null : value, page: null });
+              }}
+              onSortChange={(value) => {
+                updateFilters({ sort: value === "relevancia" ? null : value, page: null });
+              }}
+              onClear={() => {
+                updateFilters({ search: null, category: null, sort: null, page: null });
+              }}
+            />
+          </div>
 
-          <div className="mt-10">
-            <p className="mb-8 text-sm text-muted-foreground">
+          <div className="mt-8">
+            <p className="mb-6 text-sm text-muted-foreground">
               {isLoading ? (
                 <span>Carregando produtos...</span>
               ) : (
@@ -174,14 +177,15 @@ function MarketplaceContent() {
                 Array.from({ length: 6 }).map((_, idx) => (
                   <div
                     key={`skeleton-${idx}`}
-                    className="h-[340px] rounded-xl border border-border/50 bg-card/50"
+                    className="h-[380px] rounded-xl border border-border/50 bg-card/50"
                   >
-                    <div className="h-44 w-full animate-pulse bg-muted/60" />
+                    <div className="h-44 w-full animate-pulse rounded-t-xl bg-muted/60" />
                     <div className="space-y-3 p-5">
                       <div className="h-4 w-3/4 animate-pulse rounded bg-muted/60" />
+                      <div className="h-5 w-1/3 animate-pulse rounded bg-muted/60" />
                       <div className="h-4 w-full animate-pulse rounded bg-muted/60" />
                       <div className="h-4 w-2/3 animate-pulse rounded bg-muted/60" />
-                      <div className="mt-6 h-10 w-full animate-pulse rounded bg-muted/60" />
+                      <div className="mt-4 h-10 w-full animate-pulse rounded bg-muted/60" />
                     </div>
                   </div>
                 ))}
@@ -225,7 +229,7 @@ function MarketplaceContent() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-16 flex justify-center">
+            <div className="mt-14 flex justify-center">
               <nav
                 className="flex items-center gap-1.5"
                 aria-label="Pagination"
@@ -234,7 +238,7 @@ function MarketplaceContent() {
                   type="button"
                   onClick={() => handleChangePage(page - 1)}
                   disabled={page <= 1}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
                 >
                   {"<"}
                 </button>
@@ -247,9 +251,9 @@ function MarketplaceContent() {
                       key={pageNumber}
                       type="button"
                       onClick={() => handleChangePage(pageNumber)}
-                      className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                      className={`flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
                         isActive
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-primary text-primary-foreground shadow-sm"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                     >
@@ -262,7 +266,7 @@ function MarketplaceContent() {
                   type="button"
                   onClick={() => handleChangePage(page + 1)}
                   disabled={page >= totalPages}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
                 >
                   {">"}
                 </button>

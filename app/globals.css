@@ -126,6 +126,9 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   html,
   body {
     @apply overflow-x-hidden;
@@ -143,5 +146,36 @@
   summary,
   select {
     @apply cursor-pointer;
+  }
+}
+
+/* ── Reusable layout utilities ── */
+@layer utilities {
+  .section-container {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  .section-y {
+    @apply py-16 lg:py-24;
+  }
+  .price-highlight {
+    @apply text-2xl font-bold tracking-tight text-foreground;
+  }
+}
+
+/* ── Mobile sticky purchase bar ── */
+.mobile-sticky-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  padding: 0.75rem 1rem;
+  background: var(--background);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 16px oklch(0 0 0 / 0.06);
+}
+@media (min-width: 1024px) {
+  .mobile-sticky-cta {
+    display: none;
   }
 }
