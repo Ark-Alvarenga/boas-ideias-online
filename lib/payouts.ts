@@ -11,6 +11,8 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
 
   const userObjectId = typeof userId === 'string' ? new ObjectId(userId) : userId
 
+  console.log("PAYOUT START", { userId: userObjectId.toString() })
+
   // STEP 1: Fetch user
   const user = await usersCollection.findOne({ _id: userObjectId })
   
@@ -19,7 +21,13 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
     return false
   }
 
-  const { pendingBalanceCents = 0, stripeAccountId, payoutProcessing } = user
+  const { pendingBalanceCents = 0, stripeAccountId, stripeOnboardingComplete, payoutProcessing } = user
+
+  console.log("USER DATA", {
+    pendingBalanceCents,
+    stripeAccountId,
+    stripeOnboardingComplete
+  })
 
   if (pendingBalanceCents <= 0) {
     return false
@@ -59,10 +67,9 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
   }
 
   // STEP 3: Transfer
-  console.log("PAYOUT START", {
-    userId: userObjectId.toString(),
+  console.log("CREATING STRIPE TRANSFER", {
     amount: pendingBalanceCents,
-    stripeAccountId
+    destination: stripeAccountId
   })
 
   try {
@@ -78,6 +85,8 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
     })
 
     // STEP 4: Success
+    console.log("PAYOUT SUCCESS", transfer.id)
+    
     // Reset pendingBalance to 0, unlock payoutProcessing
     await usersCollection.updateOne(
       { _id: userObjectId },
@@ -85,6 +94,8 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
         $set: { payoutProcessing: false, pendingBalanceCents: 0 },
       }
     )
+
+    console.log("BALANCE RESET")
 
     // Log the transaction
     await userTransactionsCollection.insertOne({
@@ -102,11 +113,10 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
       { $set: { status: 'paid' } }
     )
 
-    console.log("PAYOUT SUCCESS", transfer.id)
     console.log(`[Payout] Successfully processed payout of ${pendingBalanceCents} for user ${userObjectId} (Transfer ${transfer.id})`)
     return true
-  } catch (err) {
-    console.error(`[Payout] Transfer failed for user ${userObjectId}:`, err)
+  } catch (error) {
+    console.error("PAYOUT ERROR", error)
     // STEP 5: Unlock on Error without resetting pending balance
     await usersCollection.updateOne(
       { _id: userObjectId },
