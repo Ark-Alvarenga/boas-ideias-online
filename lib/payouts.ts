@@ -15,7 +15,9 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
 
   // STEP 1: Fetch user
   try {
+    console.log("BEFORE FINDONE", userObjectId.toString())
     const user = await usersCollection.findOne({ _id: userObjectId })
+    console.log("AFTER FINDONE", user)
     
     if (!user) {
       console.log("EXIT: NO USER")

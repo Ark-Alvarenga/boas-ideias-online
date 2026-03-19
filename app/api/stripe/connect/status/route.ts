@@ -68,11 +68,12 @@ export async function GET() {
         // ALWAYS trigger payout if fully connected, have a balance, and StripeAccountId exists (wrapper)
         if (stripeOnboardingComplete && (user.pendingBalanceCents || 0) > 0) {
           console.log("TRIGGERING PAYOUT AFTER CONNECT", user._id)
-          // Trigger payout if they have any pending balance
-          // We don't await this so the response stays fast
-          processUserPayout(user._id!).catch(err => {
-            console.error('[Stripe Status] Async processUserPayout failed:', err)
-          })
+          // AWAIT payout to prevent Vercel from killing the serverless background promise early
+          try {
+            await processUserPayout(user._id!)
+          } catch (err) {
+            console.error('[Stripe Status] Awaited processUserPayout failed:', err)
+          }
         }
       } catch (err) {
         console.error('Stripe account retrieve error:', err)
