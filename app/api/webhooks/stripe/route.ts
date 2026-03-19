@@ -340,9 +340,14 @@ async function createSaleFromCheckoutData(
   db: Awaited<ReturnType<typeof getDatabase>>,
   stripeClient: StripeType,
 ) {
+  if (!chargeId || !chargeId.startsWith("ch_")) {
+    console.error("CRITICAL: Invalid or missing chargeId, aborting sale creation", { paymentIntentId: data.stripePaymentIntentId });
+    return;
+  }
+
   const {
     stripeSessionId,
-    stripePaymentIntentId,
+    stripePaymentIntentId, // Original intent ID, kept for reference/logging if needed
     transferGroup,
     productId,
     userId,
@@ -397,7 +402,7 @@ async function createSaleFromCheckoutData(
       createdAt: new Date(),
       updatedAt: new Date(),
       stripeSessionId,
-      stripePaymentIntentId,
+      stripePaymentIntentId: chargeId,
     };
 
     try {
@@ -507,7 +512,7 @@ async function createSaleFromCheckoutData(
     affiliateShareCents,
     creatorShareCents,
     stripeSessionId,
-    stripePaymentIntentId,
+    stripePaymentIntentId: chargeId,
     status: "completed",
     creatorPayoutStatus: "pending",
     affiliatePayoutStatus: affiliateRecord
@@ -598,6 +603,7 @@ async function createSaleFromCheckoutData(
   }
 
   // ── Persist sale ──
+  console.log("FINAL SALE CHARGE ID:", chargeId);
   try {
     await salesCollection.insertOne(sale);
   } catch (err: any) {
@@ -673,13 +679,14 @@ async function upsertPendingSale(
 // Handle charge.refunded
 // ─────────────────────────────────────────────────────────────
 async function handleChargeRefunded(charge: StripeType.Charge) {
+  const chargeId = charge.id;
   const paymentIntentId =
     typeof charge.payment_intent === "string"
       ? charge.payment_intent
       : (charge.payment_intent as any)?.id;
 
-  if (!paymentIntentId) {
-    console.warn("[Stripe webhook] charge.refunded missing payment_intent");
+  if (!paymentIntentId && !chargeId) {
+    console.warn("[Stripe webhook] charge.refunded missing both payment_intent and chargeId");
     return;
   }
 
@@ -688,12 +695,12 @@ async function handleChargeRefunded(charge: StripeType.Charge) {
   const ordersCollection = db.collection<Order>("orders");
 
   const sale = await salesCollection.findOne({
-    stripePaymentIntentId: paymentIntentId,
+    stripePaymentIntentId: { $in: [chargeId, paymentIntentId].filter(Boolean) },
   });
   if (!sale) {
     console.warn(
-      "[Stripe webhook] No sale found for refunded payment_intent:",
-      paymentIntentId,
+      "[Stripe webhook] No sale found for refunded payment_intent/charge:",
+      { paymentIntentId, chargeId },
     );
     return;
   }
