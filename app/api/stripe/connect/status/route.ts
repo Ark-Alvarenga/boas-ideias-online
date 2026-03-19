@@ -51,6 +51,7 @@ export async function GET() {
         const complete =
           account.details_submitted === true &&
           account.charges_enabled === true
+          
         if (complete && !stripeOnboardingComplete) {
           await usersCollection.updateOne(
             { _id: user._id },
@@ -62,7 +63,11 @@ export async function GET() {
             },
           )
           stripeOnboardingComplete = true
+        }
 
+        // ALWAYS trigger payout if fully connected, have a balance, and StripeAccountId exists (wrapper)
+        if (stripeOnboardingComplete && (user.pendingBalanceCents || 0) > 0) {
+          console.log("TRIGGERING PAYOUT AFTER CONNECT", user._id)
           // Trigger payout if they have any pending balance
           // We don't await this so the response stays fast
           processUserPayout(user._id!).catch(err => {
