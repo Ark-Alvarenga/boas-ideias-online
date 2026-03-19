@@ -370,7 +370,9 @@ async function handleCheckoutCompleted(
   }
 
   // ─── Create Sale Document ───
+  const saleId = new ObjectId();
   const sale: Sale = {
+    _id: saleId,
     orderId,
     productId: product._id!,
     buyerId: new ObjectId(userId!),
@@ -475,7 +477,7 @@ async function handleCheckoutCompleted(
   // Link sale back to order
   await ordersCollection.updateOne(
     { _id: orderId },
-    { $set: { saleId: sale._id } },
+    { $set: { saleId: saleId } },
   );
 
   // Update product sales count
