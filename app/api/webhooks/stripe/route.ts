@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import type StripeType from "stripe";
 import { getDatabase } from "@/lib/mongodb";
-import type { Order, Product, Affiliate, AffiliateSale, Sale, User } from "@/lib/types";
+import type { Order, Product, Affiliate, AffiliateSale, Sale, User, UserTransaction } from "@/lib/types";
 import { getStripe } from "@/lib/stripe";
 import { resolvePriceCents } from "@/lib/currency";
 import { ObjectId } from "mongodb";
@@ -361,6 +361,7 @@ async function createSaleFromCheckoutData(
   const ordersCollection = db.collection<Order>("orders");
   const salesCollection = db.collection<Sale>("sales");
   const usersCollection = db.collection<User>("users");
+  const userTransactionsCollection = db.collection<UserTransaction>("userTransactions");
 
   const product = await productsCollection.findOne({
     _id: new ObjectId(productId),
@@ -499,7 +500,9 @@ async function createSaleFromCheckoutData(
   });
 
   // ── Build Sale Document ──
+  const saleId = new ObjectId();
   const sale: Sale = {
+    _id: saleId,
     orderId,
     productId: product._id!,
     buyerId: new ObjectId(userId),
@@ -599,6 +602,51 @@ async function createSaleFromCheckoutData(
         err,
       );
       sale.affiliatePayoutStatus = "pending";
+    }
+  }
+
+  // ── Balance Accrual ──
+  // Idempotency: skip if sale was inserted by another concurrent webhook
+  const saleAlreadyInserted = await salesCollection.findOne({ stripeSessionId });
+  if (!saleAlreadyInserted) {
+    if (creatorShareCents > 0) {
+      await usersCollection.updateOne(
+        { _id: creatorId },
+        {
+          $inc: {
+            pendingBalanceCents: creatorShareCents,
+            totalEarningsCents: creatorShareCents,
+          },
+        }
+      );
+      await userTransactionsCollection.insertOne({
+        userId: creatorId,
+        amountCents: creatorShareCents,
+        type: "sale",
+        status: "pending",
+        saleId: saleId.toString(),
+        createdAt: new Date(),
+      });
+    }
+
+    if (affiliateUserId && affiliateShareCents > 0) {
+      await usersCollection.updateOne(
+        { _id: new ObjectId(affiliateUserId) },
+        {
+          $inc: {
+            pendingBalanceCents: affiliateShareCents,
+            totalEarningsCents: affiliateShareCents,
+          },
+        }
+      );
+      await userTransactionsCollection.insertOne({
+        userId: new ObjectId(affiliateUserId),
+        amountCents: affiliateShareCents,
+        type: "affiliate_commission",
+        status: "pending",
+        saleId: saleId.toString(),
+        createdAt: new Date(),
+      });
     }
   }
 
