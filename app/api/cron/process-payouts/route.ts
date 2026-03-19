@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { ObjectId } from 'mongodb'
 import { getDatabase } from '@/lib/mongodb'
 import type { User } from '@/lib/types'
 import { processUserPayout } from '@/lib/payouts'
@@ -20,9 +21,24 @@ export async function GET(request: Request) {
     const db = await getDatabase()
     const usersCollection = db.collection<User>('users')
 
-    // Find users where pendingBalanceCents > 0, stripeAccountId exists, and onboarding complete
+    const salesCollection = db.collection('sales')
+
+    // Include users mapped by any pending payout status to correctly heal invisible sums
+    const pendingCreatorIds = await salesCollection.distinct("creatorId", { creatorPayoutStatus: "pending", creatorId: { $ne: null } });
+    const pendingAffiliateIds = await salesCollection.distinct("affiliateUserId", { affiliatePayoutStatus: "pending", affiliateUserId: { $ne: null } });
+
+    const combinedSet = new Set<string>()
+    pendingCreatorIds.forEach(id => combinedSet.add(id.toString()))
+    pendingAffiliateIds.forEach(id => combinedSet.add(id.toString()))
+
+    const uniqueObjIds = Array.from(combinedSet).map(id => new ObjectId(id))
+
+    // Find users ready for payout, incorporating self-healing checks on missing balances
     const pendingUsers = await usersCollection.find({
-      pendingBalanceCents: { $gt: 0 },
+      $or: [
+        { _id: { $in: uniqueObjIds } },
+        { pendingBalanceCents: { $gt: 0 } }
+      ],
       stripeAccountId: { $exists: true, $type: 'string' },
       stripeOnboardingComplete: true,
       payoutProcessing: { $ne: true }

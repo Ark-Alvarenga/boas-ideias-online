@@ -515,7 +515,8 @@ async function createSaleFromCheckoutData(
     affiliateShareCents,
     creatorShareCents,
     stripeSessionId,
-    stripePaymentIntentId: chargeId,
+    stripePaymentIntentId: stripePaymentIntentId || chargeId,
+    stripeChargeId: chargeId,
     status: "completed",
     creatorPayoutStatus: "pending",
     affiliatePayoutStatus: affiliateRecord

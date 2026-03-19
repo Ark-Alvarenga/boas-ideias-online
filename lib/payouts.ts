@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 import { getDatabase } from '@/lib/mongodb'
 import type { User, UserTransaction, Sale } from '@/lib/types'
 import { getStripe } from '@/lib/stripe'
-import { recalculateUserBalance } from '@/lib/hardening'
+import { getUserPendingBalance } from '@/lib/hardening'
 
 export async function processUserPayout(userId: string | ObjectId): Promise<boolean> {
   const db = await getDatabase()
@@ -24,7 +24,7 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
       return false
     }
 
-    const { pendingBalanceCents = 0, stripeAccountId, stripeOnboardingComplete, payoutProcessing } = user
+    const { stripeAccountId, stripeOnboardingComplete, payoutProcessing } = user
 
     console.log("USER DATA FULL", user)
 
@@ -35,11 +35,6 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
 
     if (!stripeOnboardingComplete) {
       console.log("EXIT: ONBOARDING NOT COMPLETE")
-      return false
-    }
-
-    if (pendingBalanceCents <= 0) {
-      console.log("EXIT: NO BALANCE")
       return false
     }
 
@@ -59,26 +54,83 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
       return false
     }
 
-    // STEP 2B: Assert consistency
-    const verifiedSumCents = await recalculateUserBalance(userObjectId)
-    if (verifiedSumCents !== pendingBalanceCents) {
-      console.error(`[CRITICAL ERROR] Balance mismatch for user ${userObjectId}. Cached: ${pendingBalanceCents}, Summed: ${verifiedSumCents}. Halting payout.`)
-      // Unlock and return
-      await usersCollection.updateOne(
-        { _id: userObjectId },
-        { $set: { payoutProcessing: false } }
-      )
-      console.log("EXIT: FAILED CONSISTENCY CHECK")
+    // ── 1. HARD RECONCILIATION AT START ──
+    const allSales = await salesCollection.find({
+      $or: [
+        { creatorId: userObjectId },
+        { affiliateUserId: userObjectId }
+      ]
+    }).toArray()
+
+    for (const sale of allSales) {
+      if (!sale._id) continue
+      const saleIdStr = sale._id.toString()
+
+      // Creator side
+      if (sale.creatorId && sale.creatorId.toString() === userObjectId.toString()) {
+        if (sale.creatorPayoutStatus === 'paid') {
+          const res = await userTransactionsCollection.updateMany(
+            { userId: userObjectId, saleId: saleIdStr, type: 'sale', status: 'pending' },
+            { $set: { status: 'paid' } }
+          )
+          if (res.modifiedCount > 0) console.error(`[INCONSISTENCY FIXED] Sale ${saleIdStr} creator paid, but tx was pending.`)
+        } else if (sale.creatorPayoutStatus === 'pending') {
+          const res = await userTransactionsCollection.updateMany(
+            { userId: userObjectId, saleId: saleIdStr, type: 'sale', status: 'paid' },
+            { $set: { status: 'pending' } }
+          )
+          if (res.modifiedCount > 0) console.error(`[INCONSISTENCY FIXED] Sale ${saleIdStr} creator pending, but tx was paid.`)
+        }
+      }
+
+      // Affiliate side
+      if (sale.affiliateUserId && sale.affiliateUserId.toString() === userObjectId.toString()) {
+        if (sale.affiliatePayoutStatus === 'paid') {
+          const res = await userTransactionsCollection.updateMany(
+            { userId: userObjectId, saleId: saleIdStr, type: 'affiliate_commission', status: 'pending' },
+            { $set: { status: 'paid' } }
+          )
+          if (res.modifiedCount > 0) console.error(`[INCONSISTENCY FIXED] Sale ${saleIdStr} affiliate paid, but tx was pending.`)
+        } else if (sale.affiliatePayoutStatus === 'pending') {
+          const res = await userTransactionsCollection.updateMany(
+            { userId: userObjectId, saleId: saleIdStr, type: 'affiliate_commission', status: 'paid' },
+            { $set: { status: 'pending' } }
+          )
+          if (res.modifiedCount > 0) console.error(`[INCONSISTENCY FIXED] Sale ${saleIdStr} affiliate pending, but tx was paid.`)
+        }
+      }
+    }
+
+    // ── 2. RECALCULATE BALANCE AFTER RECONCILING ──
+    const trueBalanceCents = await getUserPendingBalance(userObjectId)
+    if (trueBalanceCents !== user.pendingBalanceCents) {
+      console.error(`[INCONSISTENCY FIXED] User ${userObjectId} cached balance was ${user.pendingBalanceCents}, corrected to ${trueBalanceCents} from transactions.`)
+      await usersCollection.updateOne({ _id: userObjectId }, { $set: { pendingBalanceCents: trueBalanceCents } })
+    }
+
+    // Exit if there is NO true balance remaining
+    if (trueBalanceCents <= 0) {
+      console.log("EXIT: NO VALID BALANCE AFTER RECONCILIATION")
+      await usersCollection.updateOne({ _id: userObjectId }, { $set: { payoutProcessing: false } })
       return false
     }
 
     // STEP 3: Iterate through individual pending sales to construct source_transaction BRL payloads
     const pendingSales = await salesCollection.find({
-      $or: [
-        { creatorId: userObjectId, creatorPayoutStatus: "pending" },
-        { affiliateUserId: userObjectId, affiliatePayoutStatus: "pending" }
-      ],
-      stripePaymentIntentId: { $regex: /^ch_/ }
+      $and: [
+        {
+          $or: [
+            { creatorId: userObjectId, creatorPayoutStatus: "pending" },
+            { affiliateUserId: userObjectId, affiliatePayoutStatus: "pending" }
+          ]
+        },
+        {
+          $or: [
+            { stripeChargeId: { $regex: /^ch_/ } },
+            { stripePaymentIntentId: { $regex: /^ch_/ } }
+          ]
+        }
+      ]
     }).toArray()
     
     if (pendingSales.length === 0) {
@@ -110,21 +162,23 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
         isAffiliate = true;
       }
 
-      if (amountToTransfer > 0 && sale.stripePaymentIntentId) {
+      const chargeId = sale.stripeChargeId || sale.stripePaymentIntentId
+
+      if (amountToTransfer > 0 && chargeId) {
         console.log("CREATING STRIPE TRANSFER", {
           amount: amountToTransfer,
           destination: stripeAccountId,
-          source_transaction: sale.stripePaymentIntentId,
+          source_transaction: chargeId,
           saleId: sale._id?.toString()
         })
 
         try {
-          // BRL Stripe accounts absolutely mandate the `source_transaction` attribute mirroring local checkout session origins.
+          // BRL Stripe accounts mandate `source_transaction`
           const transfer = await stripeClient.transfers.create({
             amount: amountToTransfer,
             currency: "brl",
             destination: stripeAccountId,
-            source_transaction: sale.stripePaymentIntentId,
+            source_transaction: chargeId,
             metadata: {
               reason: 'delayed_payout_brasil',
               userId: userObjectId.toString(),
@@ -146,9 +200,16 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
             updateQuery.stripeTransferIdAffiliate = transfer.id
           }
 
+          // Complete safety: Update sale, then user, then transactions synchronously
           await salesCollection.updateOne(
             { _id: sale._id },
             { $set: updateQuery }
+          )
+
+          // Immediately decrement user balance accurately and safely
+          await usersCollection.updateOne(
+            { _id: userObjectId },
+            { $inc: { pendingBalanceCents: -amountToTransfer } }
           )
 
           // Drop an isolated payload transaction for tracking the transfer sequence
@@ -162,7 +223,7 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
             createdAt: new Date()
           })
           
-          // Set mapping offline pending chunks reflecting this distinct source transaction array logic to paid
+          // Set mapping offline pending chunks reflecting this logic to paid atomically for THIS sale
           await userTransactionsCollection.updateMany(
             { userId: userObjectId, saleId: sale._id?.toString(), status: 'pending' },
             { $set: { status: 'paid' } }
@@ -205,16 +266,8 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
       }
     }
 
-    // Recalculate final pending balance
-    const remainingPendingTx = await userTransactionsCollection.find({
-      userId: userObjectId,
-      status: 'pending'
-    }).toArray()
-    
-    let finalPendingBalanceCents = 0
-    for (const tx of remainingPendingTx) {
-      finalPendingBalanceCents += tx.amountCents
-    }
+    // ── 3. SAFETY RECONCILIATION AT END ──
+    const finalPendingBalanceCents = await getUserPendingBalance(userObjectId)
 
     await usersCollection.updateOne(
       { _id: userObjectId },

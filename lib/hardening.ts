@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 import { getDatabase } from '@/lib/mongodb'
 import type { UserTransaction } from '@/lib/types'
 
-export async function recalculateUserBalance(userId: string | ObjectId): Promise<number> {
+export async function getUserPendingBalance(userId: string | ObjectId): Promise<number> {
   const db = await getDatabase()
   const userTransactionsCollection = db.collection<UserTransaction>('userTransactions')
 

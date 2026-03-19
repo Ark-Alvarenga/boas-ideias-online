@@ -109,6 +109,7 @@ export interface Sale {
   // Stripe references
   stripeSessionId: string
   stripePaymentIntentId: string
+  stripeChargeId?: string
   stripeTransferIdCreator?: string
   stripeTransferIdAffiliate?: string
 
