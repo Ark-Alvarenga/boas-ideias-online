@@ -8,10 +8,10 @@ export interface User {
   avatar?: string
   bio?: string
   stripeAccountId?: string
-  stripeOnboardingComplete?: boolean
-  pendingBalanceCents?: number
-  totalEarningsCents?: number
-  payoutProcessing?: boolean
+  stripeOnboardingComplete: boolean
+  pendingBalanceCents: number
+  totalEarningsCents: number
+  payoutProcessing: boolean
   createdAt: Date
   updatedAt: Date
 }

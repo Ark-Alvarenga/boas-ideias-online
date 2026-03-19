@@ -42,6 +42,14 @@ export async function POST(request: Request) {
       name,
       email,
       passwordHash,
+
+      // 🔥 DEFAULTS CRÍTICOS (OBRIGATÓRIO)
+      pendingBalanceCents: 0,
+      totalEarningsCents: 0,
+      payoutProcessing: false,
+      stripeOnboardingComplete: false,
+      stripeAccountId: undefined,
+
       createdAt: now,
       updatedAt: now,
     }
