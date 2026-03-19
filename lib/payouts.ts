@@ -78,7 +78,7 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
         { creatorId: userObjectId, creatorPayoutStatus: "pending" },
         { affiliateUserId: userObjectId, affiliatePayoutStatus: "pending" }
       ],
-      stripePaymentIntentId: { $exists: true, $ne: "" }
+      stripePaymentIntentId: { $regex: /^ch_/ }
     }).toArray()
     
     if (pendingSales.length === 0) {

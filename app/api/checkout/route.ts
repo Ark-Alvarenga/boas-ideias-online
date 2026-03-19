@@ -162,6 +162,7 @@ export async function POST(request: Request) {
       customer_email: buyerEmail || buyer.email,
       payment_intent_data: {
         transfer_group: transferGroup,
+        ...(creator.stripeAccountId ? { on_behalf_of: creator.stripeAccountId } : {}),
       },
       metadata: {
         productId: product._id!.toString(),

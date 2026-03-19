@@ -2,7 +2,16 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import type StripeType from "stripe";
 import { getDatabase } from "@/lib/mongodb";
-import type { Order, Product, Affiliate, AffiliateSale, Sale, User, ProcessedStripeEvent, UserTransaction } from "@/lib/types";
+import type {
+  Order,
+  Product,
+  Affiliate,
+  AffiliateSale,
+  Sale,
+  User,
+  ProcessedStripeEvent,
+  UserTransaction,
+} from "@/lib/types";
 import { getStripe } from "@/lib/stripe";
 import { resolvePriceCents } from "@/lib/currency";
 import { ObjectId } from "mongodb";
@@ -46,7 +55,11 @@ export async function POST(request: NextRequest) {
   try {
     switch (event.type) {
       case "checkout.session.completed":
-        await handleCheckoutCompleted(event.data.object as StripeType.Checkout.Session, stripeClient, event.id);
+        await handleCheckoutCompleted(
+          event.data.object as StripeType.Checkout.Session,
+          stripeClient,
+          event.id,
+        );
         break;
 
       case "charge.refunded":
@@ -87,9 +100,11 @@ async function handleCheckoutCompleted(
   }
 
   const metadata = session.metadata ?? {};
-  const productId = typeof metadata.productId === "string" ? metadata.productId : null;
+  const productId =
+    typeof metadata.productId === "string" ? metadata.productId : null;
   const userId = typeof metadata.userId === "string" ? metadata.userId : null;
-  const creatorIdStr = typeof metadata.creatorId === "string" ? metadata.creatorId : null;
+  const creatorIdStr =
+    typeof metadata.creatorId === "string" ? metadata.creatorId : null;
   const buyerName =
     typeof metadata.buyerName === "string"
       ? metadata.buyerName
@@ -97,14 +112,18 @@ async function handleCheckoutCompleted(
   const buyerEmail =
     typeof session.customer_details?.email === "string"
       ? session.customer_details.email
-      : (typeof session.customer_email === "string" ? session.customer_email : "");
+      : typeof session.customer_email === "string"
+        ? session.customer_email
+        : "";
   const transferGroup =
     typeof metadata.transferGroup === "string"
       ? metadata.transferGroup
       : session.id; // fallback for sessions created before this change
 
   if (!productId || !ObjectId.isValid(productId)) {
-    console.error(`[Stripe webhook] [${session.id}] Missing or invalid productId in metadata`);
+    console.error(
+      `[Stripe webhook] [${session.id}] Missing or invalid productId in metadata`,
+    );
     return;
   }
 
@@ -113,22 +132,32 @@ async function handleCheckoutCompleted(
   const ordersCollection = db.collection<Order>("orders");
   const salesCollection = db.collection<Sale>("sales");
   const usersCollection = db.collection<User>("users");
-  const processedEventsCollection = db.collection<ProcessedStripeEvent>("processedStripeEvents");
-  const userTransactionsCollection = db.collection<UserTransaction>("userTransactions");
+  const processedEventsCollection = db.collection<ProcessedStripeEvent>(
+    "processedStripeEvents",
+  );
+  const userTransactionsCollection =
+    db.collection<UserTransaction>("userTransactions");
 
   // --- Step 1: Idempotency Check ---
   const existingEvent = await processedEventsCollection.findOne({ eventId });
   if (existingEvent) {
-    console.log(`[Stripe webhook] Event ${eventId} already processed. Skipping.`);
+    console.log(
+      `[Stripe webhook] Event ${eventId} already processed. Skipping.`,
+    );
     return;
   }
   // Record event processing early to prevent race conditions
   try {
-    await processedEventsCollection.insertOne({ eventId, createdAt: new Date() });
+    await processedEventsCollection.insertOne({
+      eventId,
+      createdAt: new Date(),
+    });
   } catch (err: any) {
     if (err.code === 11000) {
-       console.log(`[Stripe webhook] Event ${eventId} race condition prevented. Skipping.`);
-       return;
+      console.log(
+        `[Stripe webhook] Event ${eventId} race condition prevented. Skipping.`,
+      );
+      return;
     }
     throw err;
   }
@@ -138,7 +167,10 @@ async function handleCheckoutCompleted(
   });
 
   if (!product) {
-    console.error(`[Stripe webhook] [${session.id}] Product not found for productId:`, productId);
+    console.error(
+      `[Stripe webhook] [${session.id}] Product not found for productId:`,
+      productId,
+    );
     return;
   }
 
@@ -155,26 +187,44 @@ async function handleCheckoutCompleted(
   const paymentIntentId =
     typeof session.payment_intent === "string"
       ? session.payment_intent
-      : (session.payment_intent as any)?.id ?? "";
+      : ((session.payment_intent as any)?.id ?? "");
 
   // ─── Fetch the charge ID from the PaymentIntent ───
   // For BRL transfers in Brazil, Stripe requires source_transaction
   // to be a charge ID (ch_...), NOT a payment intent ID (pi_...).
   let chargeId: string | undefined;
+  if (!chargeId) {
+    console.error(
+      `[Stripe webhook] [${session.id}] Could not resolve chargeId from PaymentIntent: ${paymentIntentId}, aborting sale creation.`,
+    );
+    return; // ⚠️ Não continua, protege payout
+  }
   if (paymentIntentId) {
     try {
-      const paymentIntent = await stripeClient.paymentIntents.retrieve(paymentIntentId, {
-        expand: ["latest_charge"],
-      });
+      const paymentIntent = await stripeClient.paymentIntents.retrieve(
+        paymentIntentId,
+        {
+          expand: ["latest_charge"],
+        },
+      );
       const latestCharge = paymentIntent.latest_charge;
       if (typeof latestCharge === "string") {
         chargeId = latestCharge;
-      } else if (latestCharge && typeof latestCharge === "object" && "id" in latestCharge) {
+      } else if (
+        latestCharge &&
+        typeof latestCharge === "object" &&
+        "id" in latestCharge
+      ) {
         chargeId = (latestCharge as { id: string }).id;
       }
-      console.log(`[Stripe webhook] [${session.id}] Resolved charge ID: ${chargeId ?? "NONE"} from PaymentIntent: ${paymentIntentId}`);
+      console.log(
+        `[Stripe webhook] [${session.id}] Resolved charge ID: ${chargeId ?? "NONE"} from PaymentIntent: ${paymentIntentId}`,
+      );
     } catch (err) {
-      console.error(`[Stripe webhook] [${session.id}] Failed to retrieve PaymentIntent for charge ID:`, err);
+      console.error(
+        `[Stripe webhook] [${session.id}] Failed to retrieve PaymentIntent for charge ID:`,
+        err,
+      );
     }
   }
 
@@ -189,7 +239,10 @@ async function handleCheckoutCompleted(
 
   if (existingOrder) {
     orderId = existingOrder._id!;
-    console.log(`[Stripe webhook] [${session.id}] Recovering from partial failure, order already exists:`, orderId.toString());
+    console.log(
+      `[Stripe webhook] [${session.id}] Recovering from partial failure, order already exists:`,
+      orderId.toString(),
+    );
   } else {
     const newOrder: Order = {
       productId: product._id!,
@@ -216,7 +269,9 @@ async function handleCheckoutCompleted(
     } catch (err: any) {
       if (err.code === 11000) {
         // Safe racing: ignore duplicate keys if multiple webhooks hit simultaneously
-        const raceOrder = await ordersCollection.findOne({ stripeSessionId: session.id });
+        const raceOrder = await ordersCollection.findOne({
+          stripeSessionId: session.id,
+        });
         if (raceOrder) {
           orderId = raceOrder._id!;
         } else {
@@ -233,10 +288,15 @@ async function handleCheckoutCompleted(
     100,
     Math.max(0, Number(process.env.PLATFORM_FEE_PERCENT) || 0),
   );
-  const platformFeeCents = Math.round((totalAmountCents * platformFeePercent) / 100);
+  const platformFeeCents = Math.round(
+    (totalAmountCents * platformFeePercent) / 100,
+  );
 
   // Resolve affiliate
-  const affiliateUserId = typeof metadata.affiliateUserId === "string" ? metadata.affiliateUserId : null;
+  const affiliateUserId =
+    typeof metadata.affiliateUserId === "string"
+      ? metadata.affiliateUserId
+      : null;
   let affiliateShareCents = 0;
   let affiliateUser: User | null = null;
   let affiliateRecord: Affiliate | null = null;
@@ -261,7 +321,9 @@ async function handleCheckoutCompleted(
         affiliateRecord.commissionPercent ??
         product.affiliateCommissionPercent ??
         0;
-      affiliateShareCents = Math.round((totalAmountCents * commissionPercent) / 100);
+      affiliateShareCents = Math.round(
+        (totalAmountCents * commissionPercent) / 100,
+      );
 
       // Look up affiliate user to check Stripe account status
       affiliateUser = await usersCollection.findOne({
@@ -272,12 +334,16 @@ async function handleCheckoutCompleted(
     }
   }
 
-  const creatorShareCents = Math.max(0, totalAmountCents - platformFeeCents - affiliateShareCents);
+  const creatorShareCents = Math.max(
+    0,
+    totalAmountCents - platformFeeCents - affiliateShareCents,
+  );
 
   // Resolve creator
-  const creatorId = creatorIdStr && ObjectId.isValid(creatorIdStr)
-    ? new ObjectId(creatorIdStr)
-    : product.creatorId;
+  const creatorId =
+    creatorIdStr && ObjectId.isValid(creatorIdStr)
+      ? new ObjectId(creatorIdStr)
+      : product.creatorId;
 
   const creator = await usersCollection.findOne({ _id: creatorId });
 
@@ -287,13 +353,20 @@ async function handleCheckoutCompleted(
     platformFee: platformFeeCents,
     creatorAmount: creatorShareCents,
     affiliateAmount: affiliateShareCents,
-    sumCheck: platformFeeCents + creatorShareCents + affiliateShareCents === totalAmountCents,
-    affiliateUserId: affiliateUserId ?? 'NONE',
+    sumCheck:
+      platformFeeCents + creatorShareCents + affiliateShareCents ===
+      totalAmountCents,
+    affiliateUserId: affiliateUserId ?? "NONE",
     creatorId: creatorId.toString(),
   });
 
-  if (platformFeeCents + creatorShareCents + affiliateShareCents !== totalAmountCents) {
-    console.error(`[Stripe webhook] [CRITICAL] Split amounts do not sum up exactly to total!`);
+  if (
+    platformFeeCents + creatorShareCents + affiliateShareCents !==
+    totalAmountCents
+  ) {
+    console.error(
+      `[Stripe webhook] [CRITICAL] Split amounts do not sum up exactly to total!`,
+    );
   }
 
   // ─── Create Sale Document ───
@@ -302,76 +375,84 @@ async function handleCheckoutCompleted(
     productId: product._id!,
     buyerId: new ObjectId(userId!),
     creatorId,
-    affiliateUserId: affiliateRecord ? new ObjectId(affiliateUserId!) : undefined,
+    affiliateUserId: affiliateRecord
+      ? new ObjectId(affiliateUserId!)
+      : undefined,
     totalAmountCents,
     platformFeeCents,
     affiliateShareCents,
     creatorShareCents,
     stripeSessionId: session.id,
-    stripePaymentIntentId: paymentIntentId,
+    stripePaymentIntentId: chargeId,
     status: "completed",
     creatorPayoutStatus: "pending",
     affiliatePayoutStatus: affiliateRecord ? "pending" : "not_applicable",
     createdAt: new Date(),
   };
 
-  // ─── UNIVERSAL BALANCE ACCRUAL ───
+  // ─── UNIVERSAL BALANCE ACCRUAL (CORRIGIDO) ───
 
-  console.log("UPDATING CREATOR BALANCE", {
-    creatorId: creatorId.toString(),
-    creatorShareCents
-  });
+  // Só prossegue se chargeId foi resolvido
+  if (!chargeId) {
+    console.error(
+      `[Stripe webhook] [${session.id}] Could not resolve chargeId from PaymentIntent: ${paymentIntentId}, aborting balance accrual.`,
+    );
+    return; // ⚠️ interrompe aqui para evitar inconsistência
+  }
+
+  // Atualiza Sale para usar chargeId correto
+  sale.stripePaymentIntentId = chargeId;
 
   // 1. Accrue Creator Balance
   if (creatorShareCents > 0) {
     sale.creatorPayoutStatus = "pending";
     await usersCollection.updateOne(
       { _id: new ObjectId(creatorId) },
-      { 
-        $inc: { 
+      {
+        $inc: {
           pendingBalanceCents: creatorShareCents,
-          totalEarningsCents: creatorShareCents
-        } 
-      }
+          totalEarningsCents: creatorShareCents,
+        },
+      },
     );
     await userTransactionsCollection.insertOne({
       userId: new ObjectId(creatorId),
       amountCents: creatorShareCents,
-      type: 'sale',
-      status: 'pending',
+      type: "sale",
+      status: "pending",
       saleId: sale._id?.toString(),
-      createdAt: new Date()
+      createdAt: new Date(),
     });
   } else {
-     sale.creatorPayoutStatus = "pending";
+    sale.creatorPayoutStatus = "pending";
   }
 
   // 2. Accrue Affiliate Balance
   if (affiliateRecord && affiliateUserId) {
     console.log("UPDATING AFFILIATE BALANCE", {
       affiliateUserId,
-      affiliateShareCents
+      affiliateShareCents,
     });
-    
+
     const affiliateUserIdObj = new ObjectId(affiliateUserId);
     if (affiliateShareCents > 0) {
       sale.affiliatePayoutStatus = "pending";
       await usersCollection.updateOne(
         { _id: affiliateUserIdObj },
-        { 
-          $inc: { 
+        {
+          $inc: {
             pendingBalanceCents: affiliateShareCents,
-            totalEarningsCents: affiliateShareCents
-          } 
-        }
+            totalEarningsCents: affiliateShareCents,
+          },
+        },
       );
       await userTransactionsCollection.insertOne({
         userId: affiliateUserIdObj,
         amountCents: affiliateShareCents,
-        type: 'affiliate_commission',
-        status: 'pending',
+        type: "affiliate_commission",
+        status: "pending",
         saleId: sale._id?.toString(),
-        createdAt: new Date()
+        createdAt: new Date(),
       });
     }
   }
@@ -383,7 +464,9 @@ async function handleCheckoutCompleted(
     await salesCollection.insertOne(sale);
   } catch (err: any) {
     if (err.code === 11000) {
-      console.log(`[Stripe webhook] [${session.id}] Race condition prevented: Sale already exists`);
+      console.log(
+        `[Stripe webhook] [${session.id}] Race condition prevented: Sale already exists`,
+      );
       return;
     }
     throw err;
@@ -403,7 +486,8 @@ async function handleCheckoutCompleted(
 
   // Also record in legacy affiliateSales collection for backward compatibility
   if (affiliateRecord && affiliateShareCents > 0) {
-    const affiliateSalesCollection = db.collection<AffiliateSale>("affiliateSales");
+    const affiliateSalesCollection =
+      db.collection<AffiliateSale>("affiliateSales");
     const saleDoc: AffiliateSale = {
       affiliateId: affiliateRecord._id!,
       productId: product._id!,
@@ -417,17 +501,20 @@ async function handleCheckoutCompleted(
     await affiliateSalesCollection.insertOne(saleDoc);
   }
 
-  console.log(`[Stripe webhook] [${session.id}] Sale recorded:`, JSON.stringify({
-    orderId: orderId.toString(),
-    saleId: sale._id?.toString(),
-    totalAmountCents,
-    platformFeeCents,
-    creatorShareCents,
-    affiliateShareCents,
-    affiliatePayoutStatus: sale.affiliatePayoutStatus,
-    creatorTransfer: sale.stripeTransferIdCreator ?? "none",
-    affiliateTransfer: sale.stripeTransferIdAffiliate ?? "none",
-  }));
+  console.log(
+    `[Stripe webhook] [${session.id}] Sale recorded:`,
+    JSON.stringify({
+      orderId: orderId.toString(),
+      saleId: sale._id?.toString(),
+      totalAmountCents,
+      platformFeeCents,
+      creatorShareCents,
+      affiliateShareCents,
+      affiliatePayoutStatus: sale.affiliatePayoutStatus,
+      creatorTransfer: sale.stripeTransferIdCreator ?? "none",
+      affiliateTransfer: sale.stripeTransferIdAffiliate ?? "none",
+    }),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -448,9 +535,14 @@ async function handleChargeRefunded(charge: StripeType.Charge) {
   const salesCollection = db.collection<Sale>("sales");
   const ordersCollection = db.collection<Order>("orders");
 
-  const sale = await salesCollection.findOne({ stripePaymentIntentId: paymentIntentId });
+  const sale = await salesCollection.findOne({
+    stripePaymentIntentId: paymentIntentId,
+  });
   if (!sale) {
-    console.warn("[Stripe webhook] No sale found for refunded payment_intent:", paymentIntentId);
+    console.warn(
+      "[Stripe webhook] No sale found for refunded payment_intent:",
+      paymentIntentId,
+    );
     return;
   }
 
@@ -466,11 +558,14 @@ async function handleChargeRefunded(charge: StripeType.Charge) {
     { $set: { status: "refunded", updatedAt: new Date() } },
   );
 
-  console.log("[Stripe webhook] Refund processed:", JSON.stringify({
-    saleId: sale._id?.toString(),
-    paymentIntentId,
-    status: refundStatus,
-  }));
+  console.log(
+    "[Stripe webhook] Refund processed:",
+    JSON.stringify({
+      saleId: sale._id?.toString(),
+      paymentIntentId,
+      status: refundStatus,
+    }),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -489,18 +584,23 @@ async function handleAccountUpdated(account: StripeType.Account) {
         stripeOnboardingComplete: isComplete,
         updatedAt: new Date(),
       },
-    }
+    },
   );
 
   if (result.matchedCount > 0) {
-    console.log("[Stripe webhook] Account updated:", JSON.stringify({
-      stripeAccountId: account.id,
-      stripeOnboardingComplete: isComplete,
-      charges_enabled: account.charges_enabled,
-      details_submitted: account.details_submitted,
-    }));
+    console.log(
+      "[Stripe webhook] Account updated:",
+      JSON.stringify({
+        stripeAccountId: account.id,
+        stripeOnboardingComplete: isComplete,
+        charges_enabled: account.charges_enabled,
+        details_submitted: account.details_submitted,
+      }),
+    );
   } else {
-    console.warn("[Stripe webhook] Account updated, but no matching user found:", account.id);
+    console.warn(
+      "[Stripe webhook] Account updated, but no matching user found:",
+      account.id,
+    );
   }
 }
-
