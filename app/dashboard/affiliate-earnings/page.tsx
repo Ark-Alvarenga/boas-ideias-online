@@ -11,7 +11,7 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { getDatabase } from "@/lib/mongodb"
-import type { Affiliate, AffiliateClick, AffiliateSale, Product, User } from "@/lib/types"
+import type { Affiliate, AffiliateClick, Product, User, UserTransaction } from "@/lib/types"
 import { authConfig, verifySessionToken } from "@/lib/auth"
 import { ObjectId } from "mongodb"
 
@@ -37,37 +37,44 @@ export default async function AffiliateEarningsPage() {
   const affiliates = await db.collection<Affiliate>("affiliates").find({ userId }).toArray()
   const affiliateIds = affiliates.map((a) => a._id!)
 
-  const [totalClicks, totalSales, totalEarnings, topProducts, recentAffiliateSales] = await Promise.all([
+  const pendingBalance = (user.pendingBalanceCents || 0) / 100
+
+  const userTransactionsCollection = db.collection<UserTransaction>("userTransactions")
+
+  const [totalClicks, affiliateTxs, recentTxsRaw] = await Promise.all([
     db.collection<AffiliateClick>("affiliateClicks").countDocuments({ affiliateId: { $in: affiliateIds } }),
-    db.collection<AffiliateSale>("affiliateSales").countDocuments({ affiliateId: { $in: affiliateIds } }),
-    db
-      .collection<AffiliateSale>("affiliateSales")
-      .aggregate<{ total: number }>([
-        { $match: { affiliateId: { $in: affiliateIds } } },
-        { $group: { _id: null, total: { $sum: "$commissionAmountCents" } } },
-      ])
-      .toArray()
-      .then((r) => (r[0]?.total ?? 0) / 100),
-    db
-      .collection<AffiliateSale>("affiliateSales")
-      .aggregate<{ _id: ObjectId; count: number; total: number }>([
-        { $match: { affiliateId: { $in: affiliateIds } } },
-        { $group: { _id: "$productId", count: { $sum: 1 }, total: { $sum: "$commissionAmountCents" } } },
-        { $sort: { total: -1 } },
-        { $limit: 5 },
-      ])
-      .toArray(),
-    db
-      .collection<AffiliateSale>("affiliateSales")
-      .find({ affiliateId: { $in: affiliateIds } })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .toArray(),
+    userTransactionsCollection.find({ userId: user._id, type: "affiliate_commission", status: { $in: ["paid", "pending"] } }).toArray(),
+    userTransactionsCollection.find({ userId: user._id, type: "affiliate_commission", status: { $in: ["paid", "pending"] } }).sort({ createdAt: -1 }).limit(10).toArray()
   ])
+
+  const totalSales = affiliateTxs.length
+  const totalEarnings = affiliateTxs.reduce((sum, tx) => sum + tx.amountCents, 0) / 100
+
+  // Calculate top products
+  const productEarnings = new Map<string, { count: number, total: number }>()
+  // Since UserTransaction only has saleId, we need to resolve products via Sales
+  const salesCol = db.collection("sales")
+  const saleIds = [...new Set(affiliateTxs.map(tx => tx.saleId).filter(Boolean))].map(id => new ObjectId(id!))
+  const relatedSalesRaw = await salesCol.find({ _id: { $in: saleIds } }).toArray()
+  const saleToProductMap = new Map(relatedSalesRaw.map(s => [s._id.toString(), s.productId.toString()]))
+
+  // Now calculate top
+  for (const tx of affiliateTxs) {
+    if (!tx.saleId) continue
+    const pid = saleToProductMap.get(tx.saleId)
+    if (!pid) continue
+    const existing = productEarnings.get(pid) || { count: 0, total: 0 }
+    productEarnings.set(pid, { count: existing.count + 1, total: existing.total + tx.amountCents })
+  }
+
+  const topProducts = Array.from(productEarnings.entries())
+    .map(([pid, stats]) => ({ _id: new ObjectId(pid), ...stats }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 5)
 
   const productIdsToFetch = new Set([
     ...topProducts.map((p) => p._id.toString()),
-    ...recentAffiliateSales.map((s) => s.productId.toString())
+    ...recentTxsRaw.map(tx => saleToProductMap.get(tx.saleId!) || "").filter(Boolean)
   ])
 
   const products =
@@ -81,12 +88,15 @@ export default async function AffiliateEarningsPage() {
     earnings: p.total / 100,
   }))
 
-  const recentTransactions = recentAffiliateSales.map(s => ({
-    id: s._id!.toString(),
-    title: productsById.get(s.productId.toString())?.title ?? "Produto Desconhecido",
-    earnings: s.commissionAmountCents / 100,
-    date: s.createdAt
-  }))
+  const recentTransactions = recentTxsRaw.map(tx => {
+    const pId = tx.saleId ? saleToProductMap.get(tx.saleId) : null
+    return {
+      id: tx._id!.toString(),
+      title: pId ? productsById.get(pId)?.title ?? "Produto Desconhecido" : "Produto Desconhecido",
+      earnings: tx.amountCents / 100,
+      date: tx.createdAt
+    }
+  })
 
   const conversionRate = totalClicks > 0 ? ((totalSales / totalClicks) * 100).toFixed(1) : "0"
 
@@ -145,13 +155,18 @@ export default async function AffiliateEarningsPage() {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <DollarSign className="h-4 w-4" />
-                Ganhos totais
+                Saldo Universal Pendente
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-semibold text-foreground">
-                R$ {totalEarnings.toFixed(2)}
+                R$ {pendingBalance.toFixed(2)}
               </p>
+              {pendingBalance > 0 && (!user.stripeAccountId || !user.stripeOnboardingComplete) && (
+                <p className="mt-1 text-xs text-amber-600 dark:text-amber-500 font-medium">
+                  Conecte o Stripe para receber.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -162,7 +162,7 @@ export async function POST(request: Request) {
     }
     const finalSlug = slug
 
-    const productStatus = user.stripeOnboardingComplete ? 'active' : 'draft'
+    const productStatus = 'active'
 
     const newProduct: Product = {
       title: body.title,

@@ -9,6 +9,9 @@ export interface User {
   bio?: string
   stripeAccountId?: string
   stripeOnboardingComplete?: boolean
+  pendingBalanceCents?: number
+  totalEarningsCents?: number
+  payoutProcessing?: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -117,6 +120,23 @@ export interface Sale {
   affiliatePayoutStatus: AffiliatePayoutStatus
   affiliatePaidAt?: Date
 
+  createdAt: Date
+}
+
+export interface UserTransaction {
+  _id?: ObjectId
+  userId: ObjectId
+  amountCents: number
+  type: 'sale' | 'affiliate_commission' | 'payout'
+  status: 'pending' | 'paid'
+  stripeTransferId?: string
+  saleId?: string
+  createdAt: Date
+}
+
+export interface ProcessedStripeEvent {
+  _id?: ObjectId
+  eventId: string
   createdAt: Date
 }
 

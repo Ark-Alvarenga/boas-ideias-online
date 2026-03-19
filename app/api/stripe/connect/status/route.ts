@@ -6,6 +6,7 @@ import { authConfig, verifySessionToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
 import { ObjectId } from 'mongodb'
 import { getStripe } from '@/lib/stripe'
+import { processUserPayout } from '@/lib/payouts'
 
 /** GET: Return Stripe Connect status and sync onboarding from Stripe. */
 export async function GET() {
@@ -61,6 +62,12 @@ export async function GET() {
             },
           )
           stripeOnboardingComplete = true
+
+          // Trigger payout if they have any pending balance
+          // We don't await this so the response stays fast
+          processUserPayout(user._id!).catch(err => {
+            console.error('[Stripe Status] Async processUserPayout failed:', err)
+          })
         }
       } catch (err) {
         console.error('Stripe account retrieve error:', err)

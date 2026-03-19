@@ -101,13 +101,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // Block checkout if creator has not completed Stripe onboarding
-    if (!creator.stripeAccountId || !creator.stripeOnboardingComplete) {
-      return NextResponse.json(
-        { error: 'This product is not available for purchase yet. The creator has not completed payment setup.' },
-        { status: 400 },
-      )
-    }
+    // Removed block: allow checkout even if creator has not completed Stripe onboarding
 
     // Check for affiliate ref (from body directly, or fallback to cookie from middleware)
     let affiliateUserId: string | null = null

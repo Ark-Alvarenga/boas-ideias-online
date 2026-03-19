@@ -11,7 +11,7 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { getDatabase } from "@/lib/mongodb"
-import type { Order, Product, Sale, User } from "@/lib/types"
+import type { Order, Product, Sale, User, UserTransaction } from "@/lib/types"
 import { authConfig, verifySessionToken } from "@/lib/auth"
 import { ObjectId } from "mongodb"
 import { ConnectStripeCard } from "@/components/dashboard/connect-stripe-card"
@@ -38,43 +38,49 @@ export default async function EarningsPage() {
 
   const db = await getDatabase()
   const productsCollection = db.collection<Product>("products")
-  const ordersCollection = db.collection<Order>("orders")
+  const transactionsCollection = db.collection<UserTransaction>("userTransactions")
 
-  const myProducts = await productsCollection
-    .find({ creatorId: user._id })
-    .toArray()
-  const myProductIds = myProducts.filter((p) => p._id != null).map((p) => p._id!)
+  // Use the new atomic single source of truth for total earnings
+  const estimatedEarnings = (user.totalEarningsCents || 0) / 100
+  const pendingBalance = (user.pendingBalanceCents || 0) / 100
+  const isPayoutProcessing = user.payoutProcessing || false
 
-  const salesCollection = db.collection<Sale>("sales")
-  const recentSalesRaw = await salesCollection
-    .find({ creatorId: user._id, status: { $in: ["completed", "refunded", "partially_refunded"] } })
+  const recentTxsRaw = await transactionsCollection
+    .find({ userId: user._id, status: { $in: ["paid", "pending"] }, type: { $ne: "payout" } })
     .sort({ createdAt: -1 })
+    .limit(10)
     .toArray()
 
-  const validSales = recentSalesRaw.filter(s => s.status === "completed")
+  // For transactions tied to a sale, we might want to fetch product titles.
+  // The UserTransaction has a saleId. Let's just fetch the raw sales if we want product titles.
+  const salesCollection = db.collection<Sale>("sales")
+  const saleIds = recentTxsRaw.map(tx => tx.saleId).filter(Boolean).map(id => new ObjectId(id!))
+  const relatedSales = await salesCollection.find({ _id: { $in: saleIds } }).toArray()
+  
+  const productIds = [...new Set(relatedSales.map(s => s.productId))]
+  const relatedProducts = await productsCollection.find({ _id: { $in: productIds } }).toArray()
+  const productsMap = new Map(relatedProducts.map(p => [p._id!.toString(), p.title]))
+  const salesMap = new Map(relatedSales.map(s => [s._id!.toString(), s.productId.toString()]))
 
-  const totalSalesCents = validSales.reduce((sum, s) => sum + s.totalAmountCents, 0)
-  const totalSales = totalSalesCents / 100
-  const platformFeePercent = Math.min(
-    100,
-    Math.max(0, Number(process.env.PLATFORM_FEE_PERCENT) || 0),
-  )
-  const estimatedEarnings = validSales.reduce((sum, s) => sum + s.creatorShareCents, 0) / 100
+  const recentTransactions = recentTxsRaw.map(tx => {
+    const saleId = tx.saleId
+    const productId = saleId ? salesMap.get(saleId) : null
+    const title = productId ? productsMap.get(productId) : "Produto Desconhecido"
+    
+    return {
+      id: tx._id!.toString(),
+      title,
+      typeLabel: tx.type === 'affiliate_commission' ? 'Comissão de Afiliado' : 'Venda',
+      netEarnings: tx.amountCents / 100,
+      date: tx.createdAt
+    }
+  })
 
-  // Fetch product titles for recent transactions (Top 10)
-  const recentValidSales = validSales.slice(0, 10)
-  const recentProductIds = [...new Set(recentValidSales.map(s => s.productId))]
-  const recentProducts = await productsCollection.find({ _id: { $in: recentProductIds } }).toArray()
-  const productsMap = new Map(recentProducts.map(p => [p._id!.toString(), p.title]))
-
-  const recentTransactions = recentValidSales.map(s => ({
-    id: s._id!.toString(),
-    title: productsMap.get(s.productId.toString()) || "Produto Desconhecido",
-    netEarnings: s.creatorShareCents / 100,
-    date: s.createdAt
-  }))
-
-  const totalOrderCount = validSales.length
+  // We can also fetch the exact number of sales/commissions they made instead of 'orders'
+  const totalOrderCount = await transactionsCollection.countDocuments({ 
+    userId: user._id, 
+    type: { $in: ["sale", "affiliate_commission"] } 
+  })
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -115,23 +121,7 @@ export default async function EarningsPage() {
           <Card className="border-border/50 bg-card shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Vendas totais (produtos)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold tracking-tight text-foreground">
-                R$ {totalSales.toFixed(2)}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {totalOrderCount} venda(s) nos seus produtos
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 bg-card shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Ganhos estimados
+                Ganhos Vitalícios
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -139,7 +129,23 @@ export default async function EarningsPage() {
                 R$ {estimatedEarnings.toFixed(2)}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Após taxa da plataforma ({platformFeePercent}%)
+                {totalOrderCount} recebimentos (vendas/comissões)
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 bg-card shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Saldo Pendente
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold tracking-tight text-foreground">
+                R$ {pendingBalance.toFixed(2)}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Aguardando repasse
               </p>
             </CardContent>
           </Card>
@@ -151,15 +157,27 @@ export default async function EarningsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {user.stripeAccountId && user.stripeOnboardingComplete ? (
-                <div className="flex items-center gap-2 text-green-600 dark:text-green-500">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span className="font-medium">Conectado</span>
+              {isPayoutProcessing ? (
+                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-500">
+                  <span className="font-medium animate-pulse">Processando pagamento...</span>
                 </div>
-              ) : user.stripeAccountId ? (
-                <p className="text-sm text-amber-600 dark:text-amber-500">
-                  Conclua o onboarding no Stripe para receber pagamentos.
-                </p>
+              ) : user.stripeAccountId && user.stripeOnboardingComplete ? (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-500">
+                    <CheckCircle2 className="h-5 w-5" />
+                    <span className="font-medium">Conectado</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Repasses processados automaticamente</p>
+                </div>
+              ) : pendingBalance > 0 ? (
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm font-semibold text-amber-600 dark:text-amber-500">
+                    R$ {pendingBalance.toFixed(2)} prontos para saque
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Conecte o Stripe para receber seus pagamentos.
+                  </p>
+                </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
                   Conecte sua conta Stripe acima para receber pagamentos.
@@ -194,6 +212,7 @@ export default async function EarningsPage() {
                       <tr className="border-b border-border/50 text-left text-muted-foreground">
                         <th className="pb-3 pr-4 font-medium">Data</th>
                         <th className="pb-3 pr-4 font-medium">Produto</th>
+                        <th className="hidden pb-3 pr-4 font-medium md:table-cell">Tipo</th>
                         <th className="pb-3 px-4 text-right font-medium">Ganhos</th>
                       </tr>
                     </thead>
@@ -208,7 +227,17 @@ export default async function EarningsPage() {
                             })}
                           </td>
                           <td className="py-3 pr-4 font-medium text-foreground">
-                            {tx.title}
+                            <div>{tx.title}</div>
+                            <div className="md:hidden text-xs text-muted-foreground mt-0.5">{tx.typeLabel}</div>
+                          </td>
+                          <td className="hidden py-3 pr-4 md:table-cell">
+                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                              tx.typeLabel === 'Venda' 
+                                ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                            }`}>
+                              {tx.typeLabel}
+                            </span>
                           </td>
                           <td className="py-3 px-4 text-right font-semibold text-emerald-600 dark:text-emerald-500 tabular-nums">
                             R$ {tx.netEarnings.toFixed(2)}

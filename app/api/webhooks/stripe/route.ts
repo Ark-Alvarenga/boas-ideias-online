@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import type StripeType from "stripe";
 import { getDatabase } from "@/lib/mongodb";
-import type { Order, Product, Affiliate, AffiliateSale, Sale, User } from "@/lib/types";
+import type { Order, Product, Affiliate, AffiliateSale, Sale, User, ProcessedStripeEvent, UserTransaction } from "@/lib/types";
 import { getStripe } from "@/lib/stripe";
 import { resolvePriceCents } from "@/lib/currency";
 import { ObjectId } from "mongodb";
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   try {
     switch (event.type) {
       case "checkout.session.completed":
-        await handleCheckoutCompleted(event.data.object as StripeType.Checkout.Session, stripeClient);
+        await handleCheckoutCompleted(event.data.object as StripeType.Checkout.Session, stripeClient, event.id);
         break;
 
       case "charge.refunded":
@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
 async function handleCheckoutCompleted(
   session: StripeType.Checkout.Session,
   stripeClient: StripeType,
+  eventId: string,
 ) {
   if (session.payment_status !== "paid") {
     return;
@@ -112,6 +113,25 @@ async function handleCheckoutCompleted(
   const ordersCollection = db.collection<Order>("orders");
   const salesCollection = db.collection<Sale>("sales");
   const usersCollection = db.collection<User>("users");
+  const processedEventsCollection = db.collection<ProcessedStripeEvent>("processedStripeEvents");
+  const userTransactionsCollection = db.collection<UserTransaction>("userTransactions");
+
+  // --- Step 1: Idempotency Check ---
+  const existingEvent = await processedEventsCollection.findOne({ eventId });
+  if (existingEvent) {
+    console.log(`[Stripe webhook] Event ${eventId} already processed. Skipping.`);
+    return;
+  }
+  // Record event processing early to prevent race conditions
+  try {
+    await processedEventsCollection.insertOne({ eventId, createdAt: new Date() });
+  } catch (err: any) {
+    if (err.code === 11000) {
+       console.log(`[Stripe webhook] Event ${eventId} race condition prevented. Skipping.`);
+       return;
+    }
+    throw err;
+  }
 
   const product = await productsCollection.findOne({
     _id: new ObjectId(productId),
@@ -261,6 +281,21 @@ async function handleCheckoutCompleted(
 
   const creator = await usersCollection.findOne({ _id: creatorId });
 
+  // ─── VERIFY CREATOR VS AFFILIATE SPLIT ───
+  console.log(`[Stripe webhook] [${session.id}] Financial Split Log:`, {
+    total: totalAmountCents,
+    platformFee: platformFeeCents,
+    creatorAmount: creatorShareCents,
+    affiliateAmount: affiliateShareCents,
+    sumCheck: platformFeeCents + creatorShareCents + affiliateShareCents === totalAmountCents,
+    affiliateUserId: affiliateUserId ?? 'NONE',
+    creatorId: creatorId.toString(),
+  });
+
+  if (platformFeeCents + creatorShareCents + affiliateShareCents !== totalAmountCents) {
+    console.error(`[Stripe webhook] [CRITICAL] Split amounts do not sum up exactly to total!`);
+  }
+
   // ─── Create Sale Document ───
   const sale: Sale = {
     orderId,
@@ -276,97 +311,73 @@ async function handleCheckoutCompleted(
     stripePaymentIntentId: paymentIntentId,
     status: "completed",
     creatorPayoutStatus: "pending",
-    affiliatePayoutStatus: affiliateRecord
-      ? (affiliateUser?.stripeAccountId && affiliateUser?.stripeOnboardingComplete ? "paid" : "pending")
-      : "not_applicable",
+    affiliatePayoutStatus: affiliateRecord ? "pending" : "not_applicable",
     createdAt: new Date(),
   };
 
-  // ─── Create Stripe Transfers ───
+  // ─── UNIVERSAL BALANCE ACCRUAL ───
 
-  // Transfer to creator
-  if (creator?.stripeAccountId && creatorShareCents > 0) {
-    if (!chargeId) {
-      console.error(`[Stripe webhook] [${session.id}] [REQUIRES_MANUAL_INTERVENTION] Cannot create creator transfer: no charge ID resolved from PaymentIntent ${paymentIntentId}`);
-      sale.creatorPayoutStatus = "pending";
-    } else {
-    try {
-      const creatorTransfer = await stripeClient.transfers.create(
-        {
-          amount: creatorShareCents,
-          currency: "brl",
-          destination: creator.stripeAccountId,
-          source_transaction: chargeId,
-          transfer_group: transferGroup,
-          metadata: {
-            saleType: "creator",
-            orderId: orderId.toString(),
-            productId: product._id!.toString(),
-          },
-        },
-        {
-          idempotencyKey: `transfer_creator_${session.id}`,
+  console.log("UPDATING CREATOR BALANCE", {
+    creatorId: creatorId.toString(),
+    creatorShareCents
+  });
+
+  // 1. Accrue Creator Balance
+  if (creatorShareCents > 0) {
+    sale.creatorPayoutStatus = "pending";
+    await usersCollection.updateOne(
+      { _id: new ObjectId(creatorId) },
+      { 
+        $inc: { 
+          pendingBalanceCents: creatorShareCents,
+          totalEarningsCents: creatorShareCents
+        } 
+      }
+    );
+    await userTransactionsCollection.insertOne({
+      userId: new ObjectId(creatorId),
+      amountCents: creatorShareCents,
+      type: 'sale',
+      status: 'pending',
+      saleId: sale._id?.toString(),
+      createdAt: new Date()
+    });
+  } else {
+     sale.creatorPayoutStatus = "pending";
+  }
+
+  // 2. Accrue Affiliate Balance
+  if (affiliateRecord && affiliateUserId) {
+    console.log("UPDATING AFFILIATE BALANCE", {
+      affiliateUserId,
+      affiliateShareCents
+    });
+    
+    const affiliateUserIdObj = new ObjectId(affiliateUserId);
+    if (affiliateShareCents > 0) {
+      sale.affiliatePayoutStatus = "pending";
+      await usersCollection.updateOne(
+        { _id: affiliateUserIdObj },
+        { 
+          $inc: { 
+            pendingBalanceCents: affiliateShareCents,
+            totalEarningsCents: affiliateShareCents
+          } 
         }
       );
-      sale.stripeTransferIdCreator = creatorTransfer.id;
-      sale.creatorPayoutStatus = "paid";
-      console.log(`[Stripe webhook] [${session.id}] Creator transfer created:`, JSON.stringify({
-        transferId: creatorTransfer.id,
-        amount: creatorShareCents,
-        destination: creator.stripeAccountId,
-        transferGroup,
-        sourceTransaction: chargeId,
-      }));
-    } catch (err) {
-      console.error(`[Stripe webhook] [${session.id}] [REQUIRES_MANUAL_INTERVENTION] Creator transfer failed:`, err);
-      // Sale is still recorded — transfer can be retried later
-      sale.creatorPayoutStatus = "pending";
+      await userTransactionsCollection.insertOne({
+        userId: affiliateUserIdObj,
+        amountCents: affiliateShareCents,
+        type: 'affiliate_commission',
+        status: 'pending',
+        saleId: sale._id?.toString(),
+        createdAt: new Date()
+      });
     }
-    } // end chargeId check
-  } else {
-    sale.creatorPayoutStatus = "pending";
   }
 
-  // Transfer to affiliate (only if they have a connected Stripe account)
-  if (
-    affiliateRecord &&
-    affiliateShareCents > 0 &&
-    affiliateUser?.stripeAccountId &&
-    affiliateUser?.stripeOnboardingComplete
-  ) {
-    if (!chargeId) {
-      console.error(`[Stripe webhook] [${session.id}] [REQUIRES_MANUAL_INTERVENTION] Cannot create affiliate transfer: no charge ID`);
-      sale.affiliatePayoutStatus = "pending";
-    } else {
-      try {
-        const affiliateTransfer = await stripeClient.transfers.create(
-          {
-            amount: affiliateShareCents,
-            currency: "brl",
-            destination: affiliateUser.stripeAccountId,
-            source_transaction: chargeId,
-            transfer_group: transferGroup,
-            metadata: {
-              saleType: "affiliate",
-              orderId: orderId.toString(),
-              productId: product._id!.toString(),
-              affiliateUserId: affiliateUserId!,
-            },
-          },
-          {
-            idempotencyKey: `transfer_affiliate_${session.id}`,
-          }
-        );
-        sale.stripeTransferIdAffiliate = affiliateTransfer.id;
-        sale.affiliatePayoutStatus = "paid";
-        sale.affiliatePaidAt = new Date();
-      } catch (err) {
-        console.error(`[Stripe webhook] [${session.id}] [REQUIRES_MANUAL_INTERVENTION] Affiliate transfer failed:`, err);
-        // Mark as pending so it can be retried later
-        sale.affiliatePayoutStatus = "pending";
-      }
-    } // end chargeId check
-  }
+  // Payout triggers have been strictly decoupled into /api/cron/process-payouts
+  // and /api/stripe/connect/status endpoints to prevent webhook race conditions.
 
   try {
     await salesCollection.insertOne(sale);
@@ -382,6 +393,12 @@ async function handleCheckoutCompleted(
   await ordersCollection.updateOne(
     { _id: orderId },
     { $set: { saleId: sale._id } },
+  );
+
+  // Update product sales count
+  await productsCollection.updateOne(
+    { _id: product._id },
+    { $inc: { sales: 1 } },
   );
 
   // Also record in legacy affiliateSales collection for backward compatibility
