@@ -176,23 +176,56 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
       }
     }
 
-    // Step 4: Finalize pendingBalance offset
-    if (successfullyTransferredCents > 0) {
-      await usersCollection.updateOne(
-        { _id: userObjectId },
-        { 
-          $inc: { pendingBalanceCents: -successfullyTransferredCents },
-          $set: { payoutProcessing: false }
-        }
-      )
-      console.log("BALANCE RESET", { deducted: successfullyTransferredCents })
-    } else {
-      // Nothing was successfully emitted into Stipe due to isolated pipeline failures
-      await usersCollection.updateOne(
-        { _id: userObjectId },
-        { $set: { payoutProcessing: false } }
-      )
+    // ── Step 4: RECONCILIATION STEP ──
+    const pendingTransactions = await userTransactionsCollection.find({
+      userId: userObjectId,
+      status: 'pending',
+      type: { $in: ['sale', 'affiliate_commission'] }
+    }).toArray()
+
+    for (const tx of pendingTransactions) {
+      if (!tx.saleId || !ObjectId.isValid(tx.saleId)) continue
+
+      const parentSale = await salesCollection.findOne({ _id: new ObjectId(tx.saleId) })
+      if (!parentSale) continue
+
+      let shouldMarkPaid = false
+      if (tx.type === 'sale' && parentSale.creatorPayoutStatus === 'paid') {
+        shouldMarkPaid = true
+      }
+      if (tx.type === 'affiliate_commission' && parentSale.affiliatePayoutStatus === 'paid') {
+        shouldMarkPaid = true
+      }
+
+      if (shouldMarkPaid) {
+        await userTransactionsCollection.updateOne(
+          { _id: tx._id },
+          { $set: { status: 'paid' } }
+        )
+      }
     }
+
+    // Recalculate final pending balance
+    const remainingPendingTx = await userTransactionsCollection.find({
+      userId: userObjectId,
+      status: 'pending'
+    }).toArray()
+    
+    let finalPendingBalanceCents = 0
+    for (const tx of remainingPendingTx) {
+      finalPendingBalanceCents += tx.amountCents
+    }
+
+    await usersCollection.updateOne(
+      { _id: userObjectId },
+      { 
+        $set: { 
+          pendingBalanceCents: finalPendingBalanceCents,
+          payoutProcessing: false
+        }
+      }
+    )
+    console.log("RECONCILIATION COMPLETE. NEW BALANCE:", finalPendingBalanceCents)
 
     return !hasError && successfullyTransferredCents > 0
   } catch (fatals) {
