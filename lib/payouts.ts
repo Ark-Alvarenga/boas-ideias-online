@@ -14,57 +14,61 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
   console.log("PAYOUT START", { userId: userObjectId.toString() })
 
   // STEP 1: Fetch user
-  const user = await usersCollection.findOne({ _id: userObjectId })
-  
-  if (!user) {
-    console.warn(`[Payout] User not found: ${userObjectId}`)
-    return false
-  }
+  try {
+    const user = await usersCollection.findOne({ _id: userObjectId })
+    
+    if (!user) {
+      console.log("EXIT: NO USER")
+      return false
+    }
 
-  const { pendingBalanceCents = 0, stripeAccountId, stripeOnboardingComplete, payoutProcessing } = user
+    const { pendingBalanceCents = 0, stripeAccountId, stripeOnboardingComplete, payoutProcessing } = user
 
-  console.log("USER DATA", {
-    pendingBalanceCents,
-    stripeAccountId,
-    stripeOnboardingComplete
-  })
+    console.log("USER DATA FULL", user)
 
-  if (pendingBalanceCents <= 0) {
-    return false
-  }
+    if (!stripeAccountId) {
+      console.log("EXIT: NO STRIPE ACCOUNT")
+      return false
+    }
 
-  if (!stripeAccountId) {
-    console.warn(`[Payout] User ${userObjectId} has pending balance but no stripeAccountId`)
-    return false
-  }
+    if (!stripeOnboardingComplete) {
+      console.log("EXIT: ONBOARDING NOT COMPLETE")
+      return false
+    }
 
-  if (payoutProcessing) {
-    console.log(`[Payout] User ${userObjectId} is already processing a payout`)
-    return false
-  }
+    if (pendingBalanceCents <= 0) {
+      console.log("EXIT: NO BALANCE")
+      return false
+    }
 
-  // STEP 2: Lock
-  const lockResult = await usersCollection.updateOne(
-    { _id: userObjectId, payoutProcessing: { $ne: true } },
-    { $set: { payoutProcessing: true } }
-  )
+    if (payoutProcessing) {
+      console.log("EXIT: PAYOUT LOCKED")
+      return false
+    }
 
-  if (lockResult.modifiedCount === 0) {
-    console.log(`[Payout] Failed to acquire lock for user ${userObjectId}`)
-    return false
-  }
-
-  // STEP 2B: Assert consistency
-  const verifiedSumCents = await recalculateUserBalance(userObjectId)
-  if (verifiedSumCents !== pendingBalanceCents) {
-    console.error(`[CRITICAL ERROR] Balance mismatch for user ${userObjectId}. Cached: ${pendingBalanceCents}, Summed: ${verifiedSumCents}. Halting payout.`)
-    // Unlock and return
-    await usersCollection.updateOne(
-      { _id: userObjectId },
-      { $set: { payoutProcessing: false } }
+    // STEP 2: Lock
+    const lockResult = await usersCollection.updateOne(
+      { _id: userObjectId, payoutProcessing: { $ne: true } },
+      { $set: { payoutProcessing: true } }
     )
-    return false
-  }
+
+    if (lockResult.modifiedCount === 0) {
+      console.log("EXIT: FAILED TO ACQUIRE DB LOCK")
+      return false
+    }
+
+    // STEP 2B: Assert consistency
+    const verifiedSumCents = await recalculateUserBalance(userObjectId)
+    if (verifiedSumCents !== pendingBalanceCents) {
+      console.error(`[CRITICAL ERROR] Balance mismatch for user ${userObjectId}. Cached: ${pendingBalanceCents}, Summed: ${verifiedSumCents}. Halting payout.`)
+      // Unlock and return
+      await usersCollection.updateOne(
+        { _id: userObjectId },
+        { $set: { payoutProcessing: false } }
+      )
+      console.log("EXIT: FAILED CONSISTENCY CHECK")
+      return false
+    }
 
   // STEP 3: Transfer
   console.log("CREATING STRIPE TRANSFER", {
@@ -122,6 +126,11 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
       { _id: userObjectId },
       { $set: { payoutProcessing: false } }
     )
+    console.log("EXIT: STRIPE TRANSFER FAILED")
+    return false
+  }
+  } catch (fatals) {
+    console.error("FATAL ERROR IN processUserPayout:", fatals)
     return false
   }
 }
