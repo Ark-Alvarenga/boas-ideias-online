@@ -80,9 +80,9 @@ function RegisterContent() {
         <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-0">
           <Card className="border-border/50 bg-card shadow-lg shadow-primary/5">
             <CardHeader>
-              <CardTitle className="text-xl">Criar conta</CardTitle>
+              <CardTitle className="text-xl">Crie sua conta e comece a lucrar hoje</CardTitle>
               <CardDescription>
-                Comece a comprar e gerenciar seus produtos digitais.
+                Junte-se a mais de 15.000 pessoas que estão fazendo dinheiro online de forma simples. É 100% grátis para começar.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -139,8 +139,12 @@ function RegisterContent() {
                   className="mt-6 h-11 w-full"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Criando conta..." : "Criar conta"}
+                  {isSubmitting ? "Criando conta..." : "Criar Minha Conta Grátis 🚀"}
                 </Button>
+
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  🔒 Seus dados estão protegidos e criptografados.
+                </p>
 
                 <p className="mt-4 text-center text-sm text-muted-foreground">
                   Já tem conta?{" "}

@@ -1,25 +1,25 @@
-import { Lightbulb, TrendingUp, Users, Zap } from "lucide-react"
+import { Rocket, DollarSign, ShoppingCart, Zap } from "lucide-react"
 
 const benefits = [
   {
-    icon: Lightbulb,
-    title: "Transforme Conhecimento em Renda",
-    description: "Monetize sua expertise criando produtos digitais que geram renda passiva."
+    icon: Rocket,
+    title: "Comece em Minutos",
+    description: "Não perca semanas configurando sistemas. Suba seu arquivo, copie seu link de checkout e comece a divulgar no Instagram, TikTok ou WhatsApp."
   },
   {
-    icon: TrendingUp,
-    title: "Aprenda com Especialistas",
-    description: "Acesse recursos criados por quem já trilhou o caminho do sucesso digital."
+    icon: DollarSign,
+    title: "Dinheiro Direto na Conta",
+    description: "Suas vendas, seu dinheiro. Receba pagamentos via Pix e Cartão com as taxas mais competitivas do mercado."
+  },
+  {
+    icon: ShoppingCart,
+    title: "Checkout que Vende Sozinho",
+    description: "Nossa página de pagamento foi desenhada por especialistas para garantir que o seu cliente compre por impulso, sem fricção."
   },
   {
     icon: Zap,
-    title: "Monetize sua Criatividade",
-    description: "Venda prompts, toolkits e recursos que ajudam outros criadores a crescer."
-  },
-  {
-    icon: Users,
-    title: "Comunidade Engajada",
-    description: "Faça parte de uma rede de empreendedores digitais que compartilham conhecimento."
+    title: "Venda Automática",
+    description: "O cliente pagou? O acesso é enviado na mesma hora, automaticamente. Você ganha dinheiro até dormindo."
   }
 ]
 
@@ -29,13 +29,13 @@ export function BenefitsSection() {
       <div className="section-container">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-            Por que escolher
+            SEM COMPLICAÇÃO
           </p>
           <h2 className="mt-3 font-serif text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Uma plataforma feita para criadores
+            Tudo configurado para você só se preocupar em vender.
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-            Tudo que você precisa para transformar conhecimento em produtos digitais de valor.
+            A infraestrutura completa para você empacotar seu conhecimento e faturar rápido.
           </p>
         </div>
 

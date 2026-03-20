@@ -82,7 +82,7 @@ function LoginContent() {
             <CardHeader>
               <CardTitle className="text-xl">Entrar na sua conta</CardTitle>
               <CardDescription>
-                Acesse seu painel para ver suas compras e produtos.
+                Acesse seu painel para gerenciar suas vendas e produtos.
               </CardDescription>
             </CardHeader>
             <CardContent>

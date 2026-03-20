@@ -35,15 +35,14 @@ export function ProductsPreview({ products }: { products: Product[] }) {
 
       <CardContent>
         {products.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/60 bg-muted/40 p-6 text-sm text-muted-foreground">
-            Você ainda não publicou nenhum produto.{" "}
-            <Link
-              href="/dashboard/create-product"
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Crie o primeiro agora
-            </Link>
-            .
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/40 p-8 text-center sm:p-10">
+            <h3 className="text-lg font-semibold text-foreground">Sua vitrine está vazia.</h3>
+            <p className="mt-2 text-sm text-muted-foreground max-w-sm">
+              O primeiro passo para a sua primeira venda online começa aqui. Leva literalmente 2 minutos. O que você vai vender hoje?
+            </p>
+            <Button className="mt-6" asChild>
+              <Link href="/dashboard/create-product">Criar Meu Primeiro Produto 🚀</Link>
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

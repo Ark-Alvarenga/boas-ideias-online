@@ -434,10 +434,10 @@ export default function CreateProductPage() {
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <Card className="border-border/50 bg-card shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl">Criar novo produto</CardTitle>
+              <CardTitle className="text-xl">Crie seu novo produto</CardTitle>
               <CardDescription>
-                Envie um PDF, defina o preço e publique seu produto digital.
-                Se sua conta Stripe não estiver conectada, o produto será salvo como rascunho até você concluir o onboarding.
+                Preencha os dados básicos e seu checkout estará pronto em segundos.
+                Crie o produto agora e depois conecte seu banco para habilitar as vendas.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -445,7 +445,7 @@ export default function CreateProductPage() {
                 <div>
                   <FieldGroup>
                     <Field data-invalid={fieldStatus.title === "invalid" || undefined}>
-                      <FieldLabel htmlFor="title">Título</FieldLabel>
+                      <FieldLabel htmlFor="title">Título do Produto</FieldLabel>
                       <Input
                         id="title"
                         value={formData.title}
@@ -457,12 +457,12 @@ export default function CreateProductPage() {
                       {fieldErrors.title ? (
                         <FieldError>{fieldErrors.title}</FieldError>
                       ) : (
-                        <FieldDescription>Mínimo de 3 caracteres</FieldDescription>
+                        <FieldDescription>Como seu produto vai se chamar</FieldDescription>
                       )}
                     </Field>
 
                     <Field data-invalid={fieldStatus.description === "invalid" || undefined}>
-                      <FieldLabel htmlFor="description">Descrição</FieldLabel>
+                      <FieldLabel htmlFor="description">Descrição (O que o cliente ganha?)</FieldLabel>
                       <Textarea
                         id="description"
                         value={formData.description}
@@ -474,7 +474,7 @@ export default function CreateProductPage() {
                       {fieldErrors.description ? (
                         <FieldError>{fieldErrors.description}</FieldError>
                       ) : (
-                        <FieldDescription>Mínimo de 10 caracteres</FieldDescription>
+                        <FieldDescription>Explique exatamente como seu produto vai ajudar</FieldDescription>
                       )}
                     </Field>
 
@@ -544,7 +544,7 @@ export default function CreateProductPage() {
                           Salvando...
                         </span>
                       ) : (
-                        "Publicar produto"
+                        "Colocar Produto no Ar 🟢"
                       )}
                     </Button>
                     <Button
@@ -725,7 +725,7 @@ export default function CreateProductPage() {
                         Arquivo:{" "}
                         {pdfUrl
                           ? "PDF enviado e pronto para venda."
-                          : "Envie um PDF para concluir a criação do produto."}
+                          : "Arraste o PDF para cá para a mágica acontecer."}
                       </p>
                     </CardContent>
                   </Card>

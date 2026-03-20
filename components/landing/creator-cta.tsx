@@ -6,20 +6,20 @@ const steps = [
   {
     icon: Upload,
     step: "01",
-    title: "Faça Upload",
-    description: "Envie seu PDF, guia ou recurso digital"
+    title: "Suba seu Arquivo",
+    description: "Envie seu PDF, e-book, planilha ou pack de templates com apenas 1 clique."
   },
   {
     icon: DollarSign,
     step: "02",
-    title: "Defina o Preço",
-    description: "Você decide quanto vale seu conhecimento"
+    title: "Defina seu Preço",
+    description: "Escolha quanto quer cobrar. Nós já entregamos o link de pagamento pronto."
   },
   {
     icon: BarChart3,
     step: "03",
-    title: "Comece a Vender",
-    description: "Alcance milhares de compradores"
+    title: "Notificações de Venda",
+    description: "Divulgue seu link e veja as notificações de \"venda realizada\" chegarem no celular."
   }
 ]
 
@@ -39,10 +39,10 @@ export function CreatorCTA() {
       <div className="section-container relative">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-serif text-3xl font-semibold tracking-tight text-primary-foreground sm:text-4xl lg:text-5xl">
-            Venda seus produtos digitais para milhares de compradores
+            O caminho mais curto entre sua ideia e o dinheiro no bolso.
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg text-primary-foreground/80">
-            Junte-se a mais de 15.000 criadores que já transformam conhecimento em renda passiva.
+            Junte-se a milhares de parceiros que estão lucrando diariamente.
           </p>
         </div>
 
@@ -73,8 +73,8 @@ export function CreatorCTA() {
             className="bg-background text-foreground shadow-lg hover:bg-background/90"
             asChild
           >
-            <Link href="/dashboard">
-              Começar a Vender Agora
+            <Link href="/register">
+              Quero começar a vender agora
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>

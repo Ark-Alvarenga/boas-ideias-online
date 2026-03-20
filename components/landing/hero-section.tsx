@@ -14,21 +14,19 @@ export function HeroSection() {
           {/* Left content */}
           <div className="max-w-xl lg:max-w-none">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-1.5 backdrop-blur-sm">
-              <Sparkles className="h-3.5 w-3.5 text-secondary" />
               <span className="text-sm font-medium text-primary-foreground/90">
-                Marketplace de produtos digitais
+                🔥 A plataforma de vendas mais simples do Brasil
               </span>
             </div>
 
             <h1 className="font-serif text-4xl font-semibold leading-[1.1] tracking-tight text-primary-foreground sm:text-5xl lg:text-6xl">
-              <span className="text-balance">Ideias que iluminam.</span>{" "}
-              <span className="text-secondary">Produtos que vendem.</span>
+              <span className="text-balance">Crie seu produto digital em 5 minutos</span>{" "}
+              <span className="text-secondary">e faça sua primeira venda hoje.</span>
             </h1>
 
             <p className="mt-6 text-lg leading-relaxed text-primary-foreground/80 lg:text-xl">
-              Transforme seu conhecimento em produtos digitais que geram renda
-              passiva. Compre e venda cursos, guias e recursos com acesso
-              imediato.
+              O jeito mais rápido, fácil e seguro de transformar seu conhecimento em dinheiro na conta. 
+              Sem taxas de adesão, sem precisar saber programar. Suba seu PDF, defina o preço e nós cuidamos do resto.
             </p>
 
             <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
@@ -37,8 +35,8 @@ export function HeroSection() {
                 className="bg-secondary px-7 text-secondary-foreground shadow-lg shadow-secondary/25 hover:bg-secondary/90" 
                 asChild
               >
-                <Link href="/marketplace">
-                  Explorar Produtos
+                <Link href="/register">
+                  Criar Minha Conta Grátis
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -48,14 +46,29 @@ export function HeroSection() {
                 className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" 
                 asChild
               >
-                <Link href="/dashboard">
-                  Começar a Vender
+                <Link href="/marketplace">
+                  Explorar Marketplace
                 </Link>
               </Button>
             </div>
 
+            <div className="mt-6 flex flex-wrap items-center gap-4 text-sm font-medium text-primary-foreground/80">
+              <span className="flex items-center gap-1.5">
+                <svg className="h-4 w-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Pagamentos seguros via Stripe
+              </span>
+              <span className="flex items-center gap-1.5">
+                <svg className="h-4 w-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Checkout de alta conversão
+              </span>
+            </div>
+
             {/* Social proof stats */}
-            <div className="mt-14 border-t border-primary-foreground/15 pt-8">
+            <div className="mt-10 border-t border-primary-foreground/15 pt-8">
               <div className="flex items-center gap-6 sm:gap-10">
                 <div>
                   <p className="text-2xl font-semibold tracking-tight text-secondary sm:text-3xl">2.500+</p>

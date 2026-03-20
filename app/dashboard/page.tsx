@@ -126,11 +126,10 @@ export default async function DashboardPage() {
       <main className="section-container py-8 sm:py-10 lg:py-12">
         <div className="mb-8">
           <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            Olá, {user?.name?.split(" ")[0] ?? "Usuário"}!
+            Bem-vindo(a) à sua nova máquina de vendas, {user?.name?.split(" ")[0] ?? "Usuário"}!
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Aqui você encontra todos os produtos que já comprou e pode baixar
-            seus arquivos quando quiser.
+            Pronto para transformar seu conhecimento em dinheiro hoje?
           </p>
         </div>
 
