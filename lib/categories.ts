@@ -1,16 +1,12 @@
 /**
  * Predefined product categories for the marketplace.
- * Used in: create-product form, product-edit-form, marketplace filters.
+ * Converted to Gumroad-inspired beginner-friendly categories.
  */
 export const PRODUCT_CATEGORIES = [
-  { value: 'curso', label: 'Curso' },
-  { value: 'guia', label: 'Guia' },
-  { value: 'template', label: 'Template' },
-  { value: 'ebook', label: 'E-book' },
-  { value: 'planilha', label: 'Planilha' },
-  { value: 'checklist', label: 'Checklist' },
-  { value: 'plugin', label: 'Plugin' },
-  { value: 'outro', label: 'Outro' },
+  { value: 'ideias-simples', label: 'Ideias simples' },
+  { value: 'do-zero', label: 'Começando do zero' },
+  { value: 'primeiras-vendas', label: 'Primeiras vendas fáceis' },
+  { value: 'modelos', label: 'Modelos rápidos' },
 ] as const
 
 export type ProductCategory = typeof PRODUCT_CATEGORIES[number]['value']

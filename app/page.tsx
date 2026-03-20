@@ -1,23 +1,23 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { HeroSection } from "@/components/landing/hero-section"
-import { FeaturedProducts } from "@/components/landing/featured-products"
-import { BenefitsSection } from "@/components/landing/benefits-section"
-import { CreatorCTA } from "@/components/landing/creator-cta"
-import { TestimonialsSection } from "@/components/landing/testimonials-section"
-import { NewsletterSection } from "@/components/landing/newsletter-section"
+import { SellAnythingSection } from "@/components/landing/sell-anything-section"
+import { StartSmallSection } from "@/components/landing/start-small-section"
+import { HowItWorksSection } from "@/components/landing/how-it-works-section"
+import { TrustSection } from "@/components/landing/trust-section"
+import { FinalCtaSection } from "@/components/landing/final-cta-section"
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
       <Header />
       <main>
         <HeroSection />
-        <FeaturedProducts />
-        <BenefitsSection />
-        <CreatorCTA />
-        <TestimonialsSection />
-        <NewsletterSection />
+        <SellAnythingSection />
+        <StartSmallSection />
+        <HowItWorksSection />
+        <TrustSection />
+        <FinalCtaSection />
       </main>
       <Footer />
     </div>

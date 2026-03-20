@@ -15,11 +15,13 @@ import { CheckCircle2, Loader2, CreditCard } from "lucide-react"
 interface ConnectStripeCardProps {
   stripeAccountId?: string | null
   stripeOnboardingComplete?: boolean | null
+  compact?: boolean
 }
 
 export function ConnectStripeCard({
   stripeAccountId: initialAccountId,
   stripeOnboardingComplete: initialOnboardingComplete,
+  compact = false,
 }: ConnectStripeCardProps) {
   const [stripeAccountId, setStripeAccountId] = useState(initialAccountId ?? null)
   const [stripeOnboardingComplete, setStripeOnboardingComplete] = useState(
@@ -73,36 +75,37 @@ export function ConnectStripeCard({
     !!stripeAccountId && !!stripeOnboardingComplete
 
   return (
-    <Card className="border-border/50 bg-card shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <CreditCard className="h-5 w-5 text-primary" />
-          Pagamentos Stripe
-        </CardTitle>
-        <CardDescription>
-          Conecte sua conta Stripe para receber pagamentos quando vender
-          produtos.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Card className={compact ? "border-none bg-transparent shadow-none" : "border-border/50 bg-card shadow-sm"}>
+      {!compact && (
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <CreditCard className="h-5 w-5 text-primary" />
+            Conta de Recebimentos
+          </CardTitle>
+          <CardDescription>
+            É assim que você receberá o dinheiro das suas vendas. Rápido e seguro.
+          </CardDescription>
+        </CardHeader>
+      )}
+      <CardContent className={compact ? "p-0" : ""}>
         {isConnected ? (
-          <div className="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-500">
+          <div className="flex items-center gap-2 text-sm font-bold text-green-600 dark:text-green-500">
             <CheckCircle2 className="h-5 w-5" />
-            Stripe conectado
+            Pronto para receber vendas
           </div>
         ) : (
           <Button
             onClick={handleConnect}
             disabled={isLoading}
-            className="h-10"
+            className={`font-bold shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff] border-2 border-foreground ${compact ? 'h-12 text-lg w-full sm:w-auto px-8' : 'h-10'}`}
           >
             {isLoading ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Redirecionando...
+                Abrindo cofre...
               </span>
             ) : (
-              "Conectar Stripe para receber pagamentos"
+              "Conectar meu banco agora"
             )}
           </Button>
         )}

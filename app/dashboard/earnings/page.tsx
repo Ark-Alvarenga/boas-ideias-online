@@ -56,7 +56,7 @@ export default async function EarningsPage() {
   const salesCollection = db.collection<Sale>("sales")
   const saleIds = recentTxsRaw.map(tx => tx.saleId).filter(Boolean).map(id => new ObjectId(id!))
   const relatedSales = await salesCollection.find({ _id: { $in: saleIds } }).toArray()
-  
+
   const productIds = [...new Set(relatedSales.map(s => s.productId))]
   const relatedProducts = await productsCollection.find({ _id: { $in: productIds } }).toArray()
   const productsMap = new Map(relatedProducts.map(p => [p._id!.toString(), p.title]))
@@ -66,7 +66,7 @@ export default async function EarningsPage() {
     const saleId = tx.saleId
     const productId = saleId ? salesMap.get(saleId) : null
     const title = productId ? productsMap.get(productId) : "Produto Desconhecido"
-    
+
     return {
       id: tx._id!.toString(),
       title,
@@ -77,9 +77,9 @@ export default async function EarningsPage() {
   })
 
   // We can also fetch the exact number of sales/commissions they made instead of 'orders'
-  const totalOrderCount = await transactionsCollection.countDocuments({ 
-    userId: user._id, 
-    type: { $in: ["sale", "affiliate_commission"] } 
+  const totalOrderCount = await transactionsCollection.countDocuments({
+    userId: user._id,
+    type: { $in: ["sale", "affiliate_commission"] }
   })
 
   return (
@@ -191,7 +191,7 @@ export default async function EarningsPage() {
           <Card className="border-border/50 bg-card shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-semibold text-foreground">
-                Últimas Entradas (Líquido)
+                Últimas Entradas
               </CardTitle>
               <CardDescription>
                 Histórico detalhado das suas vendas mais recentes com os descontos de plataforma e afiliados aplicados.
@@ -231,11 +231,10 @@ export default async function EarningsPage() {
                             <div className="md:hidden text-xs text-muted-foreground mt-0.5">{tx.typeLabel}</div>
                           </td>
                           <td className="hidden py-3 pr-4 md:table-cell">
-                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                              tx.typeLabel === 'Venda' 
+                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${tx.typeLabel === 'Venda'
                                 ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                                 : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                            }`}>
+                              }`}>
                               {tx.typeLabel}
                             </span>
                           </td>

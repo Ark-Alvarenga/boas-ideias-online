@@ -23,7 +23,7 @@ interface CheckoutProduct {
   title: string
   slug: string
   description: string
-  price: number
+  priceCents: number
   category: string
   creatorName: string
 }

@@ -1,9 +1,7 @@
- "use client"
+"use client"
 
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -200,7 +198,7 @@ export default function CreateProductPage() {
       // We use XMLHttpRequest here to be able to track upload progress accurately
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
-        
+
         xhr.upload.addEventListener("progress", (event) => {
           if (event.lengthComputable) {
             // progress from 30% to 100%
@@ -427,316 +425,310 @@ export default function CreateProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div className="mx-auto max-w-5xl py-6">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        <Card className="border-border/50 bg-card shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-xl">Crie seu novo produto</CardTitle>
+            <CardDescription>
+              Preencha os dados básicos e seu checkout estará pronto em segundos.
+              Crie o produto agora e depois conecte seu banco para habilitar as vendas.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr,1.5fr] lg:gap-10">
+              <div>
+                <FieldGroup>
+                  <Field data-invalid={fieldStatus.title === "invalid" || undefined}>
+                    <FieldLabel htmlFor="title">Título do Produto</FieldLabel>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => handleChange("title", e.target.value)}
+                      onBlur={() => handleBlur("title")}
+                      className={cn("h-11 bg-background", borderClass(fieldStatus.title))}
+                      required
+                    />
+                    {fieldErrors.title ? (
+                      <FieldError>{fieldErrors.title}</FieldError>
+                    ) : (
+                      <FieldDescription>Como seu produto vai se chamar</FieldDescription>
+                    )}
+                  </Field>
 
-      <main className="py-10 lg:py-16">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <Card className="border-border/50 bg-card shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-xl">Crie seu novo produto</CardTitle>
-              <CardDescription>
-                Preencha os dados básicos e seu checkout estará pronto em segundos.
-                Crie o produto agora e depois conecte seu banco para habilitar as vendas.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr,1.5fr] lg:gap-10">
-                <div>
-                  <FieldGroup>
-                    <Field data-invalid={fieldStatus.title === "invalid" || undefined}>
-                      <FieldLabel htmlFor="title">Título do Produto</FieldLabel>
+                  <Field data-invalid={fieldStatus.description === "invalid" || undefined}>
+                    <FieldLabel htmlFor="description">Descrição (O que o cliente ganha?)</FieldLabel>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => handleChange("description", e.target.value)}
+                      onBlur={() => handleBlur("description")}
+                      className={cn("min-h-32 bg-background", borderClass(fieldStatus.description))}
+                      required
+                    />
+                    {fieldErrors.description ? (
+                      <FieldError>{fieldErrors.description}</FieldError>
+                    ) : (
+                      <FieldDescription>Explique exatamente como seu produto vai ajudar</FieldDescription>
+                    )}
+                  </Field>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field data-invalid={fieldStatus.priceCents === "invalid" || undefined}>
+                      <FieldLabel htmlFor="price">Preço (R$)</FieldLabel>
                       <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e) => handleChange("title", e.target.value)}
-                        onBlur={() => handleBlur("title")}
-                        className={cn("h-11 bg-background", borderClass(fieldStatus.title))}
+                        id="price"
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={formData.price}
+                        onChange={(e) => handleChange("price", e.target.value)}
+                        onBlur={() => handleBlur("price")}
+                        className={cn("h-11 bg-background", borderClass(fieldStatus.priceCents))}
                         required
                       />
-                      {fieldErrors.title ? (
-                        <FieldError>{fieldErrors.title}</FieldError>
+                      {fieldErrors.priceCents ? (
+                        <FieldError>{fieldErrors.priceCents}</FieldError>
                       ) : (
-                        <FieldDescription>Como seu produto vai se chamar</FieldDescription>
+                        <FieldDescription>Valor em reais. Ex: 29.90</FieldDescription>
                       )}
                     </Field>
 
-                    <Field data-invalid={fieldStatus.description === "invalid" || undefined}>
-                      <FieldLabel htmlFor="description">Descrição (O que o cliente ganha?)</FieldLabel>
-                      <Textarea
-                        id="description"
-                        value={formData.description}
-                        onChange={(e) => handleChange("description", e.target.value)}
-                        onBlur={() => handleBlur("description")}
-                        className={cn("min-h-32 bg-background", borderClass(fieldStatus.description))}
+                    <Field data-invalid={fieldStatus.category === "invalid" || undefined}>
+                      <FieldLabel htmlFor="category">Categoria</FieldLabel>
+                      <Select
+                        value={formData.category}
+                        onValueChange={(value) => handleChange("category", value)}
                         required
-                      />
-                      {fieldErrors.description ? (
-                        <FieldError>{fieldErrors.description}</FieldError>
+                      >
+                        <SelectTrigger className={cn("h-11 bg-background", borderClass(fieldStatus.category))}>
+                          <SelectValue placeholder="Selecione a categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PRODUCT_CATEGORIES.map((cat) => (
+                            <SelectItem key={cat.value} value={cat.value}>
+                              {cat.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {fieldErrors.category ? (
+                        <FieldError>{fieldErrors.category}</FieldError>
                       ) : (
-                        <FieldDescription>Explique exatamente como seu produto vai ajudar</FieldDescription>
+                        <FieldDescription>Selecione uma categoria</FieldDescription>
                       )}
                     </Field>
+                  </div>
+                </FieldGroup>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <Field data-invalid={fieldStatus.priceCents === "invalid" || undefined}>
-                        <FieldLabel htmlFor="price">Preço (R$)</FieldLabel>
-                        <Input
-                          id="price"
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          value={formData.price}
-                          onChange={(e) => handleChange("price", e.target.value)}
-                          onBlur={() => handleBlur("price")}
-                          className={cn("h-11 bg-background", borderClass(fieldStatus.priceCents))}
-                          required
-                        />
-                        {fieldErrors.priceCents ? (
-                          <FieldError>{fieldErrors.priceCents}</FieldError>
-                        ) : (
-                          <FieldDescription>Valor em reais. Ex: 29.90</FieldDescription>
-                        )}
-                      </Field>
+                {error && (
+                  <p className="mt-4 text-sm text-red-500">
+                    {error}
+                  </p>
+                )}
 
-                      <Field data-invalid={fieldStatus.category === "invalid" || undefined}>
-                        <FieldLabel htmlFor="category">Categoria</FieldLabel>
-                        <Select
-                          value={formData.category}
-                          onValueChange={(value) => handleChange("category", value)}
-                          required
-                        >
-                          <SelectTrigger className={cn("h-11 bg-background", borderClass(fieldStatus.category))}>
-                            <SelectValue placeholder="Selecione a categoria" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PRODUCT_CATEGORIES.map((cat) => (
-                              <SelectItem key={cat.value} value={cat.value}>
-                                {cat.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {fieldErrors.category ? (
-                          <FieldError>{fieldErrors.category}</FieldError>
-                        ) : (
-                          <FieldDescription>Selecione uma categoria</FieldDescription>
-                        )}
-                      </Field>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Button
+                    type="submit"
+                    disabled={!canSubmit}
+                    className="h-11"
+                  >
+                    {isSaving ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Salvando...
+                      </span>
+                    ) : (
+                      "Colocar Produto no Ar 🟢"
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11"
+                    onClick={() => router.push("/dashboard/products")}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <Card className="border-border/50 bg-muted/40">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-bold">
+                      Seu Arquivo (PDF)
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      O material que seu cliente vai receber logo após o pagamento. (Até 50MB)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-background py-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50">
+                      <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
+                      <p className="text-sm font-bold text-foreground">Escolher arquivo. ✨</p>
+                      <p className="text-xs text-muted-foreground">ou arraste para cá</p>
+                      <Input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={handleFileChange}
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                      />
                     </div>
-                  </FieldGroup>
 
-                  {error && (
-                    <p className="mt-4 text-sm text-red-500">
-                      {error}
-                    </p>
-                  )}
+                    {pdfFile && (
+                      <div className="rounded-md border border-dashed border-border/60 bg-background p-3 text-xs text-muted-foreground">
+                        <p className="font-medium text-foreground">
+                          {pdfFile.name}
+                        </p>
+                        <p>
+                          {(pdfFile.size / (1024 * 1024)).toFixed(2)} MB
+                        </p>
+                      </div>
+                    )}
 
-                  <div className="mt-8 flex flex-wrap gap-3">
-                    <Button
-                      type="submit"
-                      disabled={!canSubmit}
-                      className="h-11"
-                    >
-                      {isSaving ? (
-                        <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Salvando...
-                        </span>
-                      ) : (
-                        "Colocar Produto no Ar 🟢"
-                      )}
-                    </Button>
                     <Button
                       type="button"
-                      variant="outline"
-                      className="h-11"
-                      onClick={() => router.push("/dashboard/products")}
+                      onClick={handleUpload}
+                      disabled={!pdfFile || isUploading}
+                      className="h-10 w-full"
                     >
-                      Cancelar
+                      {isUploading ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Enviando...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <UploadCloud className="h-4 w-4" />
+                          Enviar Arquivo
+                        </span>
+                      )}
                     </Button>
-                  </div>
-                </div>
 
-                <div className="space-y-6">
-                  <Card className="border-border/50 bg-muted/40">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium">
-                        Arquivo PDF
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        Tamanho máximo: 50MB. Apenas arquivos PDF são aceitos.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-background py-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50">
-                        <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
-                        <p className="text-sm font-medium text-foreground">Clique para selecionar</p>
-                        <p className="text-xs text-muted-foreground">ou arraste o arquivo até aqui</p>
-                        <Input
-                          type="file"
-                          accept="application/pdf"
-                          onChange={handleFileChange}
-                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                        />
-                      </div>
-
-                      {pdfFile && (
-                        <div className="rounded-md border border-dashed border-border/60 bg-background p-3 text-xs text-muted-foreground">
-                          <p className="font-medium text-foreground">
-                            {pdfFile.name}
-                          </p>
-                          <p>
-                            {(pdfFile.size / (1024 * 1024)).toFixed(2)} MB
-                          </p>
+                    {uploadProgress > 0 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Progresso do upload</span>
+                          <span>{uploadProgress}%</span>
                         </div>
-                      )}
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full bg-primary transition-all"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-                      <Button
-                        type="button"
-                        onClick={handleUpload}
-                        disabled={!pdfFile || isUploading}
-                        className="h-10 w-full"
-                      >
-                        {isUploading ? (
-                          <span className="flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Enviando...
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-2">
-                            <UploadCloud className="h-4 w-4" />
-                            Enviar PDF
-                          </span>
+                <Card className="border-border/50 bg-muted/40">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-bold">
+                      Capa do Produto
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Uma imagem bonita atrai mais vendas (formato aceito: PNG tamanho: 800x800px).
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-background py-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50">
+                      <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
+                      <p className="text-sm font-bold text-foreground">Escolher imagem de capa 🖼️</p>
+                      <p className="text-xs text-muted-foreground">ou arraste para cá</p>
+                      <Input
+                        type="file"
+                        accept="image/png"
+                        onChange={handleCoverFileChange}
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                      />
+                    </div>
+
+                    {coverFile && (
+                      <div className="rounded-md border border-dashed border-border/60 bg-background p-3 text-xs text-muted-foreground">
+                        <p className="font-medium text-foreground">
+                          {coverFile.name}
+                        </p>
+                        <p>
+                          {(coverFile.size / (1024 * 1024)).toFixed(2)} MB
+                        </p>
+                      </div>
+                    )}
+
+                    <Button
+                      type="button"
+                      onClick={handleCoverUpload}
+                      disabled={!coverFile || isUploading}
+                      className="h-10 w-full"
+                    >
+                      {isUploading ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Enviando capa...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <UploadCloud className="h-4 w-4" />
+                          Enviar capa
+                        </span>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/50 bg-card/80">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium">
+                      Pré-visualização
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Assim seu produto aparecerá no marketplace.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="mb-3 overflow-hidden rounded-md border border-border/40 bg-muted/60">
+                      <div className="aspect-[4/3] w-full bg-gradient-to-br from-blue-500/10 to-indigo-500/10">
+                        {coverUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={coverUrl}
+                            alt="Pré-visualização da capa"
+                            className="h-full w-full object-cover"
+                          />
                         )}
-                      </Button>
-
-                      {uploadProgress > 0 && (
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>Progresso do upload</span>
-                            <span>{uploadProgress}%</span>
-                          </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                            <div
-                              className="h-full rounded-full bg-primary transition-all"
-                              style={{ width: `${uploadProgress}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-border/50 bg-muted/40">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium">
-                        Imagem de capa (PNG)
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        Envie uma imagem PNG para ser usada como capa do produto.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-background py-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50">
-                        <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
-                        <p className="text-sm font-medium text-foreground">Clique para selecionar</p>
-                        <p className="text-xs text-muted-foreground">ou arraste a Imagem até aqui</p>
-                        <Input
-                          type="file"
-                          accept="image/png"
-                          onChange={handleCoverFileChange}
-                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                        />
                       </div>
+                    </div>
 
-                      {coverFile && (
-                        <div className="rounded-md border border-dashed border-border/60 bg-background p-3 text-xs text-muted-foreground">
-                          <p className="font-medium text-foreground">
-                            {coverFile.name}
-                          </p>
-                          <p>
-                            {(coverFile.size / (1024 * 1024)).toFixed(2)} MB
-                          </p>
-                        </div>
-                      )}
-
-                      <Button
-                        type="button"
-                        onClick={handleCoverUpload}
-                        disabled={!coverFile || isUploading}
-                        className="h-10 w-full"
-                      >
-                        {isUploading ? (
-                          <span className="flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Enviando capa...
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-2">
-                            <UploadCloud className="h-4 w-4" />
-                            Enviar capa
-                          </span>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-border/50 bg-card/80">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium">
-                        Pré-visualização
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        Assim seu produto aparecerá no marketplace.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                      <div className="mb-3 overflow-hidden rounded-md border border-border/40 bg-muted/60">
-                        <div className="aspect-[4/3] w-full bg-gradient-to-br from-blue-500/10 to-indigo-500/10">
-                          {coverUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={coverUrl}
-                              alt="Pré-visualização da capa"
-                              className="h-full w-full object-cover"
-                            />
-                          )}
-                        </div>
-                      </div>
-
-                      <p className="font-semibold text-foreground">
-                        {formData.title || "Título do produto"}
-                      </p>
-                      <p className="line-clamp-3 text-xs text-muted-foreground">
-                        {formData.description ||
-                          "A descrição do seu produto aparecerá aqui."}
-                      </p>
-                      <p className="mt-2 text-sm font-semibold text-foreground">
-                        {formData.price
-                          ? `R$${Number(formData.price).toFixed(2)}`
-                          : "Defina um preço"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Categoria:{" "}
-                        {formData.category || "Defina uma categoria"}
-                      </p>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        Arquivo:{" "}
-                        {pdfUrl
-                          ? "PDF enviado e pronto para venda."
-                          : "Arraste o PDF para cá para a mágica acontecer."}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-
-      <Footer />
+                    <p className="font-semibold text-foreground">
+                      {formData.title || "Título do produto"}
+                    </p>
+                    <p className="line-clamp-3 text-xs text-muted-foreground">
+                      {formData.description ||
+                        "A descrição do seu produto aparecerá aqui."}
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-foreground">
+                      {formData.price
+                        ? `R$${Number(formData.price).toFixed(2)}`
+                        : "Defina um preço"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Categoria:{" "}
+                      {formData.category || "Defina uma categoria"}
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Arquivo:{" "}
+                      {pdfUrl
+                        ? "PDF enviado e pronto para venda."
+                        : "Arraste o PDF para cá para a mágica acontecer."}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
