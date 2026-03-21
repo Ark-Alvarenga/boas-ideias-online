@@ -9,8 +9,10 @@ import { MarketplaceFilters } from "@/components/marketplace/marketplace-filters
 import type { Product } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 
-interface ApiProduct
-  extends Omit<Product, "_id" | "creatorId" | "creatorName"> {
+interface ApiProduct extends Omit<
+  Product,
+  "_id" | "creatorId" | "creatorName"
+> {
   _id?: string;
   creatorName?: string;
   affiliateEnabled?: boolean;
@@ -62,7 +64,7 @@ function MarketplaceContent() {
       if (search) fetchParams.set("search", search);
       if (category) fetchParams.set("category", category);
       if (sort) fetchParams.set("sort", sort);
-      
+
       const safePage = Number.isFinite(page) && page > 0 ? page : 1;
       fetchParams.set("limit", String(pageSize));
       fetchParams.set("skip", String((safePage - 1) * pageSize));
@@ -118,16 +120,18 @@ function MarketplaceContent() {
   return (
     <>
       {/* Hero section */}
-      <section className="border-b border-border/50 bg-muted/30 py-12 lg:py-20">
+      <section className="py-10 lg:py-12 text-center md:text-left">
         <div className="section-container">
-          <p className="text-sm font-bold uppercase tracking-wider text-primary">
-            Sua vez de faturar
-          </p>
-          <h1 className="mt-3 font-serif text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-            Explore ideias que já estão gerando vendas.
+          <div className="inline-flex rounded-full bg-primary/10 px-3 py-1 font-bold text-primary mb-6 border-2 border-primary shadow-[2px_2px_0px_text-primary]">
+            MARKETPLACE
+          </div>
+          <h1 className="font-serif text-4xl font-black tracking-tight text-foreground sm:text-5xl lg:text-6xl mb-6">
+            Ideias que já estão <br className="hidden md:block" />
+            <span className="text-primary">gerando vendas.</span>
           </h1>
-          <p className="mt-4 max-w-xl text-lg font-medium text-muted-foreground">
-            Pessoas normais estão ganhando dinheiro com coisas simples. Veja o que está funcionando e comece hoje mesmo.
+          <p className="max-w-2xl text-lg font-medium text-muted-foreground md:mx-0 mx-auto md:text-xl leading-relaxed">
+            Pessoas normais estão ganhando dinheiro com coisas simples. Veja o
+            que está funcionando e comece hoje mesmo.
           </p>
         </div>
       </section>
@@ -136,7 +140,7 @@ function MarketplaceContent() {
       <section className="section-y">
         <div className="section-container">
           {/* Filters in a subtle card */}
-          <div className="rounded-xl border border-border/50 bg-card p-4 shadow-sm">
+          <div className="rounded-2xl border-2 border-foreground bg-card p-6 shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff] mb-12">
             <MarketplaceFilters
               initialQuery={search}
               initialCategory={category}
@@ -145,13 +149,24 @@ function MarketplaceContent() {
                 updateFilters({ search: value || null, page: null });
               }}
               onCategoryChange={(value) => {
-                updateFilters({ category: value === "todos" ? null : value, page: null });
+                updateFilters({
+                  category: value === "todos" ? null : value,
+                  page: null,
+                });
               }}
               onSortChange={(value) => {
-                updateFilters({ sort: value === "relevancia" ? null : value, page: null });
+                updateFilters({
+                  sort: value === "relevancia" ? null : value,
+                  page: null,
+                });
               }}
               onClear={() => {
-                updateFilters({ search: null, category: null, sort: null, page: null });
+                updateFilters({
+                  search: null,
+                  category: null,
+                  sort: null,
+                  page: null,
+                });
               }}
             />
           </div>
@@ -218,38 +233,75 @@ function MarketplaceContent() {
                     sales={product.sales}
                     createdAt={product.createdAt}
                     affiliateEnabled={product.affiliateEnabled}
-                    affiliateCommissionPercent={product.affiliateCommissionPercent}
+                    affiliateCommissionPercent={
+                      product.affiliateCommissionPercent
+                    }
                   />
                 ))}
 
               {!isLoading && !loadError && products.length === 0 && (
                 <>
                   <div className="col-span-full mb-4 rounded-lg bg-primary/10 p-6 text-center border-2 border-primary">
-                    <h3 className="text-lg font-bold text-primary">A vitrine está esperando por você!</h3>
+                    <h3 className="text-lg font-bold text-primary">
+                      A vitrine está esperando por você!
+                    </h3>
                     <p className="mt-1 text-sm font-medium text-primary/80">
-                      Nenhum produto real encontrado nesta categoria. Aqui estão alguns exemplos do que você poderia vender hoje:
+                      Nenhum produto real encontrado nesta categoria. Aqui estão
+                      alguns exemplos do que você poderia vender hoje:
                     </p>
                   </div>
                   {/* Mock products to simulate activity */}
                   {[
-                    { id: 'mock1', title: 'Guia de Viagem Fim de Semana', creator: 'Ana Silva', price: 2990, sales: 14, cat: 'Ideias simples' },
-                    { id: 'mock2', title: 'Planilha de Gastos Mensais', creator: 'Carlos D.', price: 1990, sales: 8, cat: 'Começando do zero' },
-                    { id: 'mock3', title: 'Templates de E-mail para Freelancers', creator: 'Marina', price: 4700, sales: 3, cat: 'Primeiras vendas fáceis' },
+                    {
+                      id: "mock1",
+                      title: "Guia de Viagem Fim de Semana",
+                      creator: "Ana Silva",
+                      price: 2990,
+                      sales: 14,
+                      cat: "Ideias simples",
+                    },
+                    {
+                      id: "mock2",
+                      title: "Planilha de Gastos Mensais",
+                      creator: "Carlos D.",
+                      price: 1990,
+                      sales: 8,
+                      cat: "Começando do zero",
+                    },
+                    {
+                      id: "mock3",
+                      title: "Templates de E-mail para Freelancers",
+                      creator: "Marina",
+                      price: 4700,
+                      sales: 3,
+                      cat: "Primeiras vendas fáceis",
+                    },
                   ].map((mock) => (
-                    <div key={mock.id} className="group relative flex h-full flex-col overflow-hidden rounded-xl border-2 border-foreground bg-card shadow-[4px_4px_0px_#000] transition-transform hover:-translate-y-1 hover:shadow-[8px_8px_0px_#000] dark:shadow-[4px_4px_0px_#fff]">
+                    <div
+                      key={mock.id}
+                      className="group relative flex h-full flex-col overflow-hidden rounded-xl border-2 border-foreground bg-card shadow-[4px_4px_0px_#000] transition-transform hover:-translate-y-1 hover:shadow-[8px_8px_0px_#000] dark:shadow-[4px_4px_0px_#fff]"
+                    >
                       <div className="flex h-44 w-full items-center justify-center bg-muted">
-                        <span className="font-serif text-4xl font-black text-muted-foreground/30">{mock.title.charAt(0)}</span>
+                        <span className="font-serif text-4xl font-black text-muted-foreground/30">
+                          {mock.title.charAt(0)}
+                        </span>
                       </div>
                       <div className="flex flex-1 flex-col p-5">
                         <div className="mb-2 flex items-center justify-between">
-                          <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">{mock.cat}</span>
+                          <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
+                            {mock.cat}
+                          </span>
                         </div>
-                        <h3 className="line-clamp-2 font-serif text-xl font-bold">{mock.title}</h3>
-                        <p className="mt-2 text-xl font-black tracking-tight text-foreground">R$ {(mock.price / 100).toFixed(2).replace('.', ',')}</p>
+                        <h3 className="line-clamp-2 font-serif text-xl font-bold">
+                          {mock.title}
+                        </h3>
+                        <p className="mt-2 text-xl font-black tracking-tight text-foreground">
+                          R$ {(mock.price / 100).toFixed(2).replace(".", ",")}
+                        </p>
                         <div className="mt-auto pt-6 flex w-full items-center text-sm font-bold text-muted-foreground">
                           <span className="truncate">{mock.creator}</span>
                           <span className="ml-auto inline-flex items-center gap-1.5 text-green-600 dark:text-green-500">
-                             ⭐ {mock.sales} vendas hoje
+                            ⭐ {mock.sales} vendas hoje
                           </span>
                         </div>
                       </div>
@@ -317,11 +369,13 @@ export default function MarketplacePage() {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        <Suspense fallback={
-          <div className="flex h-[50vh] items-center justify-center text-muted-foreground">
-            Carregando marketplace...
-          </div>
-        }>
+        <Suspense
+          fallback={
+            <div className="flex h-[50vh] items-center justify-center text-muted-foreground">
+              Carregando marketplace...
+            </div>
+          }
+        >
           <MarketplaceContent />
         </Suspense>
       </main>

@@ -48,91 +48,106 @@ export default async function DashboardPage() {
   const firstProductSlug = hasProducts ? userProducts[0].slug : null;
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="mb-10">
-        <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-            <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
-              Início
-            </span>
-
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/marketplace">
-                  Ver Marketplace
-                  <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </header>
-        <h1 className="font-serif text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-          Sua jornada até a primeira venda.
+    <div className="mx-auto max-w-4xl p-8 pt-6">
+      <div className="mb-12">
+        <div className="mb-4 inline-flex rounded-full bg-primary/20 px-3 py-1 text-xs font-black uppercase tracking-widest text-primary border-2 border-primary shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff]">
+          DASHBOARD
+        </div>
+        <h1 className="font-serif text-4xl font-black tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+          Sua jornada até a <br className="hidden md:block" />
+          <span className="text-primary tracking-tighter italic">
+            primeira venda.
+          </span>
         </h1>
-        <p className="mt-3 text-lg font-medium text-muted-foreground">
+        <p className="mt-4 max-w-2xl text-lg font-medium text-muted-foreground leading-relaxed">
           Siga os passos abaixo, sem complicação. O dinheiro está a poucos
-          cliques de distância.
+          cliques de distância para quem começa hoje.
         </p>
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         {/* Step 1: Create Product */}
         <div
-          className={`relative flex flex-col sm:flex-row sm:items-center gap-6 rounded-xl border-2 p-6 transition-colors ${hasProducts ? "border-primary/50 bg-primary/5" : "border-foreground bg-background shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]"}`}
+          className={`relative group flex flex-col sm:flex-row sm:items-center gap-8 rounded-3xl border-2 p-8 transition-all ${
+            hasProducts
+              ? "border-primary/50 bg-primary/5"
+              : "border-foreground bg-background shadow-[8px_8px_0px_#000] dark:shadow-[8px_8px_0px_#fff]"
+          }`}
         >
           <div
-            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 ${hasProducts ? "border-primary bg-primary text-primary-foreground" : "border-foreground bg-muted text-foreground font-black text-xl"}`}
+            className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 transition-transform group-hover:scale-105 ${
+              hasProducts
+                ? "border-primary bg-primary text-primary-foreground shadow-[4px_4px_0px_rgba(0,0,0,0.1)]"
+                : "border-foreground bg-muted text-foreground font-black text-2xl shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]"
+            }`}
           >
-            {hasProducts ? <Check strokeWidth={3} className="h-6 w-6" /> : "1"}
+            {hasProducts ? <Check strokeWidth={4} className="h-8 w-8" /> : "1"}
           </div>
           <div className="flex-1">
-            <h3
-              className={`text-xl font-bold ${hasProducts ? "text-foreground" : "text-foreground"}`}
-            >
+            <h3 className="font-serif text-2xl font-black text-foreground">
               Criar meu primeiro produto
             </h3>
             {!hasProducts && (
-              <p className="mt-2 font-medium text-muted-foreground">
-                Faça upload de um PDF ou guia e defina seu preço. Leva 2
-                minutos.
+              <p className="mt-2 text-base font-medium text-muted-foreground leading-relaxed">
+                Faça upload de um PDF ou guia e defina seu preço. Leva menos de
+                2 minutos.
+              </p>
+            )}
+            {hasProducts && (
+              <p className="mt-1 text-sm font-bold text-primary">
+                🎉 Produto criado com sucesso!
               </p>
             )}
           </div>
-          {!hasProducts ? (
+          {!hasProducts && (
             <Button
               size="lg"
-              className="border-2 border-foreground font-bold shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff]"
+              className="h-14 rounded-2xl border-2 border-foreground bg-primary px-8 font-black text-foreground shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] dark:shadow-[4px_4px_0px_#fff] dark:hover:shadow-[6px_6px_0px_#fff]"
               asChild
             >
               <Link href="/dashboard/create-product">
-                Começar <ArrowRight className="ml-2 h-4 w-4" />
+                COMEÇAR <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-          ) : (
-            <div className="text-sm font-bold text-primary">Concluído!</div>
           )}
         </div>
 
         {/* Step 2: Connect Stripe */}
         <div
-          className={`relative flex flex-col sm:flex-row sm:items-center gap-6 rounded-xl border-2 p-6 transition-colors ${isStripeConnected ? "border-primary/50 bg-primary/5" : hasProducts && !isStripeConnected ? "border-foreground bg-background shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]" : "border-border bg-muted/30 opacity-60"}`}
+          className={`relative group flex flex-col sm:flex-row sm:items-center gap-8 rounded-3xl border-2 p-8 transition-all ${
+            isStripeConnected
+              ? "border-primary/50 bg-primary/5"
+              : hasProducts
+                ? "border-foreground bg-background shadow-[8px_8px_0px_#000] dark:shadow-[8px_8px_0px_#fff]"
+                : "border-border bg-muted/40 opacity-60"
+          }`}
         >
           <div
-            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 ${isStripeConnected ? "border-primary bg-primary text-primary-foreground" : "border-foreground bg-background text-foreground font-black text-xl"}`}
+            className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 transition-transform group-hover:scale-105 ${
+              isStripeConnected
+                ? "border-primary bg-primary text-primary-foreground shadow-[4px_4px_0px_rgba(0,0,0,0.1)]"
+                : "border-foreground bg-background text-foreground font-black text-2xl shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]"
+            }`}
           >
             {isStripeConnected ? (
-              <Check strokeWidth={3} className="h-6 w-6" />
+              <Check strokeWidth={4} className="h-8 w-8" />
             ) : (
               "2"
             )}
           </div>
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground">
+            <h3 className="font-serif text-2xl font-black text-foreground">
               Conectar conta bancária
             </h3>
             {!isStripeConnected && (
-              <p className="mt-2 font-medium text-muted-foreground">
-                É assim que o dinheiro das suas vendas cai na sua conta.
+              <p className="mt-2 text-base font-medium text-muted-foreground leading-relaxed">
+                É assim que o dinheiro das suas vendas cai na sua conta
+                automaticamente.
+              </p>
+            )}
+            {isStripeConnected && (
+              <p className="mt-1 text-sm font-bold text-primary">
+                ✅ Stripe conectado e pronto.
               </p>
             )}
           </div>
@@ -145,26 +160,33 @@ export default async function DashboardPage() {
               />
             </div>
           )}
-          {isStripeConnected && (
-            <div className="text-sm font-bold text-primary">Concluído!</div>
-          )}
         </div>
 
         {/* Step 3: Share Link */}
         <div
-          className={`relative flex flex-col sm:flex-row sm:items-center gap-6 rounded-xl border-2 p-6 transition-colors ${hasFirstSale ? "border-primary/50 bg-primary/5" : hasProducts && isStripeConnected ? "border-foreground bg-background shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]" : "border-border bg-muted/30 opacity-60"}`}
+          className={`relative group flex flex-col sm:flex-row sm:items-center gap-8 rounded-3xl border-2 p-8 transition-all ${
+            hasFirstSale
+              ? "border-primary/50 bg-primary/5"
+              : hasProducts && isStripeConnected
+                ? "border-foreground bg-background shadow-[8px_8px_0px_#000] dark:shadow-[8px_8px_0px_#fff]"
+                : "border-border bg-muted/40 opacity-60"
+          }`}
         >
           <div
-            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 ${hasFirstSale ? "border-primary bg-primary text-primary-foreground" : "border-foreground bg-background text-foreground font-black text-xl"}`}
+            className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 transition-transform group-hover:scale-105 ${
+              hasFirstSale
+                ? "border-primary bg-primary text-primary-foreground shadow-[4px_4px_0px_rgba(0,0,0,0.1)]"
+                : "border-foreground bg-background text-foreground font-black text-2xl shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]"
+            }`}
           >
-            {hasFirstSale ? <Check strokeWidth={3} className="h-6 w-6" /> : "3"}
+            {hasFirstSale ? <Check strokeWidth={4} className="h-8 w-8" /> : "3"}
           </div>
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground">
-              Compartilhar link de pagamento
+            <h3 className="font-serif text-2xl font-black text-foreground">
+              Compartilhar seu link
             </h3>
-            <p className="mt-2 font-medium text-muted-foreground">
-              Mande no Instagram, WhatsApp ou onde sua audiência estiver.
+            <p className="mt-2 text-base font-medium text-muted-foreground leading-relaxed">
+              Mande no Instagram, TikTok ou WhatsApp. Seu checkout está pronto.
             </p>
           </div>
           {hasProducts &&
@@ -173,8 +195,7 @@ export default async function DashboardPage() {
             firstProductSlug && (
               <Button
                 size="lg"
-                variant="outline"
-                className="border-2 border-foreground font-bold shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff]"
+                className="h-14 rounded-2xl border-2 border-foreground bg-background px-8 font-black text-foreground shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] dark:shadow-[4px_4px_0px_#fff] dark:hover:shadow-[6px_6px_0px_#fff]"
                 asChild
               >
                 <a
@@ -182,29 +203,56 @@ export default async function DashboardPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Ver Checkout <ExternalLink className="ml-2 h-4 w-4" />
+                  VER CHECKOUT <ArrowUpRight className="ml-2 h-5 w-5" />
                 </a>
               </Button>
             )}
         </div>
 
-        {/* Success State */}
+        {/* Success / Statistics State */}
         <div
-          className={`relative flex flex-col sm:flex-row sm:items-center gap-6 rounded-xl border-2 p-6 transition-colors ${hasFirstSale ? "border-foreground bg-green-500 text-primary-foreground shadow-[6px_6px_0px_#000] dark:shadow-[6px_6px_0px_#fff]" : "border-border bg-muted/30 opacity-40"}`}
+          className={`relative flex flex-col rounded-3xl border-2 p-10 transition-all ${
+            hasFirstSale
+              ? "border-foreground bg-primary text-foreground shadow-[12px_12px_0px_#000] dark:shadow-[12px_12px_0px_#fff]"
+              : "border-border bg-muted/30 opacity-40"
+          }`}
         >
           <div className="flex-1">
             <h3
-              className={`text-2xl font-black ${hasFirstSale ? "text-primary-foreground" : "text-foreground"}`}
+              className={`font-serif text-3xl font-black ${
+                hasFirstSale ? "text-foreground" : "text-foreground"
+              }`}
             >
               Fazer a 1ª venda 🎉
             </h3>
             <p
-              className={`mt-2 font-bold ${hasFirstSale ? "text-primary-foreground/90" : "text-muted-foreground"}`}
+              className={`mt-4 text-lg font-bold ${
+                hasFirstSale
+                  ? "text-foreground/80 leading-relaxed"
+                  : "text-muted-foreground"
+              }`}
             >
               {hasFirstSale
-                ? "Parabéns! Você já faturou online. Agora é só escalar e repetir o processo."
-                : "Aguardando seu primeiro cliente..."}
+                ? "Parabéns! Você já faturou online. Agora é só escalar seu marketing e repetir o processo com novas ideias."
+                : "Aguardando seu primeiro cliente para explodir o champanhe..."}
             </p>
+
+            {hasFirstSale && (
+              <div className="mt-8 grid grid-cols-2 gap-4">
+                <div className="rounded-2xl border-2 border-foreground bg-background/50 p-6 shadow-[4px_4px_0px_#000]">
+                  <div className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+                    VENDAS
+                  </div>
+                  <div className="mt-1 text-3xl font-black">{totalSales}</div>
+                </div>
+                <div className="rounded-2xl border-2 border-foreground bg-background/50 p-6 shadow-[4px_4px_0px_#000]">
+                  <div className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+                    STATUS
+                  </div>
+                  <div className="mt-1 text-3xl font-black">ATIVA</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -48,8 +48,8 @@ export function HowItWorksSection() {
           </div>
           <ArrowRight className="h-6 w-6 text-foreground/40" />
           <div className="flex flex-col items-center gap-2">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-foreground bg-primary shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff]">
-              <Banknote className="h-6 w-6 text-primary-foreground" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-foreground bg-green-500 shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff]">
+              <Banknote className="h-6 w-6 text-primary" />
             </div>
             <span className="text-xs font-bold uppercase tracking-wider text-foreground">
               Venda

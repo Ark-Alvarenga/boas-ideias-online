@@ -57,41 +57,33 @@ export default async function DashboardProductDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-          <Link
-            href="/dashboard/products"
-            className="flex items-center gap-2.5"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <img
-                src="/images/logo.jpg"
-                alt="Boas Ideias Online"
-                className="h-8 w-8"
-              />
-            </div>
-            <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
-              Gerenciar produto
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 border-b-2 border-foreground bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between px-6 lg:px-8">
+          <Link href="/dashboard/products" className="flex items-center gap-3">
+            <span className="font-serif text-xl font-black tracking-tight text-foreground uppercase">
+              Gerenciar Produto
             </span>
           </Link>
 
           <div className="flex items-center gap-3">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="text-muted-foreground"
+              className="border-2 border-foreground font-bold shadow-[2px_2px_0px_#000]"
               asChild
             >
-              <Link href="/marketplace">
-                Ver Marketplace
-                <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
-              </Link>
+              <Link href="/dashboard/products">Voltar</Link>
             </Button>
             {product.status === "active" && (
-              <Button size="sm" asChild>
+              <Button
+                size="sm"
+                className="border-2 border-foreground bg-primary font-bold shadow-[2px_2px_0px_#000]"
+                asChild
+              >
                 <Link href={`/produto/${product.slug}`}>
-                  Ver página pública
+                  Ver Página Pública
+                  <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
                 </Link>
               </Button>
             )}
@@ -99,16 +91,18 @@ export default async function DashboardProductDetailPage({
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-10 lg:px-8 lg:py-12">
-        <Card className="border-border/50 bg-card shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">{product.title}</CardTitle>
-            <CardDescription>
-              Atualize informações do produto e acompanhe estatísticas básicas.
-              Alterações salvas aqui são refletidas no marketplace.
+      <main className="mx-auto max-w-5xl p-6 lg:p-8">
+        <Card className="overflow-hidden rounded-3xl border-2 border-foreground bg-card shadow-[8px_8px_0px_#000] dark:shadow-[8px_8px_0px_#fff]">
+          <CardHeader className="border-b-2 border-foreground bg-muted/50 p-6 lg:p-8">
+            <CardTitle className="font-serif text-3xl font-black text-foreground">
+              {product.title}
+            </CardTitle>
+            <CardDescription className="text-base font-bold text-muted-foreground">
+              Atualize as informações do seu produto. Alterações salvas aqui são
+              refletidas imediatamente no marketplace.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6 lg:p-10">
             <ProductEditForm
               slug={product.slug}
               initialTitle={product.title}

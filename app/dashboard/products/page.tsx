@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Package, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -44,139 +44,144 @@ export default async function ProductsPage() {
     .toArray();
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b-2 border-foreground bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
-            Meus produtos
+        <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between px-6 lg:px-8">
+          <span className="font-serif text-xl font-black tracking-tight text-foreground uppercase">
+            Meus Produtos
           </span>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="outline" size="sm" asChild>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden sm:inline-flex border-2 border-foreground font-bold shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff]"
+              asChild
+            >
               <Link href="/marketplace">
-                Ver Marketplace
+                Marketplace
                 <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
               </Link>
             </Button>
-            <Button size="sm" className="shadow-sm" asChild>
-              <Link href="/dashboard/create-product">+ Novo produto</Link>
+            <Button
+              size="sm"
+              className="border-2 border-foreground bg-primary font-black text-foreground shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff]"
+              asChild
+            >
+              <Link href="/dashboard/create-product">+ NOVO PRODUTO</Link>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+      <main className="mx-auto max-w-7xl p-6 lg:p-8">
         {!user.stripeOnboardingComplete && (
-          <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
-            Conecte sua conta Stripe para publicar e vender seus produtos.
-            Produtos criados sem Stripe conectado ficam como rascunho.
+          <div className="mb-8 rounded-xl border-2 border-foreground bg-accent p-4 text-sm font-bold text-foreground shadow-[4px_4px_0px_#000]">
+            ⚠️ Conecte sua conta Stripe para receber seus pagamentos.
             <Link
               href="/dashboard"
-              className="ml-1 font-medium underline-offset-4 hover:underline"
+              className="ml-2 underline decoration-2 underline-offset-4"
             >
-              Conectar Stripe
+              CONECTAR AGORA
             </Link>
           </div>
         )}
-        <Card className="border-border/50 bg-card shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Meus produtos</CardTitle>
-            <CardDescription>
-              Veja seus produtos, acompanhe vendas e acesse rapidamente as
-              páginas de venda.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {products.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-border/60 bg-muted/40 p-6 text-sm text-muted-foreground">
-                Você ainda não publicou nenhum produto.{" "}
-                <Link
-                  href="/dashboard/create-product"
-                  className="font-medium text-primary underline-offset-4 hover:underline"
-                >
-                  Crie o primeiro agora
-                </Link>
-                .
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {products.map((product) => (
-                  <div
-                    key={product._id?.toString() ?? product.slug}
-                    className="flex h-full flex-col overflow-hidden rounded-xl border border-border/60 bg-background"
-                  >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-                      {product.coverImage ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={product.coverImage}
-                          alt={product.title}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center bg-gradient-to-br from-blue-500/15 to-indigo-500/15">
-                          <span className="font-serif text-5xl font-semibold text-foreground/10">
-                            {product.title.charAt(0)}
-                          </span>
-                        </div>
-                      )}
-                      <div className="absolute left-3 top-3">
-                        <span className="inline-flex rounded-md bg-background/90 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                          PDF Product
-                        </span>
-                      </div>
-                    </div>
 
-                    <div className="flex flex-1 flex-col p-4">
-                      <h3 className="line-clamp-2 text-sm font-semibold text-foreground">
-                        {product.title}
-                      </h3>
-                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                        {product.description}
-                      </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span>
-                          {(product.priceCents / 100).toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          })}
-                        </span>
-                        {product.status === "active" && (
-                          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-                            Active
-                          </span>
-                        )}
-                        {product.status === "archived" && (
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                            Archived
-                          </span>
-                        )}
-                        {product.status === "draft" && (
-                          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-700 dark:text-amber-400">
-                            Draft
-                          </span>
-                        )}
-                        <span>Vendas: {product.sales ?? 0}</span>
-                      </div>
-                      <div className="mt-3 flex justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 px-3 text-xs"
-                          asChild
-                        >
-                          <Link href={`/dashboard/products/${product.slug}`}>
-                            Gerenciar
-                          </Link>
-                        </Button>
-                      </div>
+        {products.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-foreground bg-muted/30 py-20 text-center">
+            <div className="mb-4 rounded-full border-2 border-foreground bg-background p-6 shadow-[4px_4px_0px_#000]">
+              <Package className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h3 className="font-serif text-2xl font-black">
+              Nenhum produto ainda
+            </h3>
+            <p className="mt-2 max-w-xs font-medium text-muted-foreground">
+              Você ainda não publicou nada. Que tal transformar sua primeira
+              ideia em PDF hoje?
+            </p>
+            <Button
+              className="mt-8 h-12 rounded-xl border-2 border-foreground bg-primary px-8 font-black text-foreground shadow-[4px_4px_0px_#000]"
+              asChild
+            >
+              <Link href="/dashboard/create-product">
+                CRIAR MEU PRIMEIRO PRODUTO
+              </Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {products.map((product) => (
+              <div
+                key={product._id?.toString() ?? product.slug}
+                className="group flex flex-col overflow-hidden rounded-2xl border-2 border-foreground bg-card shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[8px_8px_0px_#000] dark:shadow-[4px_4px_0px_#fff] dark:hover:shadow-[8px_8px_0px_#fff]"
+              >
+                <div className="relative aspect-[16/10] w-full overflow-hidden border-b-2 border-foreground bg-muted">
+                  {product.coverImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={product.coverImage}
+                      alt={product.title}
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20 font-serif text-6xl font-black opacity-20">
+                      {product.title.charAt(0)}
+                    </div>
+                  )}
+                  <div className="absolute left-4 top-4">
+                    <span className="inline-flex rounded-lg border-2 border-foreground bg-background px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0px_#000]">
+                      {product.status === "active"
+                        ? "ATIVO"
+                        : product.status === "draft"
+                          ? "RASCUNHO"
+                          : "ARQUIVADO"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-1 flex-col p-6">
+                  <h3 className="line-clamp-2 font-serif text-xl font-black text-foreground">
+                    {product.title}
+                  </h3>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="text-2xl font-black text-foreground">
+                      {(product.priceCents / 100).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </div>
+                    <div className="flex items-center gap-1 text-sm font-bold text-muted-foreground uppercase tracking-tighter">
+                      <span className="text-foreground">
+                        {product.sales ?? 0}
+                      </span>{" "}
+                      vendas
                     </div>
                   </div>
-                ))}
+
+                  <div className="mt-6 flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-2 border-foreground font-bold shadow-[2px_2px_0px_#000] hover:bg-muted"
+                      asChild
+                    >
+                      <Link href={`/dashboard/products/${product.slug}`}>
+                        GERENCIAR
+                      </Link>
+                    </Button>
+                    <Link
+                      href={`/produto/${product.slug}`}
+                      target="_blank"
+                      className="flex h-10 w-10 items-center justify-center rounded-md border-2 border-foreground bg-background shadow-[2px_2px_0px_#000] hover:bg-muted"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

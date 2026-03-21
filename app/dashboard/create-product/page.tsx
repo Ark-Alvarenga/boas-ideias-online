@@ -48,11 +48,10 @@ interface MeResponse {
 
 /** Returns border class based on field validation status */
 function borderClass(status: FieldStatus | undefined): string {
-  if (status === "invalid")
-    return "border-red-500 focus-visible:ring-red-500/30";
+  if (status === "invalid") return "border-red-500 ring-2 ring-red-500/20";
   if (status === "valid")
-    return "border-green-500 focus-visible:ring-green-500/30";
-  return "border-border/50";
+    return "border-emerald-500 ring-2 ring-emerald-500/20";
+  return "border-foreground";
 }
 
 export default function CreateProductPage() {
@@ -463,60 +462,69 @@ export default function CreateProductPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl py-6">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-            <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
-              Criador de Produtos
-            </span>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 border-b-2 border-foreground bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between px-6 lg:px-8">
+          <span className="font-serif text-xl font-black tracking-tight text-foreground uppercase">
+            Criar Novo Produto
+          </span>
 
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/marketplace">
-                  Ver Marketplace
-                  <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-2 border-foreground font-bold shadow-[2px_2px_0px_#000]"
+              asChild
+            >
+              <Link href="/dashboard/products">Voltar</Link>
+            </Button>
           </div>
-        </header>
-        <Card className="border-border/50 bg-card shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl">Crie seu novo produto</CardTitle>
-            <CardDescription>
-              Preencha os dados básicos e seu checkout estará pronto em
-              segundos. Crie o produto agora e depois conecte seu banco para
-              habilitar as vendas.
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl p-6 lg:p-8">
+        <Card className="overflow-hidden rounded-3xl border-2 border-foreground bg-card shadow-[8px_8px_0px_#000] dark:shadow-[8px_8px_0px_#fff]">
+          <CardHeader className="border-b-2 border-foreground bg-muted/50 p-6 lg:p-8">
+            <CardTitle className="font-serif text-3xl font-black text-foreground">
+              Dados do Produto
+            </CardTitle>
+            <CardDescription className="text-base font-bold text-muted-foreground">
+              Preencha os dados e suba seu arquivo PDF. Seu checkout estará
+              pronto em segundos.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6 lg:p-10">
             <form
               onSubmit={handleSubmit}
-              className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr,1.5fr] lg:gap-10"
+              className="grid grid-cols-1 gap-10 lg:grid-cols-[2fr,1.3fr] lg:gap-12"
             >
               <div>
                 <FieldGroup>
                   <Field
                     data-invalid={fieldStatus.title === "invalid" || undefined}
                   >
-                    <FieldLabel htmlFor="title">Título do Produto</FieldLabel>
+                    <FieldLabel className="text-sm font-black uppercase tracking-widest text-muted-foreground">
+                      Título do Produto
+                    </FieldLabel>
                     <Input
                       id="title"
+                      placeholder="Ex: Guia de React Avançado"
                       value={formData.title}
                       onChange={(e) => handleChange("title", e.target.value)}
                       onBlur={() => handleBlur("title")}
                       className={cn(
-                        "h-11 bg-background",
+                        "h-12 border-2 text-lg font-bold shadow-[2px_2px_0px_#000]",
                         borderClass(fieldStatus.title),
                       )}
                       required
                     />
                     {fieldErrors.title ? (
-                      <FieldError>{fieldErrors.title}</FieldError>
+                      <FieldError className="font-bold text-red-500">
+                        {fieldErrors.title}
+                      </FieldError>
                     ) : (
-                      <FieldDescription>
-                        Como seu produto vai se chamar
+                      <FieldDescription className="font-medium text-muted-foreground">
+                        Como seu produto vai se chamar no marketplace
                       </FieldDescription>
                     )}
                   </Field>
@@ -526,27 +534,30 @@ export default function CreateProductPage() {
                       fieldStatus.description === "invalid" || undefined
                     }
                   >
-                    <FieldLabel htmlFor="description">
+                    <FieldLabel className="text-sm font-black uppercase tracking-widest text-muted-foreground">
                       Descrição (O que o cliente ganha?)
                     </FieldLabel>
                     <Textarea
                       id="description"
+                      placeholder="Descreva os benefícios e o que está incluso no PDF..."
                       value={formData.description}
                       onChange={(e) =>
                         handleChange("description", e.target.value)
                       }
                       onBlur={() => handleBlur("description")}
                       className={cn(
-                        "min-h-32 bg-background",
+                        "min-h-40 border-2 text-base font-bold shadow-[2px_2px_0px_#000]",
                         borderClass(fieldStatus.description),
                       )}
                       required
                     />
                     {fieldErrors.description ? (
-                      <FieldError>{fieldErrors.description}</FieldError>
+                      <FieldError className="font-bold text-red-500">
+                        {fieldErrors.description}
+                      </FieldError>
                     ) : (
-                      <FieldDescription>
-                        Explique exatamente como seu produto vai ajudar
+                      <FieldDescription className="font-medium text-muted-foreground">
+                        Explique como seu produto ajuda seu cliente
                       </FieldDescription>
                     )}
                   </Field>
@@ -557,26 +568,31 @@ export default function CreateProductPage() {
                         fieldStatus.priceCents === "invalid" || undefined
                       }
                     >
-                      <FieldLabel htmlFor="price">Preço (R$)</FieldLabel>
+                      <FieldLabel className="text-sm font-black uppercase tracking-widest text-muted-foreground">
+                        Preço (R$)
+                      </FieldLabel>
                       <Input
                         id="price"
                         type="number"
                         min={0}
                         step="0.01"
+                        placeholder="29.90"
                         value={formData.price}
                         onChange={(e) => handleChange("price", e.target.value)}
                         onBlur={() => handleBlur("price")}
                         className={cn(
-                          "h-11 bg-background",
+                          "h-12 border-2 text-lg font-black shadow-[2px_2px_0px_#000]",
                           borderClass(fieldStatus.priceCents),
                         )}
                         required
                       />
                       {fieldErrors.priceCents ? (
-                        <FieldError>{fieldErrors.priceCents}</FieldError>
+                        <FieldError className="font-bold text-red-500">
+                          {fieldErrors.priceCents}
+                        </FieldError>
                       ) : (
-                        <FieldDescription>
-                          Valor em reais. Ex: 29.90
+                        <FieldDescription className="font-medium text-muted-foreground">
+                          Valor sugerido: R$ 29 - R$ 97
                         </FieldDescription>
                       )}
                     </Field>
@@ -586,7 +602,9 @@ export default function CreateProductPage() {
                         fieldStatus.category === "invalid" || undefined
                       }
                     >
-                      <FieldLabel htmlFor="category">Categoria</FieldLabel>
+                      <FieldLabel className="text-sm font-black uppercase tracking-widest text-muted-foreground">
+                        Categoria
+                      </FieldLabel>
                       <Select
                         value={formData.category}
                         onValueChange={(value) =>
@@ -596,13 +614,13 @@ export default function CreateProductPage() {
                       >
                         <SelectTrigger
                           className={cn(
-                            "h-11 bg-background",
+                            "h-12 border-2 text-base font-bold shadow-[2px_2px_0px_#000]",
                             borderClass(fieldStatus.category),
                           )}
                         >
-                          <SelectValue placeholder="Selecione a categoria" />
+                          <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="border-2 border-foreground font-bold">
                           {PRODUCT_CATEGORIES.map((cat) => (
                             <SelectItem key={cat.value} value={cat.value}>
                               {cat.label}
@@ -611,10 +629,12 @@ export default function CreateProductPage() {
                         </SelectContent>
                       </Select>
                       {fieldErrors.category ? (
-                        <FieldError>{fieldErrors.category}</FieldError>
+                        <FieldError className="font-bold text-red-500">
+                          {fieldErrors.category}
+                        </FieldError>
                       ) : (
-                        <FieldDescription>
-                          Selecione uma categoria
+                        <FieldDescription className="font-medium text-muted-foreground">
+                          Organize no marketplace
                         </FieldDescription>
                       )}
                     </Field>
@@ -623,46 +643,51 @@ export default function CreateProductPage() {
 
                 {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
 
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Button type="submit" disabled={!canSubmit} className="h-11">
+                <div className="mt-10 flex flex-wrap gap-4">
+                  <Button
+                    type="submit"
+                    disabled={!canSubmit}
+                    className="h-14 flex-1 rounded-xl border-2 border-foreground bg-primary px-8 text-lg font-black uppercase tracking-widest text-foreground shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] disabled:bg-muted disabled:shadow-none"
+                  >
                     {isSaving ? (
                       <span className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Salvando...
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        SALVANDO...
                       </span>
                     ) : (
-                      "Colocar Produto no Ar 🟢"
+                      "CRIAR PRODUTO AGORA 🟢"
                     )}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-11"
+                    className="h-14 rounded-xl border-2 border-foreground bg-background px-8 text-lg font-black uppercase tracking-widest shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000]"
                     onClick={() => router.push("/dashboard/products")}
                   >
-                    Cancelar
+                    CANCELAR
                   </Button>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <Card className="border-border/50 bg-muted/40">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-bold">
-                      Seu Arquivo (PDF)
+              <div className="space-y-8">
+                <Card className="rounded-2xl border-2 border-foreground bg-muted/30 shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]">
+                  <CardHeader className="pb-4 border-b-2 border-foreground/10 bg-muted/20">
+                    <CardTitle className="font-serif text-lg font-black uppercase tracking-tight">
+                      Arquivo (PDF)
                     </CardTitle>
-                    <CardDescription className="text-xs">
-                      O material que seu cliente vai receber logo após o
-                      pagamento. (Até 50MB)
+                    <CardDescription className="font-bold text-muted-foreground">
+                      O material que seu cliente recebe. (Até 50MB)
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-background py-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50">
-                      <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
-                      <p className="text-sm font-bold text-foreground">
-                        Escolher arquivo. ✨
+                  <CardContent className="p-6 space-y-6">
+                    <div className="group relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-foreground bg-background py-10 text-center transition-all hover:bg-muted/50">
+                      <div className="mb-4 rounded-full border-2 border-foreground bg-primary p-3 shadow-[2px_2px_0px_#000]">
+                        <UploadCloud className="h-6 w-6 text-foreground" />
+                      </div>
+                      <p className="text-base font-black uppercase tracking-widest text-foreground">
+                        ENVIAR PDF ✨
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="mt-1 text-xs font-bold text-muted-foreground uppercase">
                         ou arraste para cá
                       </p>
                       <Input
@@ -674,11 +699,13 @@ export default function CreateProductPage() {
                     </div>
 
                     {pdfFile && (
-                      <div className="rounded-md border border-dashed border-border/60 bg-background p-3 text-xs text-muted-foreground">
-                        <p className="font-medium text-foreground">
+                      <div className="rounded-xl border-2 border-foreground bg-background p-4 shadow-[2px_2px_0px_#000]">
+                        <p className="font-black text-foreground truncate">
                           {pdfFile.name}
                         </p>
-                        <p>{(pdfFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase">
+                          {(pdfFile.size / (1024 * 1024)).toFixed(2)} MB
+                        </p>
                       </div>
                     )}
 
@@ -686,30 +713,30 @@ export default function CreateProductPage() {
                       type="button"
                       onClick={handleUpload}
                       disabled={!pdfFile || isUploading}
-                      className="h-10 w-full"
+                      className="h-12 w-full rounded-xl border-2 border-foreground bg-foreground font-black text-background transition-all hover:-translate-y-1 hover:shadow-[4px_4px_0px_#000] dark:bg-background dark:text-foreground dark:hover:shadow-[4px_4px_0px_#fff]"
                     >
                       {isUploading ? (
                         <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Enviando...
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          ENVIANDO...
                         </span>
                       ) : (
                         <span className="flex items-center gap-2">
-                          <UploadCloud className="h-4 w-4" />
-                          Enviar Arquivo
+                          <UploadCloud className="h-5 w-5" />
+                          SUBIR ARQUIVO
                         </span>
                       )}
                     </Button>
 
                     {uploadProgress > 0 && (
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Progresso do upload</span>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                          <span>UPLOAD</span>
                           <span>{uploadProgress}%</span>
                         </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div className="h-3 w-full overflow-hidden rounded-full border-2 border-foreground bg-muted">
                           <div
-                            className="h-full rounded-full bg-primary transition-all"
+                            className="h-full bg-primary transition-all"
                             style={{ width: `${uploadProgress}%` }}
                           />
                         </div>
@@ -718,24 +745,25 @@ export default function CreateProductPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-border/50 bg-muted/40">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-bold">
-                      Capa do Produto
+                <Card className="rounded-2xl border-2 border-foreground bg-muted/30 shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]">
+                  <CardHeader className="pb-4 border-b-2 border-foreground/10 bg-muted/20">
+                    <CardTitle className="font-serif text-lg font-black uppercase tracking-tight">
+                      Capa (PNG)
                     </CardTitle>
-                    <CardDescription className="text-xs">
-                      Uma imagem bonita atrai mais vendas (formato aceito: PNG
-                      tamanho: 800x800px).
+                    <CardDescription className="font-bold text-muted-foreground">
+                      Imagem de destaque (Recomendado: 800x800px).
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-background py-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50">
-                      <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
-                      <p className="text-sm font-bold text-foreground">
-                        Escolher imagem de capa 🖼️
+                  <CardContent className="p-6 space-y-6">
+                    <div className="group relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-foreground bg-background py-10 text-center transition-all hover:bg-muted/50">
+                      <div className="mb-4 rounded-full border-2 border-foreground bg-secondary p-3 shadow-[2px_2px_0px_#000]">
+                        <UploadCloud className="h-6 w-6 text-foreground" />
+                      </div>
+                      <p className="text-base font-black uppercase tracking-widest text-foreground">
+                        CAPA ✨
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        ou arraste para cá
+                      <p className="mt-1 text-xs font-bold text-muted-foreground uppercase">
+                        PNG apenas
                       </p>
                       <Input
                         type="file"
@@ -746,11 +774,10 @@ export default function CreateProductPage() {
                     </div>
 
                     {coverFile && (
-                      <div className="rounded-md border border-dashed border-border/60 bg-background p-3 text-xs text-muted-foreground">
-                        <p className="font-medium text-foreground">
+                      <div className="rounded-xl border-2 border-foreground bg-background p-4 shadow-[2px_2px_0px_#000]">
+                        <p className="font-black text-foreground truncate">
                           {coverFile.name}
                         </p>
-                        <p>{(coverFile.size / (1024 * 1024)).toFixed(2)} MB</p>
                       </div>
                     )}
 
@@ -758,74 +785,71 @@ export default function CreateProductPage() {
                       type="button"
                       onClick={handleCoverUpload}
                       disabled={!coverFile || isUploading}
-                      className="h-10 w-full"
+                      className="h-12 w-full rounded-xl border-2 border-foreground bg-foreground font-black text-background transition-all hover:-translate-y-1 hover:shadow-[4px_4px_0px_#000] dark:bg-background dark:text-foreground dark:hover:shadow-[4px_4px_0px_#fff]"
                     >
                       {isUploading ? (
                         <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Enviando capa...
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          ENVIANDO...
                         </span>
                       ) : (
                         <span className="flex items-center gap-2">
-                          <UploadCloud className="h-4 w-4" />
-                          Enviar capa
+                          <UploadCloud className="h-5 w-5" />
+                          SUBIR CAPA
                         </span>
                       )}
                     </Button>
                   </CardContent>
                 </Card>
 
-                <Card className="border-border/50 bg-card/80">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium">
+                <Card className="overflow-hidden rounded-2xl border-2 border-foreground bg-card shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]">
+                  <CardHeader className="pb-4 border-b-2 border-foreground/10 bg-muted/20">
+                    <CardTitle className="font-serif text-lg font-black uppercase tracking-tight">
                       Pré-visualização
                     </CardTitle>
-                    <CardDescription className="text-xs">
-                      Assim seu produto aparecerá no marketplace.
-                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <div className="mb-3 overflow-hidden rounded-md border border-border/40 bg-muted/60">
-                      <div className="aspect-[4/3] w-full bg-gradient-to-br from-blue-500/10 to-indigo-500/10">
-                        {coverUrl && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={coverUrl}
-                            alt="Pré-visualização da capa"
-                            className="h-full w-full object-cover"
-                          />
-                        )}
+                  <CardContent className="p-0">
+                    <div className="aspect-[16/10] w-full border-b-2 border-foreground bg-muted">
+                      {coverUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={coverUrl}
+                          alt="Capa"
+                          className="h-full w-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="p-6 space-y-3">
+                      <p className="font-serif text-xl font-black text-foreground">
+                        {formData.title || "TÍTULO DO PRODUTO"}
+                      </p>
+                      <div className="text-2xl font-black text-primary">
+                        {formData.price
+                          ? `R$ ${Number(formData.price).toFixed(2)}`
+                          : "---"}
+                      </div>
+                      <div className="flex flex-col gap-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        <div>
+                          CATEGORIA:{" "}
+                          <span className="text-foreground">
+                            {formData.category || "---"}
+                          </span>
+                        </div>
+                        <div>
+                          STATUS:{" "}
+                          <span className="text-foreground">
+                            {pdfUrl ? "ENVIADO" : "PENDENTE"}
+                          </span>
+                        </div>
                       </div>
                     </div>
-
-                    <p className="font-semibold text-foreground">
-                      {formData.title || "Título do produto"}
-                    </p>
-                    <p className="line-clamp-3 text-xs text-muted-foreground">
-                      {formData.description ||
-                        "A descrição do seu produto aparecerá aqui."}
-                    </p>
-                    <p className="mt-2 text-sm font-semibold text-foreground">
-                      {formData.price
-                        ? `R$${Number(formData.price).toFixed(2)}`
-                        : "Defina um preço"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Categoria: {formData.category || "Defina uma categoria"}
-                    </p>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Arquivo:{" "}
-                      {pdfUrl
-                        ? "PDF enviado e pronto para venda."
-                        : "Arraste o PDF para cá para a mágica acontecer."}
-                    </p>
                   </CardContent>
                 </Card>
               </div>
             </form>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   );
 }

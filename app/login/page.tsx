@@ -1,76 +1,83 @@
-"use client"
+"use client";
 
-import { useState, Suspense } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { toast } from "@/hooks/use-toast"
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { toast } from "@/hooks/use-toast";
 
 function LoginContent() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectPath = searchParams.get("redirect") || searchParams.get("next") || "/dashboard"
-  const isDashboardRedirect = redirectPath.startsWith("/dashboard")
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath =
+    searchParams.get("redirect") || searchParams.get("next") || "/dashboard";
+  const isDashboardRedirect = redirectPath.startsWith("/dashboard");
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (field: "email" | "password", value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setError(null)
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
 
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-      })
+      });
 
-      const json = await res.json()
+      const json = await res.json();
 
       if (!res.ok || !json.success) {
-        const message = json.error || "Não foi possível entrar."
-        setError(message)
+        const message = json.error || "Não foi possível entrar.";
+        setError(message);
         toast({
           title: "Não foi possível entrar",
           description: message,
           variant: "destructive",
-        })
-        return
+        });
+        return;
       }
 
       toast({
         title: "Login realizado com sucesso",
         description: "Bem-vindo de volta! Redirecionando...",
-      })
-      router.push(redirectPath)
+      });
+      router.push(redirectPath);
     } catch (err) {
-      console.error("Login error", err)
-      const message = "Ocorreu um erro ao tentar fazer login."
-      setError(message)
+      console.error("Login error", err);
+      const message = "Ocorreu um erro ao tentar fazer login.";
+      setError(message);
       toast({
         title: "Não foi possível entrar",
         description: message,
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -78,71 +85,76 @@ function LoginContent() {
 
       <main className="py-10 lg:py-16">
         <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-0">
-          <Card className="border-border/50 bg-card shadow-lg shadow-primary/5">
-            <CardHeader>
-              <CardTitle className="text-xl">Entrar na sua conta</CardTitle>
-              <CardDescription>
-                Acesse seu painel para gerenciar suas vendas e produtos.
+          <Card className="overflow-hidden rounded-2xl border-2 border-foreground bg-background p-4 shadow-[8px_8px_0px_#000]">
+            <CardHeader className="text-center">
+              <CardTitle className="font-serif text-3xl font-black uppercase tracking-tight text-foreground">
+                Entrar
+              </CardTitle>
+              <CardDescription className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                Acesse seu painel agora
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit}>
-                {isDashboardRedirect && (
-                  <div className="mb-6 rounded-md bg-blue-500/10 p-3 text-sm text-blue-600 dark:text-blue-400">
-                    Faça login para gerenciar seus produtos e acessar o dashboard.
-                  </div>
-                )}
-                <FieldGroup>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <FieldGroup className="space-y-4">
                   <Field>
-                    <FieldLabel htmlFor="email">Email</FieldLabel>
+                    <FieldLabel
+                      className="text-xs font-black uppercase tracking-widest text-muted-foreground"
+                      htmlFor="email"
+                    >
+                      Email de Acesso
+                    </FieldLabel>
                     <Input
                       id="email"
                       type="email"
                       autoComplete="email"
                       value={formData.email}
                       onChange={(e) => handleChange("email", e.target.value)}
-                      className="h-11 border-border/50 bg-background"
+                      className="h-12 border-2 border-foreground bg-background font-bold shadow-[2px_2px_0px_#000] focus:ring-0"
                       required
                     />
                   </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="password">Senha</FieldLabel>
+                    <FieldLabel
+                      className="text-xs font-black uppercase tracking-widest text-muted-foreground"
+                      htmlFor="password"
+                    >
+                      Sua Senha
+                    </FieldLabel>
                     <Input
                       id="password"
                       type="password"
                       autoComplete="current-password"
                       value={formData.password}
-                      onChange={(e) =>
-                        handleChange("password", e.target.value)
-                      }
-                      className="h-11 border-border/50 bg-background"
+                      onChange={(e) => handleChange("password", e.target.value)}
+                      className="h-12 border-2 border-foreground bg-background font-bold shadow-[2px_2px_0px_#000] focus:ring-0"
                       required
                     />
                   </Field>
                 </FieldGroup>
 
                 {error && (
-                  <p className="mt-3 text-sm text-red-500">
-                    {error}
+                  <p className="text-xs font-black uppercase tracking-tight text-red-500">
+                    ❌ {error}
                   </p>
                 )}
 
                 <Button
                   type="submit"
-                  className="mt-6 h-11 w-full"
+                  className="h-14 w-full rounded-xl border-2 border-foreground bg-primary text-lg font-black uppercase tracking-widest text-primary-foreground shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] active:translate-y-0 active:shadow-none"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Entrando..." : "Entrar"}
+                  {isSubmitting ? "ENTRANDO..." : "ENTRAR"}
                 </Button>
 
-                <p className="mt-4 text-center text-sm text-muted-foreground">
-                  Não tem conta?{" "}
+                <p className="text-center text-sm font-bold text-muted-foreground">
+                  Ainda não tem uma conta?{" "}
                   <Link
                     href={`/register?redirect=${encodeURIComponent(redirectPath)}`}
-                    className="font-medium text-primary underline-offset-4 hover:underline"
+                    className="text-foreground underline decoration-[#FFE600] decoration-4 underline-offset-2 hover:bg-[#FFE600]/20"
                   >
-                    Criar conta
+                    CRIAR CONTA
                   </Link>
                 </p>
               </form>
@@ -153,7 +165,7 @@ function LoginContent() {
 
       <Footer />
     </div>
-  )
+  );
 }
 
 export default function LoginPage() {
@@ -167,5 +179,5 @@ export default function LoginPage() {
     >
       <LoginContent />
     </Suspense>
-  )
+  );
 }

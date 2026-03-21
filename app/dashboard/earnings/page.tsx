@@ -102,17 +102,22 @@ export default async function EarningsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
-            Ganhos
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 border-b-2 border-foreground bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between px-6 lg:px-8">
+          <span className="font-serif text-xl font-black tracking-tight text-foreground uppercase">
+            Ganhos e Vendas
           </span>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="outline" size="sm" asChild>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-2 border-foreground font-bold shadow-[2px_2px_0px_#000]"
+              asChild
+            >
               <Link href="/marketplace">
-                Ver Marketplace
+                Marketplace
                 <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -120,166 +125,154 @@ export default async function EarningsPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-        <div className="mb-8">
+      <main className="mx-auto max-w-7xl p-6 lg:p-8">
+        <div className="mb-10">
           <ConnectStripeCard
             stripeAccountId={user.stripeAccountId}
             stripeOnboardingComplete={user.stripeOnboardingComplete}
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <Card className="border-border/50 bg-card shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Ganhos Vitalícios
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold tracking-tight text-foreground">
-                R$ {estimatedEarnings.toFixed(2)}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {totalOrderCount} recebimentos (vendas/comissões)
-              </p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="rounded-2xl border-2 border-foreground bg-card p-6 shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]">
+            <div className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              GANHOS VITALÍCIOS
+            </div>
+            <div className="mt-2 text-3xl font-black text-foreground">
+              R$ {estimatedEarnings.toFixed(2)}
+            </div>
+            <div className="mt-2 text-sm font-bold text-primary">
+              {totalOrderCount} recebimentos totais
+            </div>
+          </div>
 
-          <Card className="border-border/50 bg-card shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Saldo Pendente
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold tracking-tight text-foreground">
-                R$ {pendingBalance.toFixed(2)}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Aguardando repasse
-              </p>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl border-2 border-foreground bg-card p-6 shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]">
+            <div className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              SALDO PENDENTE
+            </div>
+            <div className="mt-2 text-3xl font-black text-foreground">
+              R$ {pendingBalance.toFixed(2)}
+            </div>
+            <div className="mt-2 text-sm font-bold text-muted-foreground">
+              Aguardando repasse automático
+            </div>
+          </div>
 
-          <Card className="border-border/50 bg-card shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Status Stripe
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-2xl border-2 border-foreground bg-card p-6 shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]">
+            <div className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              STATUS STRIPE
+            </div>
+            <div className="mt-2">
               {isPayoutProcessing ? (
-                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-500">
-                  <span className="font-medium animate-pulse">
-                    Processando pagamento...
-                  </span>
+                <div className="flex items-center gap-2 text-blue-600 font-black italic animate-pulse">
+                  PROCESSANDO PAGAMENTO...
                 </div>
               ) : user.stripeAccountId && user.stripeOnboardingComplete ? (
                 <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2 text-green-600 dark:text-green-500">
-                    <CheckCircle2 className="h-5 w-5" />
-                    <span className="font-medium">Conectado</span>
+                  <div className="flex items-center gap-2 text-emerald-500 font-black">
+                    <CheckCircle2 className="h-5 w-5 stroke-[3px]" />
+                    CONECTADO
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Repasses processados automaticamente
-                  </p>
-                </div>
-              ) : pendingBalance > 0 ? (
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm font-semibold text-amber-600 dark:text-amber-500">
-                    R$ {pendingBalance.toFixed(2)} prontos para saque
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Conecte o Stripe para receber seus pagamentos.
+                  <p className="text-xs font-bold text-muted-foreground">
+                    Repasses automáticos ativados
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Conecte sua conta Stripe acima para receber pagamentos.
-                </p>
+                <div className="flex flex-col gap-1">
+                  <div className="text-amber-500 font-black">PENDENTE</div>
+                  <p className="text-xs font-bold text-muted-foreground">
+                    Conecte para receber ganhos
+                  </p>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-8 border-t border-border/50 pt-8">
-          <Card className="border-border/50 bg-card shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold text-foreground">
-                Últimas Entradas
-              </CardTitle>
-              <CardDescription>
-                Histórico detalhado das suas vendas mais recentes com os
-                descontos de plataforma e afiliados aplicados.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {recentTransactions.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/40 py-10 text-center">
-                  <p className="text-sm font-medium text-foreground">
-                    Nenhuma venda ainda
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Publicize seu produto e aguarde sua primeira venda para ver
-                    o histórico.
-                  </p>
+        <div className="mt-12 overflow-hidden rounded-3xl border-2 border-foreground bg-card shadow-[8px_8px_0px_#000] dark:shadow-[8px_8px_0px_#fff]">
+          <div className="border-b-2 border-foreground bg-muted/50 p-6">
+            <h3 className="font-serif text-2xl font-black text-foreground">
+              Últimas Entradas
+            </h3>
+            <p className="mt-1 text-sm font-bold text-muted-foreground">
+              Histórico detalhado das suas vendas e comissões.
+            </p>
+          </div>
+
+          <div className="p-0">
+            {recentTransactions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center border-t-0 py-20 text-center">
+                <div className="mb-4 rounded-full border-2 border-foreground bg-background p-4 shadow-[4px_4px_0px_#000]">
+                  <DollarSign className="h-8 w-8 text-muted-foreground" />
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border/50 text-left text-muted-foreground">
-                        <th className="pb-3 pr-4 font-medium">Data</th>
-                        <th className="pb-3 pr-4 font-medium">Produto</th>
-                        <th className="hidden pb-3 pr-4 font-medium md:table-cell">
-                          Tipo
-                        </th>
-                        <th className="pb-3 px-4 text-right font-medium">
-                          Ganhos
-                        </th>
+                <h4 className="font-serif text-xl font-black text-foreground">
+                  Nenhuma entrada ainda
+                </h4>
+                <p className="mt-2 max-w-xs text-sm font-medium text-muted-foreground">
+                  Aguardando sua primeira venda para começar o histórico.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b-2 border-foreground bg-muted/30 text-left">
+                      <th className="px-6 py-4 text-xs font-black uppercase tracking-widest">
+                        Data
+                      </th>
+                      <th className="px-6 py-4 text-xs font-black uppercase tracking-widest">
+                        Produto
+                      </th>
+                      <th className="hidden px-6 py-4 text-xs font-black uppercase tracking-widest md:table-cell">
+                        Tipo
+                      </th>
+                      <th className="px-6 py-4 text-right text-xs font-black uppercase tracking-widest">
+                        Ganhos Líquidos
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y-2 divide-foreground/10">
+                    {recentTransactions.map((tx) => (
+                      <tr
+                        key={tx.id}
+                        className="transition-colors hover:bg-muted/30"
+                      >
+                        <td className="px-6 py-4 text-sm font-bold tabular-nums text-muted-foreground">
+                          {new Date(tx.date).toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-foreground">
+                            {tx.title}
+                          </div>
+                          <div className="md:hidden mt-0.5 text-xs font-bold text-primary">
+                            {tx.typeLabel}
+                          </div>
+                        </td>
+                        <td className="hidden px-6 py-4 md:table-cell">
+                          <span
+                            className={`inline-flex rounded-lg border-2 border-foreground px-2 py-0.5 text-[10px] font-black uppercase tracking-widest ${
+                              tx.typeLabel === "Venda"
+                                ? "bg-blue-400 text-foreground"
+                                : "bg-purple-400 text-foreground"
+                            }`}
+                          >
+                            {tx.typeLabel}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right font-black text-foreground tabular-nums">
+                          R$ {tx.netEarnings.toFixed(2)}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/50">
-                      {recentTransactions.map((tx) => (
-                        <tr
-                          key={tx.id}
-                          className="transition-colors hover:bg-muted/30"
-                        >
-                          <td className="py-3 pr-4 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
-                            {new Date(tx.date).toLocaleDateString("pt-BR", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </td>
-                          <td className="py-3 pr-4 font-medium text-foreground">
-                            <div>{tx.title}</div>
-                            <div className="md:hidden text-xs text-muted-foreground mt-0.5">
-                              {tx.typeLabel}
-                            </div>
-                          </td>
-                          <td className="hidden py-3 pr-4 md:table-cell">
-                            <span
-                              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                                tx.typeLabel === "Venda"
-                                  ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                                  : "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                              }`}
-                            >
-                              {tx.typeLabel}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-right font-semibold text-emerald-600 dark:text-emerald-500 tabular-nums">
-                            R$ {tx.netEarnings.toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>

@@ -159,26 +159,29 @@ export default async function AffiliateEarningsPage() {
     totalClicks > 0 ? ((totalSales / totalClicks) * 100).toFixed(1) : "0";
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <img
-                src="/images/logo.jpg"
-                alt="Boas Ideias Online"
-                className="h-8 w-8"
-              />
-            </div>
-            <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
-              Ganhos de afiliado
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-50 border-b-2 border-foreground bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between px-6 lg:px-8">
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <span className="font-serif text-xl font-black tracking-tight uppercase">
+              Ganhos de Afiliado
             </span>
           </Link>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/dashboard/affiliates">Meus links</Link>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-2 border-foreground font-bold shadow-[2px_2px_0px_#000]"
+              asChild
+            >
+              <Link href="/dashboard/affiliates">Meus Links</Link>
             </Button>
-            <Button variant="outline" size="sm" asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-2 border-foreground bg-primary font-bold shadow-[2px_2px_0px_#000]"
+              asChild
+            >
               <Link href="/marketplace">
                 Marketplace
                 <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
@@ -188,142 +191,150 @@ export default async function AffiliateEarningsPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-10 lg:px-8 lg:py-12">
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-border/50 bg-card shadow-sm">
+      <main className="mx-auto max-w-7xl p-6 lg:p-8">
+        <div className="mb-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <Card className="rounded-2xl border-2 border-foreground bg-card shadow-[4px_4px_0px_#000]">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
                 <MousePointer className="h-4 w-4" />
-                Total de cliques
+                Cliques Totais
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold text-foreground">
+              <p className="font-serif text-4xl font-black text-foreground">
                 {totalClicks}
               </p>
             </CardContent>
           </Card>
-          <Card className="border-border/50 bg-card shadow-sm">
+          <Card className="rounded-2xl border-2 border-foreground bg-primary shadow-[4px_4px_0px_#000]">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-foreground">
                 <ShoppingCart className="h-4 w-4" />
-                Conversões
+                Vendas Realizadas
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold text-foreground">
+              <p className="font-serif text-4xl font-black text-foreground">
                 {totalSales}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Taxa: {conversionRate}%
+              <p className="mt-1 text-xs font-black uppercase tracking-widest text-foreground/70">
+                TAXA DE CONV.: {conversionRate}%
               </p>
             </CardContent>
           </Card>
-          <Card className="border-border/50 bg-card shadow-sm">
+          <Card className="rounded-2xl border-2 border-foreground bg-card shadow-[4px_4px_0px_#000]">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
                 <DollarSign className="h-4 w-4" />
-                Saldo Universal Pendente
+                Comissões Pendentes
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold text-foreground">
+              <p className="font-serif text-4xl font-black text-foreground tabular-nums text-emerald-600">
                 R$ {pendingBalance.toFixed(2)}
               </p>
               {pendingBalance > 0 &&
                 (!user.stripeAccountId || !user.stripeOnboardingComplete) && (
-                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-500 font-medium">
-                    Conecte o Stripe para receber.
+                  <p className="mt-2 rounded-lg border-2 border-amber-600 bg-amber-50 p-2 text-[10px] font-black uppercase tracking-tight text-amber-700">
+                    CONECTE O STRIPE PARA RECEBER
                   </p>
                 )}
             </CardContent>
           </Card>
         </div>
 
-        <Card className="border-border/50 bg-card shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Produtos que mais vendem
-            </CardTitle>
-            <CardDescription>
-              Top 5 produtos por comissão gerada.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {topProductsWithNames.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">
-                Nenhuma venda de afiliado ainda.
-              </p>
-            ) : (
-              <ul className="space-y-3">
-                {topProductsWithNames.map((p, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-4 py-3"
-                  >
-                    <span className="font-medium text-foreground">
-                      {p.title}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {p.sales} venda(s) · R$ {p.earnings.toFixed(2)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="mt-8 border-t border-border/50 pt-8">
-          <Card className="border-border/50 bg-card shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold text-foreground">
-                Últimas Indicações Convertidas
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.2fr,2fr]">
+          <Card className="overflow-hidden rounded-2xl border-2 border-foreground bg-card shadow-[4px_4px_0px_#000]">
+            <CardHeader className="border-b-2 border-foreground bg-muted/50 pb-4">
+              <CardTitle className="flex items-center gap-3 font-serif text-xl font-black">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Mais Vendidos
               </CardTitle>
-              <CardDescription>
-                Histórico recente das suas comissões geradas por indicação.
+              <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                Top 5 produtos convertidos.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
+              {topProductsWithNames.length === 0 ? (
+                <p className="py-12 text-center text-xs font-bold text-muted-foreground uppercase">
+                  Nenhuma venda ainda.
+                </p>
+              ) : (
+                <ul className="divide-y-2 divide-foreground/10">
+                  {topProductsWithNames.map((p, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center justify-between px-6 py-4 hover:bg-muted/30"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-serif font-black text-foreground">
+                          {p.title}
+                        </span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                          {p.sales} Vendas
+                        </span>
+                      </div>
+                      <span className="font-black text-emerald-600 tabular-nums">
+                        R$ {p.earnings.toFixed(2)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden rounded-2xl border-2 border-foreground bg-card shadow-[8px_8px_0px_#000]">
+            <CardHeader className="border-b-2 border-foreground bg-muted/50 pb-4">
+              <CardTitle className="font-serif text-xl font-black">
+                Últimas Comissões
+              </CardTitle>
+              <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                Histórico recente das suas indicações premiadas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
               {recentTransactions.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/40 py-10 text-center">
-                  <p className="text-sm font-medium text-foreground">
+                <div className="flex flex-col items-center justify-center p-12 text-center">
+                  <p className="text-sm font-black text-foreground uppercase">
                     Ainda sem comissões
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Divulgue seus links de parceiro para começar a ganhar.
+                  <p className="mt-1 text-xs font-bold text-muted-foreground">
+                    Divulgue seus links para começar.
                   </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full">
                     <thead>
-                      <tr className="border-b border-border/50 text-left text-muted-foreground">
-                        <th className="pb-3 pr-4 font-medium">Data</th>
-                        <th className="pb-3 pr-4 font-medium">Produto</th>
-                        <th className="pb-3 px-4 text-right font-medium">
+                      <tr className="border-b-2 border-foreground/10 bg-muted/20 text-left">
+                        <th className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                          Data
+                        </th>
+                        <th className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                          Produto
+                        </th>
+                        <th className="px-6 py-3 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                           Sua Comissão
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border/50">
+                    <tbody className="divide-y-2 divide-foreground/5">
                       {recentTransactions.map((tx) => (
                         <tr
                           key={tx.id}
                           className="transition-colors hover:bg-muted/30"
                         >
-                          <td className="py-3 pr-4 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                          <td className="px-6 py-4 text-[10px] font-black tabular-nums text-muted-foreground uppercase">
                             {new Date(tx.date).toLocaleDateString("pt-BR", {
                               day: "2-digit",
                               month: "short",
-                              year: "numeric",
                             })}
                           </td>
-                          <td className="py-3 pr-4 font-medium text-foreground">
+                          <td className="px-6 py-4 font-serif font-black text-foreground truncate max-w-[150px]">
                             {tx.title}
                           </td>
-                          <td className="py-3 px-4 text-right font-semibold text-emerald-600 dark:text-emerald-500 tabular-nums">
+                          <td className="px-6 py-4 text-right font-black text-emerald-600 tabular-nums">
                             R$ {tx.earnings.toFixed(2)}
                           </td>
                         </tr>

@@ -78,42 +78,42 @@ function RegisterContent() {
 
       <main className="py-10 lg:py-16">
         <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-0">
-          <Card className="border-border/50 bg-card shadow-lg shadow-primary/5">
-            <CardHeader>
-              <CardTitle className="text-xl">Crie sua conta e comece a lucrar hoje</CardTitle>
-              <CardDescription>
-                Junte-se a mais de 15.000 pessoas que estão fazendo dinheiro online de forma simples. É 100% grátis para começar.
+          <Card className="overflow-hidden rounded-2xl border-2 border-foreground bg-background p-4 shadow-[8px_8px_0px_#000]">
+            <CardHeader className="text-center">
+              <CardTitle className="font-serif text-3xl font-black uppercase tracking-tight text-foreground">Criar Conta</CardTitle>
+              <CardDescription className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                Comece a lucrar hoje mesmo
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit}>
-                <FieldGroup>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <FieldGroup className="space-y-4">
                   <Field>
-                    <FieldLabel htmlFor="name">Nome</FieldLabel>
+                    <FieldLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground" htmlFor="name">Seu Nome Real</FieldLabel>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => handleChange("name", e.target.value)}
-                      className="h-11 border-border/50 bg-background"
+                      className="h-12 border-2 border-foreground bg-background font-bold shadow-[2px_2px_0px_#000] focus:ring-0"
                       required
                     />
                   </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="email">Email</FieldLabel>
+                    <FieldLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground" htmlFor="email">Email</FieldLabel>
                     <Input
                       id="email"
                       type="email"
                       autoComplete="email"
                       value={formData.email}
                       onChange={(e) => handleChange("email", e.target.value)}
-                      className="h-11 border-border/50 bg-background"
+                      className="h-12 border-2 border-foreground bg-background font-bold shadow-[2px_2px_0px_#000] focus:ring-0"
                       required
                     />
                   </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="password">Senha</FieldLabel>
+                    <FieldLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground" htmlFor="password">Crie uma Senha</FieldLabel>
                     <Input
                       id="password"
                       type="password"
@@ -122,37 +122,37 @@ function RegisterContent() {
                       onChange={(e) =>
                         handleChange("password", e.target.value)
                       }
-                      className="h-11 border-border/50 bg-background"
+                      className="h-12 border-2 border-foreground bg-background font-bold shadow-[2px_2px_0px_#000] focus:ring-0"
                       required
                     />
                   </Field>
                 </FieldGroup>
 
                 {error && (
-                  <p className="mt-3 text-sm text-red-500">
-                    {error}
+                  <p className="text-xs font-black uppercase tracking-tight text-red-500">
+                    ❌ {error}
                   </p>
                 )}
 
                 <Button
                   type="submit"
-                  className="mt-6 h-11 w-full"
+                  className="h-14 w-full rounded-xl border-2 border-foreground bg-primary text-lg font-black uppercase tracking-widest text-primary-foreground shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] active:translate-y-0 active:shadow-none"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Criando conta..." : "Criar Minha Conta Grátis 🚀"}
+                  {isSubmitting ? "CRIANDO CONTA..." : "COMEÇAR AGORA GRATIS 🚀"}
                 </Button>
 
-                <p className="mt-2 text-center text-xs text-muted-foreground">
-                  🔒 Seus dados estão protegidos e criptografados.
+                <p className="text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  🔒 Seus dados estão 100% protegidos.
                 </p>
 
-                <p className="mt-4 text-center text-sm text-muted-foreground">
+                <p className="text-center text-sm font-bold text-muted-foreground">
                   Já tem conta?{" "}
                   <Link
                     href={`/login?redirect=${encodeURIComponent(redirectPath)}`}
-                    className="font-medium text-primary underline-offset-4 hover:underline"
+                    className="text-foreground underline decoration-[#FFE600] decoration-4 underline-offset-4 hover:bg-[#FFE600]/20"
                   >
-                    Entrar
+                    ENTRAR NA CONTA
                   </Link>
                 </p>
               </form>

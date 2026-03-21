@@ -25,42 +25,42 @@ export function AffiliatesTable({ rows }: { rows: Row[] }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full">
         <thead>
-          <tr className="border-b border-border/50 text-left text-muted-foreground">
-            <th className="pb-3 font-medium">Produto</th>
-            <th className="pb-3 font-medium">Link de afiliado</th>
-            <th className="pb-3 font-medium text-right">Cliques</th>
-            <th className="pb-3 font-medium text-right">Vendas</th>
-            <th className="pb-3 font-medium text-right">Comissão</th>
+          <tr className="border-b-2 border-foreground bg-muted/30 text-left">
+            <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">Produto</th>
+            <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">Link de Afiliado</th>
+            <th className="px-6 py-4 text-right text-xs font-black uppercase tracking-widest text-muted-foreground">Cliques</th>
+            <th className="px-6 py-4 text-right text-xs font-black uppercase tracking-widest text-muted-foreground">Vendas</th>
+            <th className="px-6 py-4 text-right text-xs font-black uppercase tracking-widest text-muted-foreground">Comissão</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y-2 divide-foreground/10">
           {rows.map((row, i) => (
-            <tr key={i} className="border-b border-border/50">
-              <td className="py-3 font-medium text-foreground">{row.productTitle}</td>
-              <td className="py-3">
+            <tr key={i} className="transition-colors hover:bg-muted/30">
+              <td className="px-6 py-4 font-serif text-lg font-black text-foreground">{row.productTitle}</td>
+              <td className="px-6 py-4">
                 <div className="flex items-center gap-2">
-                  <code className="max-w-[200px] truncate rounded bg-muted px-2 py-1 text-xs">
+                  <div className="max-w-[200px] truncate rounded-lg border-2 border-foreground bg-muted px-3 py-1.5 font-mono text-xs font-bold shadow-[2px_2px_0px_#000]">
                     {row.affiliateLink}
-                  </code>
+                  </div>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
-                    className="h-8 w-8 shrink-0"
+                    className="h-9 w-9 border-2 border-foreground shadow-[2px_2px_0px_#000] hover:bg-primary"
                     onClick={() => copyLink(row.affiliateLink)}
                   >
                     {copied === row.affiliateLink ? (
-                      <Check className="h-4 w-4 text-green-600" />
+                      <Check className="h-4 w-4 text-emerald-600" />
                     ) : (
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-4 w-4 text-foreground" />
                     )}
                   </Button>
                 </div>
               </td>
-              <td className="py-3 text-right">{row.clicks}</td>
-              <td className="py-3 text-right">{row.sales}</td>
-              <td className="py-3 text-right font-medium">
+              <td className="px-6 py-4 text-right font-black tabular-nums">{row.clicks}</td>
+              <td className="px-6 py-4 text-right font-black tabular-nums">{row.sales}</td>
+              <td className="px-6 py-4 text-right font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
                 R$ {row.commission.toFixed(2)}
               </td>
             </tr>

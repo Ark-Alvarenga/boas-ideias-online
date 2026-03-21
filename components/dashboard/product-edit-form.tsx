@@ -11,6 +11,7 @@ import { PRODUCT_CATEGORIES } from "@/lib/categories";
 import { productUpdateSchema } from "@/lib/schema";
 import { useFormValidation, type FieldStatus } from "@/hooks/use-form-validation";
 import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Eye, Archive, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -23,9 +24,9 @@ const STATUS_LABELS: Record<string, string> = {
 
 /** Returns border class based on field validation status */
 function borderClass(status: FieldStatus | undefined): string {
-  if (status === "invalid") return "border-red-500 focus-visible:ring-red-500/30";
-  if (status === "valid") return "border-green-500 focus-visible:ring-green-500/30";
-  return "border-border/50";
+  if (status === "invalid") return "border-red-500 ring-2 ring-red-500/20";
+  if (status === "valid") return "border-emerald-500 ring-2 ring-emerald-500/20";
+  return "border-foreground";
 }
 
 interface ProductEditFormProps {
@@ -399,10 +400,10 @@ export function ProductEditForm({
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr,1.2fr] lg:gap-10">
-      <div>
-        <FieldGroup>
+      <div className="space-y-8">
+        <div className="space-y-8">
           <Field data-invalid={fieldStatus.title === "invalid" || undefined}>
-            <FieldLabel htmlFor="title">Título</FieldLabel>
+            <FieldLabel className="text-sm font-black uppercase tracking-widest text-muted-foreground">Título do Produto</FieldLabel>
             <Input
               id="title"
               value={title}
@@ -411,18 +412,18 @@ export function ProductEditForm({
                 handleValidateField("title", e.target.value);
               }}
               onBlur={() => handleValidateField("title", title)}
-              className={cn("h-11 bg-background", borderClass(fieldStatus.title))}
+              className={cn("h-12 border-2 text-lg font-bold shadow-[2px_2px_0px_#000]", borderClass(fieldStatus.title))}
               required
             />
             {fieldErrors.title ? (
-              <FieldError>{fieldErrors.title}</FieldError>
+              <FieldError className="font-bold text-red-500">{fieldErrors.title}</FieldError>
             ) : (
-              <FieldDescription>Mínimo de 3 caracteres</FieldDescription>
+              <FieldDescription className="font-medium text-muted-foreground text-xs uppercase tracking-tight">Atraia clientes com um título claro</FieldDescription>
             )}
           </Field>
 
           <Field data-invalid={fieldStatus.description === "invalid" || undefined}>
-            <FieldLabel htmlFor="description">Descrição</FieldLabel>
+            <FieldLabel className="text-sm font-black uppercase tracking-widest text-muted-foreground">Descrição (O que o cliente ganha?)</FieldLabel>
             <Textarea
               id="description"
               value={description}
@@ -431,19 +432,19 @@ export function ProductEditForm({
                 handleValidateField("description", e.target.value);
               }}
               onBlur={() => handleValidateField("description", description)}
-              className={cn("min-h-32 bg-background", borderClass(fieldStatus.description))}
+              className={cn("min-h-40 border-2 text-base font-bold shadow-[2px_2px_0px_#000]", borderClass(fieldStatus.description))}
               required
             />
             {fieldErrors.description ? (
-              <FieldError>{fieldErrors.description}</FieldError>
+              <FieldError className="font-bold text-red-500">{fieldErrors.description}</FieldError>
             ) : (
-              <FieldDescription>Mínimo de 10 caracteres</FieldDescription>
+              <FieldDescription className="font-medium text-muted-foreground text-xs uppercase tracking-tight">Detalhamento completo do produto</FieldDescription>
             )}
           </Field>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-8 sm:grid-cols-2">
             <Field data-invalid={fieldStatus.priceCents === "invalid" || undefined}>
-              <FieldLabel htmlFor="price">Preço (R$)</FieldLabel>
+              <FieldLabel className="text-sm font-black uppercase tracking-widest text-muted-foreground">Preço (R$)</FieldLabel>
               <Input
                 id="price"
                 type="number"
@@ -455,18 +456,18 @@ export function ProductEditForm({
                   handleValidateField("price", e.target.value);
                 }}
                 onBlur={() => handleValidateField("price", price)}
-                className={cn("h-11 bg-background", borderClass(fieldStatus.priceCents))}
+                className={cn("h-12 border-2 text-lg font-black shadow-[2px_2px_0px_#000]", borderClass(fieldStatus.priceCents))}
                 required
               />
               {fieldErrors.priceCents ? (
-                <FieldError>{fieldErrors.priceCents}</FieldError>
+                <FieldError className="font-bold text-red-500">{fieldErrors.priceCents}</FieldError>
               ) : (
-                <FieldDescription>Valor em reais. Ex: 29.90</FieldDescription>
+                <FieldDescription className="font-medium text-muted-foreground text-xs uppercase tracking-tight">Valor justo pelo conteúdo</FieldDescription>
               )}
             </Field>
 
             <Field data-invalid={fieldStatus.category === "invalid" || undefined}>
-              <FieldLabel htmlFor="category">Categoria</FieldLabel>
+              <FieldLabel className="text-sm font-black uppercase tracking-widest text-muted-foreground">Categoria</FieldLabel>
               <Select
                 value={category}
                 onValueChange={(value) => {
@@ -475,10 +476,10 @@ export function ProductEditForm({
                 }}
                 required
               >
-                <SelectTrigger className={cn("h-11 bg-background", borderClass(fieldStatus.category))}>
-                  <SelectValue placeholder="Selecione a categoria" />
+                <SelectTrigger className={cn("h-12 border-2 text-base font-bold shadow-[2px_2px_0px_#000]", borderClass(fieldStatus.category))}>
+                  <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="border-2 border-foreground font-bold">
                   {PRODUCT_CATEGORIES.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
                       {cat.label}
@@ -487,204 +488,190 @@ export function ProductEditForm({
                 </SelectContent>
               </Select>
               {fieldErrors.category ? (
-                <FieldError>{fieldErrors.category}</FieldError>
+                <FieldError className="font-bold text-red-500">{fieldErrors.category}</FieldError>
               ) : (
-                <FieldDescription>Selecione uma categoria</FieldDescription>
+                <FieldDescription className="font-medium text-muted-foreground text-xs uppercase tracking-tight">Organização no marketplace</FieldDescription>
               )}
             </Field>
           </div>
 
           <div className={cn(
-            "rounded-xl border p-5 transition-colors",
+            "rounded-2xl border-2 p-6 transition-all shadow-[4px_4px_0px_#000]",
             isAffiliateEnabled 
-              ? "border-primary/30 bg-primary/5" 
-              : "border-border/60 bg-muted/20"
+              ? "border-foreground bg-primary/10" 
+              : "border-foreground bg-muted/20"
           )}>
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-6 flex items-center justify-between">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-foreground">Programa de Afiliados</h3>
+                  <h3 className="font-serif text-xl font-black text-foreground">Programa de Afiliados</h3>
                   {isAffiliateEnabled && (
-                    <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-                      Ativado
+                    <span className="rounded-full border-2 border-foreground bg-emerald-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest text-foreground shadow-[2px_2px_0px_#000]">
+                      ATIVO ✨
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Permita que outras pessoas vendam este produto em troca de uma comissão.
+                <p className="text-sm font-bold text-muted-foreground">
+                  Permita que outros vendam por você em troca de comissão.
                 </p>
               </div>
               <Switch
                 checked={isAffiliateEnabled}
                 onCheckedChange={handleAffiliateToggle}
+                className="data-[state=checked]:bg-primary border-2 border-foreground"
               />
             </div>
 
             {isAffiliateEnabled && (
               <Field
-                className="border-t border-border/40 pt-4"
+                className="border-t-2 border-foreground pt-6"
                 data-invalid={fieldStatus.affiliateCommissionPercent === "invalid" || undefined}
               >
-                <FieldLabel htmlFor="commission">Comissão do Afiliado (%)</FieldLabel>
-                <Input
-                  id="commission"
-                  type="number"
-                  min={0}
-                  max={50}
-                  value={commissionPercent}
-                  onChange={(e) => handleCommissionChange(e.target.value)}
-                  onBlur={() => validateField("affiliateCommissionPercent", commissionPercent)}
-                  className={cn("h-11 max-w-xs bg-background", borderClass(fieldStatus.affiliateCommissionPercent))}
-                  required={isAffiliateEnabled}
-                />
+                <FieldLabel className="text-sm font-black uppercase tracking-widest text-muted-foreground">Comissão do Afiliado (%)</FieldLabel>
+                <div className="flex items-center gap-4">
+                    <Input
+                    id="commission"
+                    type="number"
+                    min={0}
+                    max={50}
+                    value={commissionPercent}
+                    onChange={(e) => handleCommissionChange(e.target.value)}
+                    onBlur={() => validateField("affiliateCommissionPercent", commissionPercent)}
+                    className={cn("h-12 w-28 border-2 text-lg font-black shadow-[2px_2px_0px_#000]", borderClass(fieldStatus.affiliateCommissionPercent))}
+                    required={isAffiliateEnabled}
+                    />
+                    <div className="text-sm font-black text-foreground uppercase tracking-widest">
+                        DOS LUCROS LÍQUIDOS
+                    </div>
+                </div>
                 {fieldErrors.affiliateCommissionPercent ? (
-                  <FieldError>{fieldErrors.affiliateCommissionPercent}</FieldError>
+                  <FieldError className="font-bold text-red-500">{fieldErrors.affiliateCommissionPercent}</FieldError>
                 ) : (
-                  <FieldDescription>Comissão entre 1% e 50%</FieldDescription>
+                  <FieldDescription className="font-medium text-muted-foreground text-xs uppercase tracking-tight">Comissão recomendada: 20% a 40%</FieldDescription>
                 )}
               </Field>
             )}
           </div>
-        </FieldGroup>
+        </div>
 
         {error && (
-          <p className="mt-4 text-sm text-red-500">
-            {error}
+          <p className="mt-4 text-sm font-bold text-red-500 uppercase tracking-tight">
+            ⚠️ {error}
           </p>
         )}
         {success && (
-          <p className="mt-4 text-sm text-emerald-600">
-            {success}
+          <p className="mt-4 text-sm font-bold text-emerald-600 uppercase tracking-tight">
+            ✅ {success}
           </p>
         )}
 
-        <div className="mt-6 flex gap-3">
+        <div className="mt-10 flex gap-4">
           <Button
             type="submit"
             disabled={isSaving || hasErrors}
-            className="h-11"
+            className="h-14 flex-1 rounded-xl border-2 border-foreground bg-primary px-8 text-lg font-black uppercase tracking-widest text-foreground shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] disabled:bg-muted disabled:shadow-none"
           >
             {isSaving ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Salvando...
+              <span className="flex items-center gap-3">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                SALVANDO...
               </span>
             ) : (
-              "Salvar alterações"
+              "SALVAR ALTERAÇÕES 💾"
             )}
           </Button>
         </div>
       </div>
 
-      <div className="space-y-4 rounded-xl border border-border/60 bg-muted/40 p-4 text-sm text-muted-foreground">
-        <p>
-          <span className="font-medium text-foreground">Status:</span>{" "}
-          {STATUS_LABELS[status] ?? status}
-        </p>
-        <p>
-          <span className="font-medium text-foreground">Vendas:</span>{" "}
-          {sales}
-        </p>
-        <p>
-          <span className="font-medium text-foreground">Visualizações:</span>{" "}
-          {views}
-        </p>
+      <div className="space-y-8">
+        <Card className="overflow-hidden rounded-2xl border-2 border-foreground bg-muted/30 shadow-[4px_4px_0px_#000]">
+            <CardHeader className="border-b-2 border-foreground bg-muted/20 pb-4">
+                <CardTitle className="font-serif text-lg font-black uppercase tracking-tight">Status & Métricas</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Status Atual:</span>
+                    <span className="rounded-lg border-2 border-foreground bg-background px-2 py-0.5 text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0px_#000]">
+                        {STATUS_LABELS[status] ?? status}
+                    </span>
+                </div>
+                <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Total de Vendas:</span>
+                    <span className="font-serif text-2xl font-black text-foreground">{sales}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Visualizações:</span>
+                    <span className="font-serif text-2xl font-black text-foreground">{views}</span>
+                </div>
+            </CardContent>
+        </Card>
 
-        <div className="border-t border-border/60 pt-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm">
-              <span className="font-medium text-foreground">Destaque na home:</span>{" "}
-              {isFeatured ? "Sim" : "Não"}
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsFeatured((prev) => !prev)}
-              className="text-xs font-medium text-primary underline-offset-2 hover:underline"
-            >
-              {isFeatured ? "Remover destaque" : "Marcar como destaque"}
-            </button>
-          </div>
+        <Card className="overflow-hidden rounded-2xl border-2 border-foreground bg-background shadow-[4px_4px_0px_#000]">
+          <CardHeader className="border-b-2 border-foreground bg-muted/20 pb-4">
+            <CardTitle className="font-serif text-lg font-black uppercase tracking-tight">Gerenciar Visibilidade</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">Destaque:</span>
+                    <span className="text-xs font-bold text-foreground">{isFeatured ? "EM DESTAQUE 🌟" : "NÃO DESTACADO"}</span>
+                </div>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsFeatured((prev) => !prev)}
+                    className="h-8 border-2 border-foreground text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0px_#000] hover:bg-primary"
+                >
+                    MODIFICAR
+                </Button>
+            </div>
 
-          <p className="font-medium text-foreground">Ações</p>
-          {status === "active" && (
-            <>
+            <div className="border-t-2 border-foreground/10 pt-4 space-y-3">
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ações de Publicação:</span>
+              
+              {status === "active" && (
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start gap-3 border-2 border-foreground font-black uppercase tracking-tight shadow-[2px_2px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[4px_4px_0px_#000]"
+                    onClick={handleArchive}
+                    disabled={isStatusAction}
+                >
+                    {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />}
+                    Arquivar Produto
+                </Button>
+              )}
+              
+              {(status === "archived" || status === "draft") && (
+                <Button
+                    type="button"
+                    variant="default" 
+                    size="sm"
+                    className="w-full justify-start gap-3 border-2 border-foreground bg-primary font-black uppercase tracking-tight shadow-[2px_2px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[4px_4px_0px_#000]"
+                    onClick={status === "archived" ? handleRepublish : handlePublish}
+                    disabled={isStatusAction}
+                >
+                    {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+                    {status === "archived" ? "Republicar Agora" : "Publicar Agora"}
+                </Button>
+              )}
+
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="w-full justify-start gap-2"
-                onClick={handleArchive}
-                disabled={isStatusAction}
-              >
-                {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />}
-                Arquivar (sair do marketplace)
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+                className="w-full justify-start gap-3 border-2 border-red-500 bg-red-50 text-red-600 font-black uppercase tracking-tight shadow-[2px_2px_0px_#ef4444] transition-all hover:-translate-y-1 hover:shadow-[4px_4px_0px_#ef4444] hover:bg-red-100"
                 onClick={handleDelete}
                 disabled={isStatusAction}
               >
                 {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                Excluir permanentemente
+                Excluir Definitivamente
               </Button>
-            </>
-          )}
-          {status === "archived" && (
-            <>
-              <Button
-                type="button"
-                variant="default"
-                size="sm"
-                className="w-full justify-start gap-2"
-                onClick={handleRepublish}
-                disabled={isStatusAction}
-              >
-                {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
-                Republicar (voltar ao marketplace)
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
-                onClick={handleDelete}
-                disabled={isStatusAction}
-              >
-                {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                Excluir permanentemente
-              </Button>
-            </>
-          )}
-          {status === "draft" && (
-            <>
-              <Button
-                type="button"
-                variant="default"
-                size="sm"
-                className="w-full justify-start gap-2"
-                onClick={handlePublish}
-                disabled={isStatusAction}
-              >
-                {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
-                Publicar no marketplace
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
-                onClick={handleDelete}
-                disabled={isStatusAction}
-              >
-                {isStatusAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                Excluir permanentemente
-              </Button>
-            </>
-          )}
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </form>
   );
