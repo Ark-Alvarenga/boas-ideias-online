@@ -1,55 +1,79 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PRODUCT_CATEGORIES } from "@/lib/categories"
-import { productCreateSchema } from "@/lib/schema"
-import { useFormValidation, type FieldStatus } from "@/hooks/use-form-validation"
-import { Loader2, UploadCloud } from "lucide-react"
-import { toast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldDescription,
+  FieldError,
+} from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PRODUCT_CATEGORIES } from "@/lib/categories";
+import { productCreateSchema } from "@/lib/schema";
+import {
+  useFormValidation,
+  type FieldStatus,
+} from "@/hooks/use-form-validation";
+import { ArrowUpRight, Loader2, UploadCloud } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface MeResponse {
-  authenticated: boolean
+  authenticated: boolean;
   user?: {
-    id: string
-    name: string
-    email: string
-  }
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 /** Returns border class based on field validation status */
 function borderClass(status: FieldStatus | undefined): string {
-  if (status === "invalid") return "border-red-500 focus-visible:ring-red-500/30"
-  if (status === "valid") return "border-green-500 focus-visible:ring-green-500/30"
-  return "border-border/50"
+  if (status === "invalid")
+    return "border-red-500 focus-visible:ring-red-500/30";
+  if (status === "valid")
+    return "border-green-500 focus-visible:ring-green-500/30";
+  return "border-border/50";
 }
 
 export default function CreateProductPage() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [pdfFile, setPdfFile] = useState<File | null>(null)
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
-  const [coverFile, setCoverFile] = useState<File | null>(null)
-  const [coverUrl, setCoverUrl] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     price: "",
     category: "",
-  })
+  });
 
   const {
     fieldErrors,
@@ -59,114 +83,122 @@ export default function CreateProductPage() {
     setServerErrors,
     hasErrors,
   } = useFormValidation<{
-    title: string
-    description: string
-    priceCents: number
-    category: string
-    pdfUrl?: string
-    coverImage?: string
-  }>(productCreateSchema)
+    title: string;
+    description: string;
+    priceCents: number;
+    category: string;
+    pdfUrl?: string;
+    coverImage?: string;
+  }>(productCreateSchema);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch("/api/auth/me", { cache: "no-store" })
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
         if (!res.ok) {
-          router.push(`/login?next=${encodeURIComponent("/dashboard/create-product")}`)
-          return
+          router.push(
+            `/login?next=${encodeURIComponent("/dashboard/create-product")}`,
+          );
+          return;
         }
-        const json = (await res.json()) as MeResponse
+        const json = (await res.json()) as MeResponse;
         if (!json.authenticated) {
-          router.push(`/login?next=${encodeURIComponent("/dashboard/create-product")}`)
-          return
+          router.push(
+            `/login?next=${encodeURIComponent("/dashboard/create-product")}`,
+          );
+          return;
         }
       } catch {
-        router.push(`/login?next=${encodeURIComponent("/dashboard/create-product")}`)
-        return
+        router.push(
+          `/login?next=${encodeURIComponent("/dashboard/create-product")}`,
+        );
+        return;
       } finally {
-        setIsCheckingAuth(false)
+        setIsCheckingAuth(false);
       }
-    }
+    };
 
-    void checkAuth()
-  }, [router])
+    void checkAuth();
+  }, [router]);
 
   const handleChange = useCallback(
     (field: keyof typeof formData, value: string) => {
-      setFormData((prev) => ({ ...prev, [field]: value }))
+      setFormData((prev) => ({ ...prev, [field]: value }));
 
       // Validate using Zod schema (single source of truth)
       if (field === "price") {
-        const cents = value ? Math.round(Number(value) * 100) : undefined
-        validateField("priceCents", cents)
+        const cents = value ? Math.round(Number(value) * 100) : undefined;
+        validateField("priceCents", cents);
       } else {
-        validateField(field as "title" | "description" | "category", value)
+        validateField(field as "title" | "description" | "category", value);
       }
     },
     [validateField],
-  )
+  );
 
   const handleBlur = useCallback(
     (field: keyof typeof formData) => {
-      const value = formData[field]
+      const value = formData[field];
       if (field === "price") {
-        const cents = value ? Math.round(Number(value) * 100) : undefined
-        validateField("priceCents", cents)
+        const cents = value ? Math.round(Number(value) * 100) : undefined;
+        validateField("priceCents", cents);
       } else {
-        validateField(field as "title" | "description" | "category", value)
+        validateField(field as "title" | "description" | "category", value);
       }
     },
     [formData, validateField],
-  )
+  );
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) return;
 
     if (file.type !== "application/pdf") {
-      setError("Apenas arquivos PDF são permitidos.")
-      return
+      setError("Apenas arquivos PDF são permitidos.");
+      return;
     }
     if (file.size > 50 * 1024 * 1024) {
-      setError("Tamanho máximo do arquivo é 50MB.")
-      return
+      setError("Tamanho máximo do arquivo é 50MB.");
+      return;
     }
 
-    setError(null)
-    setPdfFile(file)
-    setPdfUrl(null)
-    setUploadProgress(0)
-  }
+    setError(null);
+    setPdfFile(file);
+    setPdfUrl(null);
+    setUploadProgress(0);
+  };
 
-  const handleCoverFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const handleCoverFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
     if (file.type !== "image/png") {
-      setError("A imagem de capa deve ser um arquivo PNG.")
-      return
+      setError("A imagem de capa deve ser um arquivo PNG.");
+      return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setError("Tamanho máximo da capa é 10MB.")
-      return
+      setError("Tamanho máximo da capa é 10MB.");
+      return;
     }
 
-    setError(null)
-    setCoverFile(file)
+    setError(null);
+    setCoverFile(file);
     // Show a local preview immediately
-    const objectUrl = URL.createObjectURL(file)
-    setCoverUrl(objectUrl)
-  }
+    const objectUrl = URL.createObjectURL(file);
+    setCoverUrl(objectUrl);
+  };
 
   const handleUpload = async () => {
     if (!pdfFile) {
-      setError("Selecione um arquivo PDF antes de enviar.")
-      return
+      setError("Selecione um arquivo PDF antes de enviar.");
+      return;
     }
 
-    setIsUploading(true)
-    setUploadProgress(10)
-    setError(null)
+    setIsUploading(true);
+    setUploadProgress(10);
+    setError(null);
 
     try {
       // Step 1: Get the presigned URL
@@ -174,125 +206,130 @@ export default function CreateProductPage() {
         filename: pdfFile.name,
         contentType: pdfFile.type,
         size: pdfFile.size.toString(),
-      })
+      });
 
-      const presignRes = await fetch(`/api/upload-url?${urlParams.toString()}`)
-      const presignData = await presignRes.json()
+      const presignRes = await fetch(`/api/upload-url?${urlParams.toString()}`);
+      const presignData = await presignRes.json();
 
       if (!presignRes.ok || !presignData.success) {
-        const message = presignData.error || "Falha ao obter URL de upload."
-        setError(message)
+        const message = presignData.error || "Falha ao obter URL de upload.";
+        setError(message);
         toast({
           title: "Erro de Servidor",
           description: message,
           variant: "destructive",
-        })
-        setIsUploading(false)
-        return
+        });
+        setIsUploading(false);
+        return;
       }
 
-      setUploadProgress(30)
-      const { url, publicUrl } = presignData
+      setUploadProgress(30);
+      const { url, publicUrl } = presignData;
 
       // Step 2: Upload directly to S3 via the presigned URL
       // We use XMLHttpRequest here to be able to track upload progress accurately
       await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
+        const xhr = new XMLHttpRequest();
 
         xhr.upload.addEventListener("progress", (event) => {
           if (event.lengthComputable) {
             // progress from 30% to 100%
-            const percentComplete = 30 + Math.round((event.loaded / event.total) * 70)
-            setUploadProgress(percentComplete)
+            const percentComplete =
+              30 + Math.round((event.loaded / event.total) * 70);
+            setUploadProgress(percentComplete);
           }
-        })
+        });
 
         xhr.addEventListener("load", () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            resolve()
+            resolve();
           } else {
-            reject(new Error(`S3 upload failed with status ${xhr.status}`))
+            reject(new Error(`S3 upload failed with status ${xhr.status}`));
           }
-        })
+        });
 
-        xhr.addEventListener("error", () => reject(new Error("Network error during S3 upload")))
-        xhr.addEventListener("abort", () => reject(new Error("Upload aborted")))
+        xhr.addEventListener("error", () =>
+          reject(new Error("Network error during S3 upload")),
+        );
+        xhr.addEventListener("abort", () =>
+          reject(new Error("Upload aborted")),
+        );
 
-        xhr.open("PUT", url, true)
-        xhr.setRequestHeader("Content-Type", pdfFile.type)
-        xhr.send(pdfFile)
-      })
+        xhr.open("PUT", url, true);
+        xhr.setRequestHeader("Content-Type", pdfFile.type);
+        xhr.send(pdfFile);
+      });
 
-      setUploadProgress(100)
-      setPdfUrl(publicUrl)
+      setUploadProgress(100);
+      setPdfUrl(publicUrl);
       toast({
         title: "PDF enviado com sucesso",
         description: "Seu arquivo já pode ser vendido no marketplace.",
-      })
+      });
     } catch (err) {
-      console.error("Upload error", err)
-      const message = "Ocorreu um erro ao enviar o arquivo."
-      setError(message)
+      console.error("Upload error", err);
+      const message = "Ocorreu um erro ao enviar o arquivo.";
+      setError(message);
       toast({
         title: "Não foi possível enviar o PDF",
         description: message,
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
   const handleCoverUpload = async () => {
     if (!coverFile) {
-      setError("Selecione uma imagem PNG antes de enviar a capa.")
-      return
+      setError("Selecione uma imagem PNG antes de enviar a capa.");
+      return;
     }
 
-    setIsUploading(true)
-    setError(null)
+    setIsUploading(true);
+    setError(null);
 
     try {
-      const formData = new FormData()
-      formData.append("file", coverFile)
+      const formData = new FormData();
+      formData.append("file", coverFile);
 
       const res = await fetch("/api/upload/cover", {
         method: "POST",
         body: formData,
-      })
+      });
 
-      const json = await res.json()
+      const json = await res.json();
 
       if (!res.ok || !json.success) {
-        const message = json.error || "Falha ao enviar capa."
-        setError(message)
+        const message = json.error || "Falha ao enviar capa.";
+        setError(message);
         toast({
           title: "Não foi possível enviar a capa",
           description: message,
           variant: "destructive",
-        })
-        setIsUploading(false)
-        return
+        });
+        setIsUploading(false);
+        return;
       }
 
-      setCoverUrl(json.url as string)
+      setCoverUrl(json.url as string);
       toast({
         title: "Capa enviada com sucesso",
         description: "Sua capa já será usada na listagem do marketplace.",
-      })
+      });
     } catch (err) {
-      console.error("Cover upload error", err)
-      const message = "Ocorreu um erro ao enviar a capa."
-      setError(message)
+      console.error("Cover upload error", err);
+      const message = "Ocorreu um erro ao enviar a capa.";
+      setError(message);
       toast({
         title: "Não foi possível enviar a capa",
         description: message,
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
   // Check if form can be submitted
   const isFormIncomplete =
@@ -300,20 +337,20 @@ export default function CreateProductPage() {
     !formData.description ||
     !formData.price ||
     !formData.category ||
-    !pdfUrl
+    !pdfUrl;
 
-  const canSubmit = !isFormIncomplete && !hasErrors && !isSaving
+  const canSubmit = !isFormIncomplete && !hasErrors && !isSaving;
 
   const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault()
+    event.preventDefault();
 
     if (!pdfUrl) {
-      setError("Envie o PDF antes de salvar o produto.")
-      return
+      setError("Envie o PDF antes de salvar o produto.");
+      return;
     }
 
     // Full validation using Zod schema
-    const priceCents = Math.round(Number(formData.price) * 100)
+    const priceCents = Math.round(Number(formData.price) * 100);
     const dataToValidate = {
       title: formData.title,
       description: formData.description,
@@ -321,44 +358,44 @@ export default function CreateProductPage() {
       category: formData.category,
       pdfUrl,
       coverImage: coverUrl ?? undefined,
-    }
+    };
 
-    const isValid = validateAll(dataToValidate)
+    const isValid = validateAll(dataToValidate);
     if (!isValid) {
       toast({
         title: "Corrija os erros antes de continuar",
         description: "Verifique os campos destacados em vermelho.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsSaving(true)
-    setError(null)
+    setIsSaving(true);
+    setError(null);
 
     try {
       // If there is a cover file selected but it was not uploaded yet (no remote URL),
       // upload it automatically before creating the product.
-      let finalCoverUrl = coverUrl
+      let finalCoverUrl = coverUrl;
       if (coverFile && (!finalCoverUrl || !finalCoverUrl.startsWith("http"))) {
-        const formData = new FormData()
-        formData.append("file", coverFile)
+        const formData = new FormData();
+        formData.append("file", coverFile);
 
         const resCover = await fetch("/api/upload/cover", {
           method: "POST",
           body: formData,
-        })
+        });
 
-        const jsonCover = await resCover.json()
+        const jsonCover = await resCover.json();
 
         if (!resCover.ok || !jsonCover.success) {
-          setError(jsonCover.error || "Falha ao enviar capa.")
-          setIsSaving(false)
-          return
+          setError(jsonCover.error || "Falha ao enviar capa.");
+          setIsSaving(false);
+          return;
         }
 
-        finalCoverUrl = jsonCover.url as string
-        setCoverUrl(finalCoverUrl)
+        finalCoverUrl = jsonCover.url as string;
+        setCoverUrl(finalCoverUrl);
       }
 
       const res = await fetch("/api/products", {
@@ -372,109 +409,154 @@ export default function CreateProductPage() {
           pdfUrl,
           coverImage: finalCoverUrl ?? undefined,
         }),
-      })
+      });
 
-      const json = await res.json()
+      const json = await res.json();
 
       if (!res.ok || !json.success) {
         // Map server errors to fields
         if (json.details && Array.isArray(json.details)) {
-          setServerErrors(json.details)
+          setServerErrors(json.details);
           toast({
             title: "Corrija os erros antes de continuar",
             description: "O servidor retornou erros de validação.",
             variant: "destructive",
-          })
+          });
         } else {
-          const message = json.error || "Não foi possível criar o produto."
-          setError(message)
+          const message = json.error || "Não foi possível criar o produto.";
+          setError(message);
           toast({
             title: "Não foi possível criar o produto",
             description: message,
             variant: "destructive",
-          })
+          });
         }
-        return
+        return;
       }
 
       toast({
         title: "Produto criado com sucesso",
-        description: "Agora você pode gerenciar e publicar seu produto no painel.",
-      })
-      router.push("/dashboard/products")
+        description:
+          "Agora você pode gerenciar e publicar seu produto no painel.",
+      });
+      router.push("/dashboard/products");
     } catch (err) {
-      console.error("Create product error", err)
-      const message = "Ocorreu um erro ao salvar o produto."
-      setError(message)
+      console.error("Create product error", err);
+      const message = "Ocorreu um erro ao salvar o produto.";
+      setError(message);
       toast({
         title: "Não foi possível criar o produto",
         description: message,
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   if (isCheckingAuth) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
     <div className="mx-auto max-w-5xl py-6">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
+            <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
+              Criador de Produtos
+            </span>
+
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/marketplace">
+                  Ver Marketplace
+                  <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </header>
         <Card className="border-border/50 bg-card shadow-sm">
           <CardHeader>
             <CardTitle className="text-xl">Crie seu novo produto</CardTitle>
             <CardDescription>
-              Preencha os dados básicos e seu checkout estará pronto em segundos.
-              Crie o produto agora e depois conecte seu banco para habilitar as vendas.
+              Preencha os dados básicos e seu checkout estará pronto em
+              segundos. Crie o produto agora e depois conecte seu banco para
+              habilitar as vendas.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr,1.5fr] lg:gap-10">
+            <form
+              onSubmit={handleSubmit}
+              className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr,1.5fr] lg:gap-10"
+            >
               <div>
                 <FieldGroup>
-                  <Field data-invalid={fieldStatus.title === "invalid" || undefined}>
+                  <Field
+                    data-invalid={fieldStatus.title === "invalid" || undefined}
+                  >
                     <FieldLabel htmlFor="title">Título do Produto</FieldLabel>
                     <Input
                       id="title"
                       value={formData.title}
                       onChange={(e) => handleChange("title", e.target.value)}
                       onBlur={() => handleBlur("title")}
-                      className={cn("h-11 bg-background", borderClass(fieldStatus.title))}
+                      className={cn(
+                        "h-11 bg-background",
+                        borderClass(fieldStatus.title),
+                      )}
                       required
                     />
                     {fieldErrors.title ? (
                       <FieldError>{fieldErrors.title}</FieldError>
                     ) : (
-                      <FieldDescription>Como seu produto vai se chamar</FieldDescription>
+                      <FieldDescription>
+                        Como seu produto vai se chamar
+                      </FieldDescription>
                     )}
                   </Field>
 
-                  <Field data-invalid={fieldStatus.description === "invalid" || undefined}>
-                    <FieldLabel htmlFor="description">Descrição (O que o cliente ganha?)</FieldLabel>
+                  <Field
+                    data-invalid={
+                      fieldStatus.description === "invalid" || undefined
+                    }
+                  >
+                    <FieldLabel htmlFor="description">
+                      Descrição (O que o cliente ganha?)
+                    </FieldLabel>
                     <Textarea
                       id="description"
                       value={formData.description}
-                      onChange={(e) => handleChange("description", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("description", e.target.value)
+                      }
                       onBlur={() => handleBlur("description")}
-                      className={cn("min-h-32 bg-background", borderClass(fieldStatus.description))}
+                      className={cn(
+                        "min-h-32 bg-background",
+                        borderClass(fieldStatus.description),
+                      )}
                       required
                     />
                     {fieldErrors.description ? (
                       <FieldError>{fieldErrors.description}</FieldError>
                     ) : (
-                      <FieldDescription>Explique exatamente como seu produto vai ajudar</FieldDescription>
+                      <FieldDescription>
+                        Explique exatamente como seu produto vai ajudar
+                      </FieldDescription>
                     )}
                   </Field>
 
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field data-invalid={fieldStatus.priceCents === "invalid" || undefined}>
+                    <Field
+                      data-invalid={
+                        fieldStatus.priceCents === "invalid" || undefined
+                      }
+                    >
                       <FieldLabel htmlFor="price">Preço (R$)</FieldLabel>
                       <Input
                         id="price"
@@ -484,24 +566,40 @@ export default function CreateProductPage() {
                         value={formData.price}
                         onChange={(e) => handleChange("price", e.target.value)}
                         onBlur={() => handleBlur("price")}
-                        className={cn("h-11 bg-background", borderClass(fieldStatus.priceCents))}
+                        className={cn(
+                          "h-11 bg-background",
+                          borderClass(fieldStatus.priceCents),
+                        )}
                         required
                       />
                       {fieldErrors.priceCents ? (
                         <FieldError>{fieldErrors.priceCents}</FieldError>
                       ) : (
-                        <FieldDescription>Valor em reais. Ex: 29.90</FieldDescription>
+                        <FieldDescription>
+                          Valor em reais. Ex: 29.90
+                        </FieldDescription>
                       )}
                     </Field>
 
-                    <Field data-invalid={fieldStatus.category === "invalid" || undefined}>
+                    <Field
+                      data-invalid={
+                        fieldStatus.category === "invalid" || undefined
+                      }
+                    >
                       <FieldLabel htmlFor="category">Categoria</FieldLabel>
                       <Select
                         value={formData.category}
-                        onValueChange={(value) => handleChange("category", value)}
+                        onValueChange={(value) =>
+                          handleChange("category", value)
+                        }
                         required
                       >
-                        <SelectTrigger className={cn("h-11 bg-background", borderClass(fieldStatus.category))}>
+                        <SelectTrigger
+                          className={cn(
+                            "h-11 bg-background",
+                            borderClass(fieldStatus.category),
+                          )}
+                        >
                           <SelectValue placeholder="Selecione a categoria" />
                         </SelectTrigger>
                         <SelectContent>
@@ -515,24 +613,18 @@ export default function CreateProductPage() {
                       {fieldErrors.category ? (
                         <FieldError>{fieldErrors.category}</FieldError>
                       ) : (
-                        <FieldDescription>Selecione uma categoria</FieldDescription>
+                        <FieldDescription>
+                          Selecione uma categoria
+                        </FieldDescription>
                       )}
                     </Field>
                   </div>
                 </FieldGroup>
 
-                {error && (
-                  <p className="mt-4 text-sm text-red-500">
-                    {error}
-                  </p>
-                )}
+                {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
 
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Button
-                    type="submit"
-                    disabled={!canSubmit}
-                    className="h-11"
-                  >
+                  <Button type="submit" disabled={!canSubmit} className="h-11">
                     {isSaving ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -560,14 +652,19 @@ export default function CreateProductPage() {
                       Seu Arquivo (PDF)
                     </CardTitle>
                     <CardDescription className="text-xs">
-                      O material que seu cliente vai receber logo após o pagamento. (Até 50MB)
+                      O material que seu cliente vai receber logo após o
+                      pagamento. (Até 50MB)
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-background py-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50">
                       <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
-                      <p className="text-sm font-bold text-foreground">Escolher arquivo. ✨</p>
-                      <p className="text-xs text-muted-foreground">ou arraste para cá</p>
+                      <p className="text-sm font-bold text-foreground">
+                        Escolher arquivo. ✨
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        ou arraste para cá
+                      </p>
                       <Input
                         type="file"
                         accept="application/pdf"
@@ -581,9 +678,7 @@ export default function CreateProductPage() {
                         <p className="font-medium text-foreground">
                           {pdfFile.name}
                         </p>
-                        <p>
-                          {(pdfFile.size / (1024 * 1024)).toFixed(2)} MB
-                        </p>
+                        <p>{(pdfFile.size / (1024 * 1024)).toFixed(2)} MB</p>
                       </div>
                     )}
 
@@ -629,14 +724,19 @@ export default function CreateProductPage() {
                       Capa do Produto
                     </CardTitle>
                     <CardDescription className="text-xs">
-                      Uma imagem bonita atrai mais vendas (formato aceito: PNG tamanho: 800x800px).
+                      Uma imagem bonita atrai mais vendas (formato aceito: PNG
+                      tamanho: 800x800px).
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-background py-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50">
                       <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
-                      <p className="text-sm font-bold text-foreground">Escolher imagem de capa 🖼️</p>
-                      <p className="text-xs text-muted-foreground">ou arraste para cá</p>
+                      <p className="text-sm font-bold text-foreground">
+                        Escolher imagem de capa 🖼️
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        ou arraste para cá
+                      </p>
                       <Input
                         type="file"
                         accept="image/png"
@@ -650,9 +750,7 @@ export default function CreateProductPage() {
                         <p className="font-medium text-foreground">
                           {coverFile.name}
                         </p>
-                        <p>
-                          {(coverFile.size / (1024 * 1024)).toFixed(2)} MB
-                        </p>
+                        <p>{(coverFile.size / (1024 * 1024)).toFixed(2)} MB</p>
                       </div>
                     )}
 
@@ -713,8 +811,7 @@ export default function CreateProductPage() {
                         : "Defina um preço"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Categoria:{" "}
-                      {formData.category || "Defina uma categoria"}
+                      Categoria: {formData.category || "Defina uma categoria"}
                     </p>
                     <p className="mt-2 text-xs text-muted-foreground">
                       Arquivo:{" "}
@@ -730,5 +827,5 @@ export default function CreateProductPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

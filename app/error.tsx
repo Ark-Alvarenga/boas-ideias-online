@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Lightbulb, RefreshCw, ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { RefreshCw, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Error({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -17,7 +17,11 @@ export default function Error({
         <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Lightbulb className="h-4 w-4 text-primary-foreground" />
+              <img
+                src="/images/logo.jpg"
+                alt="Boas Ideias Online"
+                className="h-8 w-8"
+              />
             </div>
             <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
               Boas Ideias
@@ -60,5 +64,5 @@ export default function Error({
         </div>
       </main>
     </div>
-  )
+  );
 }

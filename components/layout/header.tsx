@@ -1,78 +1,77 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Menu, X } from "lucide-react"
-import { useState } from "react"
-import { HeaderAuthActions, HeaderAuthActionsMobile } from "./header-auth-actions"
-
-function LogoIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Greek column stylized as lightbulb base */}
-      <rect x="11" y="20" width="10" height="10" rx="1" fill="currentColor" fillOpacity="0.3" />
-      <rect x="13" y="22" width="2" height="6" fill="currentColor" fillOpacity="0.2" />
-      <rect x="17" y="22" width="2" height="6" fill="currentColor" fillOpacity="0.2" />
-      {/* Lightbulb top */}
-      <circle cx="16" cy="12" r="8" fill="currentColor" />
-      {/* Inner glow */}
-      <circle cx="16" cy="12" r="5" fill="currentColor" fillOpacity="0.8" />
-      {/* Rays of light */}
-      <path d="M16 2 L16 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M24 12 L26 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M6 12 L8 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M22 6 L23.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M10 6 L8.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  )
-}
+import Link from "next/link";
+import { Menu, X } from "lucide-react";
+import { useState } from "react";
+import {
+  HeaderAuthActions,
+  HeaderAuthActionsMobile,
+} from "./header-auth-actions";
 
 export function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 shadow-[0_1px_3px_0_oklch(0_0_0/0.04)] backdrop-blur-xl">
-      <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <LogoIcon className="h-6 w-6 text-secondary" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-serif text-lg font-semibold leading-tight tracking-tight text-foreground">
+    <header className="fixed top-0 left-0 z-[100] w-full border-b-2 border-border/40 bg-background/80 backdrop-blur-md">
+      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-6 lg:px-8">
+        {/* LOGO */}
+        <Link href="/" className="flex items-center gap-3">
+          <img
+            src="/images/logo.jpg"
+            alt="Boas Ideias Online"
+            className="h-10 w-auto mt-1"
+          />
+
+          <div className="flex flex-col leading-tight">
+            <span className="font-serif text-lg font-black tracking-tight text-foreground">
               Boas Ideias
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Online
             </span>
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
-          <Link 
-            href="/marketplace" 
-            className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        {/* NAV DESKTOP */}
+        <nav className="hidden items-center gap-2 md:flex">
+          <Link
+            href="/marketplace"
+            className="rounded-md px-4 py-2 text-sm font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-accent hover:shadow-[2px_2px_0px_#000]"
           >
             Marketplace
           </Link>
-          <Link 
-            href="/sobre" 
-            className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+
+          <Link
+            href="/sobre"
+            className="rounded-md px-4 py-2 text-sm font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-accent hover:shadow-[2px_2px_0px_#000]"
           >
             Sobre
           </Link>
-          <Link 
-            href="/para-criadores" 
-            className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+
+          <Link
+            href="/para-criadores"
+            className="rounded-md px-4 py-2 text-sm font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-accent hover:shadow-[2px_2px_0px_#000]"
           >
             Para Criadores
           </Link>
+
+          <Link
+            href="/ajuda"
+            className="rounded-md px-4 py-2 text-sm font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-accent hover:shadow-[2px_2px_0px_#000]"
+          >
+            Ajuda
+          </Link>
         </nav>
 
-        <HeaderAuthActions />
+        {/* ACTIONS DESKTOP */}
+        <div className="hidden md:block">
+          <HeaderAuthActions />
+        </div>
 
+        {/* MOBILE BUTTON */}
         <button
-          className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-muted md:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-md border-2 border-transparent transition hover:border-foreground hover:bg-accent md:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Menu"
         >
           {mobileMenuOpen ? (
             <X className="h-5 w-5 text-foreground" />
@@ -82,36 +81,52 @@ export function Header() {
         </button>
       </div>
 
+      {/* MOBILE MENU */}
       <div
-        className={`overflow-hidden border-t border-border/50 bg-background transition-all duration-300 ease-in-out md:hidden ${
-          mobileMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0 border-t-0"
+        className={`overflow-hidden border-t border-border/40 bg-background transition-all duration-300 md:hidden ${
+          mobileMenuOpen
+            ? "max-h-screen opacity-100"
+            : "max-h-0 opacity-0 border-t-0"
         }`}
       >
-        <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4 sm:px-6">
-          <Link 
-            href="/marketplace" 
-            className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        <nav className="flex flex-col gap-2 px-4 py-4">
+          <Link
+            href="/marketplace"
             onClick={() => setMobileMenuOpen(false)}
+            className="rounded-md px-4 py-3 text-sm font-bold text-foreground transition hover:bg-accent"
           >
             Marketplace
           </Link>
-          <Link 
-            href="/sobre" 
-            className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+
+          <Link
+            href="/sobre"
             onClick={() => setMobileMenuOpen(false)}
+            className="rounded-md px-4 py-3 text-sm font-bold text-foreground transition hover:bg-accent"
           >
             Sobre
           </Link>
-          <Link 
-            href="/para-criadores" 
-            className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+
+          <Link
+            href="/para-criadores"
             onClick={() => setMobileMenuOpen(false)}
+            className="rounded-md px-4 py-3 text-sm font-bold text-foreground transition hover:bg-accent"
           >
             Para Criadores
           </Link>
-          <HeaderAuthActionsMobile onLinkClick={() => setMobileMenuOpen(false)} />
+
+          <Link
+            href="/ajuda"
+            onClick={() => setMobileMenuOpen(false)}
+            className="rounded-md px-4 py-3 text-sm font-bold text-foreground transition hover:bg-accent"
+          >
+            Ajuda
+          </Link>
+
+          <HeaderAuthActionsMobile
+            onLinkClick={() => setMobileMenuOpen(false)}
+          />
         </nav>
       </div>
     </header>
-  )
+  );
 }

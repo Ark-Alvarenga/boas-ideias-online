@@ -1,37 +1,37 @@
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
-import { SidebarNav } from "@/components/dashboard/sidebar-nav"
-import { getDatabase } from "@/lib/mongodb"
-import type { User } from "@/lib/types"
-import { authConfig, verifySessionToken } from "@/lib/auth"
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { SidebarNav } from "@/components/dashboard/sidebar-nav";
+import { getDatabase } from "@/lib/mongodb";
+import type { User } from "@/lib/types";
+import { authConfig, verifySessionToken } from "@/lib/auth";
 
 async function getCurrentUser(): Promise<User | null> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get(authConfig.cookieName)?.value
-  if (!token) return null
+  const cookieStore = await cookies();
+  const token = cookieStore.get(authConfig.cookieName)?.value;
+  if (!token) return null;
 
-  const payload = verifySessionToken(token)
-  if (!payload) return null
+  const payload = verifySessionToken(token);
+  if (!payload) return null;
 
-  const db = await getDatabase()
-  const users = db.collection<User>("users")
+  const db = await getDatabase();
+  const users = db.collection<User>("users");
   const user = await users.findOne({
     _id: new (await import("mongodb")).ObjectId(payload.userId),
-  })
-  return user ?? null
+  });
+  return user ?? null;
 }
 
 export default async function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const user = await getCurrentUser()
+  const user = await getCurrentUser();
   if (!user) {
-    redirect(`/login?next=${encodeURIComponent("/dashboard")}`)
+    redirect(`/login?next=${encodeURIComponent("/dashboard")}`);
   }
 
-  const initials = (user.name?.charAt(0) ?? "?").toUpperCase()
+  const initials = (user.name?.charAt(0) ?? "?").toUpperCase();
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
@@ -46,11 +46,9 @@ export default async function DashboardLayout({
         <div className="flex h-16 shrink-0 items-center border-b-2 border-foreground bg-background px-4 lg:hidden">
           <span className="font-serif text-lg font-black">Boas Ideias</span>
         </div>
-        
-        <main className="flex-1 bg-muted/10 p-4 sm:p-6 lg:p-8">
-          {children}
-        </main>
+
+        <main className="">{children}</main>
       </div>
     </div>
-  )
+  );
 }

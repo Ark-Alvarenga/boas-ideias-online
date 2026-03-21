@@ -1,26 +1,36 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export function FinalCtaSection() {
   return (
     <section className="border-t-2 border-foreground bg-primary py-24 lg:py-32">
-      <div className="section-container text-center">
-        <h2 className="font-serif text-5xl font-black tracking-tight text-primary-foreground sm:text-7xl">
-          Sua primeira venda está <br className="hidden sm:block"/> mais perto do que você imagina.
-        </h2>
-        
-        <div className="mt-12">
-          <Button 
-            size="xl" 
-            className="h-16 rounded-md border-2 border-foreground bg-background px-12 text-xl font-bold text-foreground shadow-[6px_6px_0px_#000] transition-transform hover:-translate-y-1 hover:shadow-[10px_10px_0px_#000] active:translate-y-1 active:shadow-[2px_2px_0px_#000] dark:shadow-[6px_6px_0px_#fff] dark:hover:shadow-[10px_10px_0px_#fff] dark:active:shadow-[2px_2px_0px_#fff]" 
-            asChild
-          >
-            <Link href="/register">
-              Começar hoje (É grátis)
-            </Link>
-          </Button>
+      <div className="section-container flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
+        <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:w-[50%]">
+          <h2 className="font-serif text-5xl font-black tracking-tight text-primary-foreground sm:text-7xl">
+            Sua <span className="text-green-500">primeira venda</span> está{" "}
+            <br className="hidden sm:block" /> mais perto do que você imagina.
+          </h2>
+
+          <div className="mt-12">
+            <Button
+              size="xl"
+              className="h-16 rounded-md border-2 border-foreground bg-background px-12 text-xl font-bold text-foreground shadow-[6px_6px_0px_#000] transition-transform hover:-translate-y-1 hover:shadow-[10px_10px_0px_#000] hover:bg-[#fab72a] active:translate-y-1 active:shadow-[2px_2px_0px_#000]"
+              asChild
+            >
+              <Link href="/register">Começar hoje (É grátis)</Link>
+            </Button>
+          </div>
+        </div>
+        <div className="w-full lg:w-[50%] flex justify-center lg:justify-end items-center mt-12 lg:mt-0">
+          <div className="relative w-full max-w-none">
+            <img
+              src="images/cta-image.png"
+              alt="Comece a vender hoje"
+              className="w-full h-auto scale-110 lg:scale-125 drop-shadow-2xl transition-transform duration-700 hover:scale-[1.02]"
+            />
+          </div>
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -26,7 +26,7 @@ export function StartSmallSection() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30">
                 <X className="h-6 w-6" strokeWidth={3} />
               </div>
-              <p>Você <span className="line-through decoration-2">não precisa saber programação.</span></p>
+              <p>Você <span className="line-through decoration-2">não precisa de mais tempo.</span></p>
             </div>
             <div className="flex items-center gap-4 text-foreground mt-4 p-6 border-2 border-foreground bg-primary/10 rounded-xl">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500 text-white">

@@ -1,71 +1,65 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
-import { Lightbulb, ArrowUpRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { authConfig, verifySessionToken } from "@/lib/auth"
-import { getDatabase } from "@/lib/mongodb"
-import type { Product, User } from "@/lib/types"
-import { ObjectId } from "mongodb"
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { ArrowUpRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { authConfig, verifySessionToken } from "@/lib/auth";
+import { getDatabase } from "@/lib/mongodb";
+import type { Product, User } from "@/lib/types";
+import { ObjectId } from "mongodb";
 
 async function getCurrentUser(): Promise<User | null> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get(authConfig.cookieName)?.value
-  if (!token) return null
+  const cookieStore = await cookies();
+  const token = cookieStore.get(authConfig.cookieName)?.value;
+  if (!token) return null;
 
-  const payload = verifySessionToken(token)
-  if (!payload || !ObjectId.isValid(payload.userId)) return null
+  const payload = verifySessionToken(token);
+  if (!payload || !ObjectId.isValid(payload.userId)) return null;
 
-  const db = await getDatabase()
-  const users = db.collection<User>("users")
-  const user = await users.findOne({ _id: new ObjectId(payload.userId) })
-  return user ?? null
+  const db = await getDatabase();
+  const users = db.collection<User>("users");
+  const user = await users.findOne({ _id: new ObjectId(payload.userId) });
+  return user ?? null;
 }
 
 export default async function ProductsPage() {
-  const user = await getCurrentUser()
+  const user = await getCurrentUser();
   if (!user) {
-    redirect(`/login?next=${encodeURIComponent("/dashboard/products")}`)
+    redirect(`/login?next=${encodeURIComponent("/dashboard/products")}`);
   }
 
-  const db = await getDatabase()
-  const productsCollection = db.collection<Product>("products")
+  const db = await getDatabase();
+  const productsCollection = db.collection<Product>("products");
 
   const products = await productsCollection
     .find({ creatorId: user._id })
     .sort({ createdAt: -1 })
-    .toArray()
+    .toArray();
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b-2 border-foreground bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Lightbulb className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
-              Meus produtos
-            </span>
-          </Link>
+          <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
+            Meus produtos
+          </span>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground"
-              asChild
-            >
+            <Button variant="outline" size="sm" asChild>
               <Link href="/marketplace">
                 Ver Marketplace
                 <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
               </Link>
             </Button>
             <Button size="sm" className="shadow-sm" asChild>
-              <Link href="/dashboard/create-product">
-                + Novo produto
-              </Link>
+              <Link href="/dashboard/create-product">+ Novo produto</Link>
             </Button>
           </div>
         </div>
@@ -74,7 +68,8 @@ export default async function ProductsPage() {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
         {!user.stripeOnboardingComplete && (
           <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
-            Conecte sua conta Stripe para publicar e vender seus produtos. Produtos criados sem Stripe conectado ficam como rascunho.
+            Conecte sua conta Stripe para publicar e vender seus produtos.
+            Produtos criados sem Stripe conectado ficam como rascunho.
             <Link
               href="/dashboard"
               className="ml-1 font-medium underline-offset-4 hover:underline"
@@ -87,7 +82,8 @@ export default async function ProductsPage() {
           <CardHeader className="pb-4">
             <CardTitle className="text-lg">Meus produtos</CardTitle>
             <CardDescription>
-              Veja seus produtos, acompanhe vendas e acesse rapidamente as páginas de venda.
+              Veja seus produtos, acompanhe vendas e acesse rapidamente as
+              páginas de venda.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -139,7 +135,12 @@ export default async function ProductsPage() {
                         {product.description}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span>{(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                        <span>
+                          {(product.priceCents / 100).toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })}
+                        </span>
                         {product.status === "active" && (
                           <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
                             Active
@@ -178,6 +179,5 @@ export default async function ProductsPage() {
         </Card>
       </main>
     </div>
-  )
+  );
 }
-

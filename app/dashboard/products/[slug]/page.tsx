@@ -1,60 +1,75 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
-import { Lightbulb, ArrowUpRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { authConfig, verifySessionToken } from "@/lib/auth"
-import { getDatabase } from "@/lib/mongodb"
-import type { Product, User } from "@/lib/types"
-import { ObjectId } from "mongodb"
-import { ProductEditForm } from "@/components/dashboard/product-edit-form"
-import { resolvePriceCents } from "@/lib/currency"
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { ArrowUpRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { authConfig, verifySessionToken } from "@/lib/auth";
+import { getDatabase } from "@/lib/mongodb";
+import type { Product, User } from "@/lib/types";
+import { ObjectId } from "mongodb";
+import { ProductEditForm } from "@/components/dashboard/product-edit-form";
+import { resolvePriceCents } from "@/lib/currency";
 
 async function getCurrentUser(): Promise<User | null> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get(authConfig.cookieName)?.value
-  if (!token) return null
+  const cookieStore = await cookies();
+  const token = cookieStore.get(authConfig.cookieName)?.value;
+  if (!token) return null;
 
-  const payload = verifySessionToken(token)
-  if (!payload || !ObjectId.isValid(payload.userId)) return null
+  const payload = verifySessionToken(token);
+  if (!payload || !ObjectId.isValid(payload.userId)) return null;
 
-  const db = await getDatabase()
-  const users = db.collection<User>("users")
-  const user = await users.findOne({ _id: new ObjectId(payload.userId) })
-  return user ?? null
+  const db = await getDatabase();
+  const users = db.collection<User>("users");
+  const user = await users.findOne({ _id: new ObjectId(payload.userId) });
+  return user ?? null;
 }
 
 export default async function DashboardProductDetailPage({
   params,
 }: {
-  params: Promise<{ slug: string }>
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params
-  const user = await getCurrentUser()
+  const { slug } = await params;
+  const user = await getCurrentUser();
   if (!user) {
-    redirect(`/login?next=${encodeURIComponent(`/dashboard/products/${slug}`)}`)
+    redirect(
+      `/login?next=${encodeURIComponent(`/dashboard/products/${slug}`)}`,
+    );
   }
 
-  const db = await getDatabase()
-  const productsCollection = db.collection<Product>("products")
+  const db = await getDatabase();
+  const productsCollection = db.collection<Product>("products");
 
   const product = await productsCollection.findOne({
     slug,
     creatorId: user._id!,
-  })
+  });
 
   if (!product) {
-    redirect("/dashboard/products")
+    redirect("/dashboard/products");
   }
 
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-          <Link href="/dashboard/products" className="flex items-center gap-2.5">
+          <Link
+            href="/dashboard/products"
+            className="flex items-center gap-2.5"
+          >
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Lightbulb className="h-4 w-4 text-primary-foreground" />
+              <img
+                src="/images/logo.jpg"
+                alt="Boas Ideias Online"
+                className="h-8 w-8"
+              />
             </div>
             <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
               Gerenciar produto
@@ -75,7 +90,9 @@ export default async function DashboardProductDetailPage({
             </Button>
             {product.status === "active" && (
               <Button size="sm" asChild>
-                <Link href={`/produto/${product.slug}`}>Ver página pública</Link>
+                <Link href={`/produto/${product.slug}`}>
+                  Ver página pública
+                </Link>
               </Button>
             )}
           </div>
@@ -87,7 +104,8 @@ export default async function DashboardProductDetailPage({
           <CardHeader className="pb-4">
             <CardTitle className="text-lg">{product.title}</CardTitle>
             <CardDescription>
-              Atualize informações do produto e acompanhe estatísticas básicas. Alterações salvas aqui são refletidas no marketplace.
+              Atualize informações do produto e acompanhe estatísticas básicas.
+              Alterações salvas aqui são refletidas no marketplace.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -108,6 +126,5 @@ export default async function DashboardProductDetailPage({
         </Card>
       </main>
     </div>
-  )
+  );
 }
-

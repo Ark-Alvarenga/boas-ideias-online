@@ -1,104 +1,162 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
-import { Lightbulb, ArrowUpRight, DollarSign, MousePointer, ShoppingCart, TrendingUp } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import {
+  ArrowUpRight,
+  DollarSign,
+  MousePointer,
+  ShoppingCart,
+  TrendingUp,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card"
-import { getDatabase } from "@/lib/mongodb"
-import type { Affiliate, AffiliateClick, Product, User, UserTransaction } from "@/lib/types"
-import { authConfig, verifySessionToken } from "@/lib/auth"
-import { ObjectId } from "mongodb"
+} from "@/components/ui/card";
+import { getDatabase } from "@/lib/mongodb";
+import type {
+  Affiliate,
+  AffiliateClick,
+  Product,
+  User,
+  UserTransaction,
+} from "@/lib/types";
+import { authConfig, verifySessionToken } from "@/lib/auth";
+import { ObjectId } from "mongodb";
 
 async function getCurrentUser(): Promise<User | null> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get(authConfig.cookieName)?.value
-  if (!token) return null
-  const payload = verifySessionToken(token)
-  if (!payload || !ObjectId.isValid(payload.userId)) return null
-  const db = await getDatabase()
-  const user = await db.collection<User>("users").findOne({ _id: new ObjectId(payload.userId) })
-  return user ?? null
+  const cookieStore = await cookies();
+  const token = cookieStore.get(authConfig.cookieName)?.value;
+  if (!token) return null;
+  const payload = verifySessionToken(token);
+  if (!payload || !ObjectId.isValid(payload.userId)) return null;
+  const db = await getDatabase();
+  const user = await db
+    .collection<User>("users")
+    .findOne({ _id: new ObjectId(payload.userId) });
+  return user ?? null;
 }
 
 export default async function AffiliateEarningsPage() {
-  const user = await getCurrentUser()
+  const user = await getCurrentUser();
   if (!user) {
-    redirect(`/login?next=${encodeURIComponent("/dashboard/affiliate-earnings")}`)
+    redirect(
+      `/login?next=${encodeURIComponent("/dashboard/affiliate-earnings")}`,
+    );
   }
 
-  const db = await getDatabase()
-  const userId = user._id!
-  const affiliates = await db.collection<Affiliate>("affiliates").find({ userId }).toArray()
-  const affiliateIds = affiliates.map((a) => a._id!)
+  const db = await getDatabase();
+  const userId = user._id!;
+  const affiliates = await db
+    .collection<Affiliate>("affiliates")
+    .find({ userId })
+    .toArray();
+  const affiliateIds = affiliates.map((a) => a._id!);
 
-  const pendingBalance = (user.pendingBalanceCents || 0) / 100
+  const pendingBalance = (user.pendingBalanceCents || 0) / 100;
 
-  const userTransactionsCollection = db.collection<UserTransaction>("userTransactions")
+  const userTransactionsCollection =
+    db.collection<UserTransaction>("userTransactions");
 
   const [totalClicks, affiliateTxs, recentTxsRaw] = await Promise.all([
-    db.collection<AffiliateClick>("affiliateClicks").countDocuments({ affiliateId: { $in: affiliateIds } }),
-    userTransactionsCollection.find({ userId: user._id, type: "affiliate_commission", status: { $in: ["paid", "pending"] } }).toArray(),
-    userTransactionsCollection.find({ userId: user._id, type: "affiliate_commission", status: { $in: ["paid", "pending"] } }).sort({ createdAt: -1 }).limit(10).toArray()
-  ])
+    db
+      .collection<AffiliateClick>("affiliateClicks")
+      .countDocuments({ affiliateId: { $in: affiliateIds } }),
+    userTransactionsCollection
+      .find({
+        userId: user._id,
+        type: "affiliate_commission",
+        status: { $in: ["paid", "pending"] },
+      })
+      .toArray(),
+    userTransactionsCollection
+      .find({
+        userId: user._id,
+        type: "affiliate_commission",
+        status: { $in: ["paid", "pending"] },
+      })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .toArray(),
+  ]);
 
-  const totalSales = affiliateTxs.length
-  const totalEarnings = affiliateTxs.reduce((sum, tx) => sum + tx.amountCents, 0) / 100
+  const totalSales = affiliateTxs.length;
+  const totalEarnings =
+    affiliateTxs.reduce((sum, tx) => sum + tx.amountCents, 0) / 100;
 
   // Calculate top products
-  const productEarnings = new Map<string, { count: number, total: number }>()
+  const productEarnings = new Map<string, { count: number; total: number }>();
   // Since UserTransaction only has saleId, we need to resolve products via Sales
-  const salesCol = db.collection("sales")
-  const saleIds = [...new Set(affiliateTxs.map(tx => tx.saleId).filter(Boolean))].map(id => new ObjectId(id!))
-  const relatedSalesRaw = await salesCol.find({ _id: { $in: saleIds } }).toArray()
-  const saleToProductMap = new Map(relatedSalesRaw.map(s => [s._id.toString(), s.productId.toString()]))
+  const salesCol = db.collection("sales");
+  const saleIds = [
+    ...new Set(affiliateTxs.map((tx) => tx.saleId).filter(Boolean)),
+  ].map((id) => new ObjectId(id!));
+  const relatedSalesRaw = await salesCol
+    .find({ _id: { $in: saleIds } })
+    .toArray();
+  const saleToProductMap = new Map(
+    relatedSalesRaw.map((s) => [s._id.toString(), s.productId.toString()]),
+  );
 
   // Now calculate top
   for (const tx of affiliateTxs) {
-    if (!tx.saleId) continue
-    const pid = saleToProductMap.get(tx.saleId)
-    if (!pid) continue
-    const existing = productEarnings.get(pid) || { count: 0, total: 0 }
-    productEarnings.set(pid, { count: existing.count + 1, total: existing.total + tx.amountCents })
+    if (!tx.saleId) continue;
+    const pid = saleToProductMap.get(tx.saleId);
+    if (!pid) continue;
+    const existing = productEarnings.get(pid) || { count: 0, total: 0 };
+    productEarnings.set(pid, {
+      count: existing.count + 1,
+      total: existing.total + tx.amountCents,
+    });
   }
 
   const topProducts = Array.from(productEarnings.entries())
     .map(([pid, stats]) => ({ _id: new ObjectId(pid), ...stats }))
     .sort((a, b) => b.total - a.total)
-    .slice(0, 5)
+    .slice(0, 5);
 
   const productIdsToFetch = new Set([
     ...topProducts.map((p) => p._id.toString()),
-    ...recentTxsRaw.map(tx => saleToProductMap.get(tx.saleId!) || "").filter(Boolean)
-  ])
+    ...recentTxsRaw
+      .map((tx) => saleToProductMap.get(tx.saleId!) || "")
+      .filter(Boolean),
+  ]);
 
   const products =
     productIdsToFetch.size > 0
-      ? await db.collection<Product>("products").find({ _id: { $in: Array.from(productIdsToFetch).map(id => new ObjectId(id)) } }).toArray()
-      : []
-  const productsById = new Map(products.map((p) => [p._id!.toString(), p]))
+      ? await db
+          .collection<Product>("products")
+          .find({
+            _id: {
+              $in: Array.from(productIdsToFetch).map((id) => new ObjectId(id)),
+            },
+          })
+          .toArray()
+      : [];
+  const productsById = new Map(products.map((p) => [p._id!.toString(), p]));
   const topProductsWithNames = topProducts.map((p) => ({
     title: productsById.get(p._id.toString())?.title ?? "Produto",
     sales: p.count,
     earnings: p.total / 100,
-  }))
+  }));
 
-  const recentTransactions = recentTxsRaw.map(tx => {
-    const pId = tx.saleId ? saleToProductMap.get(tx.saleId) : null
+  const recentTransactions = recentTxsRaw.map((tx) => {
+    const pId = tx.saleId ? saleToProductMap.get(tx.saleId) : null;
     return {
       id: tx._id!.toString(),
-      title: pId ? productsById.get(pId)?.title ?? "Produto Desconhecido" : "Produto Desconhecido",
+      title: pId
+        ? (productsById.get(pId)?.title ?? "Produto Desconhecido")
+        : "Produto Desconhecido",
       earnings: tx.amountCents / 100,
-      date: tx.createdAt
-    }
-  })
+      date: tx.createdAt,
+    };
+  });
 
-  const conversionRate = totalClicks > 0 ? ((totalSales / totalClicks) * 100).toFixed(1) : "0"
+  const conversionRate =
+    totalClicks > 0 ? ((totalSales / totalClicks) * 100).toFixed(1) : "0";
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -106,7 +164,11 @@ export default async function AffiliateEarningsPage() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
           <Link href="/dashboard" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Lightbulb className="h-4 w-4 text-primary-foreground" />
+              <img
+                src="/images/logo.jpg"
+                alt="Boas Ideias Online"
+                className="h-8 w-8"
+              />
             </div>
             <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
               Ganhos de afiliado
@@ -136,7 +198,9 @@ export default async function AffiliateEarningsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold text-foreground">{totalClicks}</p>
+              <p className="text-2xl font-semibold text-foreground">
+                {totalClicks}
+              </p>
             </CardContent>
           </Card>
           <Card className="border-border/50 bg-card shadow-sm">
@@ -147,8 +211,12 @@ export default async function AffiliateEarningsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold text-foreground">{totalSales}</p>
-              <p className="text-xs text-muted-foreground">Taxa: {conversionRate}%</p>
+              <p className="text-2xl font-semibold text-foreground">
+                {totalSales}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Taxa: {conversionRate}%
+              </p>
             </CardContent>
           </Card>
           <Card className="border-border/50 bg-card shadow-sm">
@@ -162,11 +230,12 @@ export default async function AffiliateEarningsPage() {
               <p className="text-2xl font-semibold text-foreground">
                 R$ {pendingBalance.toFixed(2)}
               </p>
-              {pendingBalance > 0 && (!user.stripeAccountId || !user.stripeOnboardingComplete) && (
-                <p className="mt-1 text-xs text-amber-600 dark:text-amber-500 font-medium">
-                  Conecte o Stripe para receber.
-                </p>
-              )}
+              {pendingBalance > 0 &&
+                (!user.stripeAccountId || !user.stripeOnboardingComplete) && (
+                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-500 font-medium">
+                    Conecte o Stripe para receber.
+                  </p>
+                )}
             </CardContent>
           </Card>
         </div>
@@ -193,7 +262,9 @@ export default async function AffiliateEarningsPage() {
                     key={i}
                     className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-4 py-3"
                   >
-                    <span className="font-medium text-foreground">{p.title}</span>
+                    <span className="font-medium text-foreground">
+                      {p.title}
+                    </span>
                     <span className="text-sm text-muted-foreground">
                       {p.sales} venda(s) · R$ {p.earnings.toFixed(2)}
                     </span>
@@ -217,7 +288,9 @@ export default async function AffiliateEarningsPage() {
             <CardContent>
               {recentTransactions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/40 py-10 text-center">
-                  <p className="text-sm font-medium text-foreground">Ainda sem comissões</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Ainda sem comissões
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Divulgue seus links de parceiro para começar a ganhar.
                   </p>
@@ -229,17 +302,22 @@ export default async function AffiliateEarningsPage() {
                       <tr className="border-b border-border/50 text-left text-muted-foreground">
                         <th className="pb-3 pr-4 font-medium">Data</th>
                         <th className="pb-3 pr-4 font-medium">Produto</th>
-                        <th className="pb-3 px-4 text-right font-medium">Sua Comissão</th>
+                        <th className="pb-3 px-4 text-right font-medium">
+                          Sua Comissão
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/50">
                       {recentTransactions.map((tx) => (
-                        <tr key={tx.id} className="transition-colors hover:bg-muted/30">
+                        <tr
+                          key={tx.id}
+                          className="transition-colors hover:bg-muted/30"
+                        >
                           <td className="py-3 pr-4 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
                             {new Date(tx.date).toLocaleDateString("pt-BR", {
                               day: "2-digit",
                               month: "short",
-                              year: "numeric"
+                              year: "numeric",
                             })}
                           </td>
                           <td className="py-3 pr-4 font-medium text-foreground">
@@ -259,5 +337,5 @@ export default async function AffiliateEarningsPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }
