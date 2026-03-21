@@ -213,7 +213,7 @@ export default async function DashboardPage() {
         <div
           className={`relative flex flex-col rounded-3xl border-2 p-10 transition-all ${
             hasFirstSale
-              ? "border-foreground bg-primary text-foreground shadow-[12px_12px_0px_#000] dark:shadow-[12px_12px_0px_#fff]"
+              ? "border-foreground bg-green-500 text-foreground shadow-[12px_12px_0px_#000] dark:shadow-[12px_12px_0px_#fff]"
               : "border-border bg-muted/30 opacity-40"
           }`}
         >
