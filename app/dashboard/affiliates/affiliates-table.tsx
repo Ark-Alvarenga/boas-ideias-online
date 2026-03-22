@@ -3,21 +3,29 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Copy, Check } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface Row {
   productTitle: string
   affiliateLink: string
   clicks: number
   sales: number
+  revenue: number
   commission: number
 }
 
 export function AffiliatesTable({ rows }: { rows: Row[] }) {
   const [copied, setCopied] = useState<string | null>(null)
+  const { toast } = useToast()
 
   const copyLink = (link: string) => {
     navigator.clipboard.writeText(link)
     setCopied(link)
+    toast({
+      title: "Link Copiado! 🚀",
+      description: "O link de afiliado ja esta na sua area de transferencia.",
+      variant: "success",
+    })
     setTimeout(() => setCopied(null), 2000)
   }
 
@@ -32,6 +40,7 @@ export function AffiliatesTable({ rows }: { rows: Row[] }) {
             <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">Link de Afiliado</th>
             <th className="px-6 py-4 text-right text-xs font-black uppercase tracking-widest text-muted-foreground">Cliques</th>
             <th className="px-6 py-4 text-right text-xs font-black uppercase tracking-widest text-muted-foreground">Vendas</th>
+            <th className="px-6 py-4 text-right text-xs font-black uppercase tracking-widest text-muted-foreground">Faturamento</th>
             <th className="px-6 py-4 text-right text-xs font-black uppercase tracking-widest text-muted-foreground">Comissão</th>
           </tr>
         </thead>
@@ -60,6 +69,9 @@ export function AffiliatesTable({ rows }: { rows: Row[] }) {
               </td>
               <td className="px-6 py-4 text-right font-black tabular-nums">{row.clicks}</td>
               <td className="px-6 py-4 text-right font-black tabular-nums">{row.sales}</td>
+              <td className="px-6 py-4 text-right font-black tabular-nums">
+                R$ {row.revenue.toFixed(2)}
+              </td>
               <td className="px-6 py-4 text-right font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
                 R$ {row.commission.toFixed(2)}
               </td>

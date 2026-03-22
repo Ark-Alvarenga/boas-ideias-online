@@ -1,6 +1,7 @@
 "use client";
 
 import { Search, HelpCircle, Mail, MessageSquare, Book, FileText } from "lucide-react";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 
 export default function AjudaPage() {
   const faqs = [
@@ -19,8 +20,10 @@ export default function AjudaPage() {
   ];
 
   return (
-    <div className="flex-1 space-y-8 p-8 pt-6">
-      <div className="space-y-4">
+    <div className="min-h-screen bg-background">
+      <DashboardHeader title="Central de Ajuda" />
+      <div className="mx-auto max-w-7xl space-y-8 p-8 pt-6">
+        <div className="space-y-4">
         <h2 className="font-serif text-3xl font-black tracking-tight">Central de Ajuda</h2>
         <div className="relative max-w-2xl">
           <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -99,6 +102,7 @@ export default function AjudaPage() {
         <button className="rounded-xl border-2 border-foreground bg-background px-6 py-2 text-sm font-bold shadow-[2px_2px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[4px_4px_0px_#000] dark:shadow-[2px_2px_0px_#fff] dark:hover:shadow-[4px_4px_0px_#fff]">
           Acessar
         </button>
+      </div>
       </div>
     </div>
   );

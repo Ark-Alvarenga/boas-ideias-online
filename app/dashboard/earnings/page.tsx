@@ -15,6 +15,7 @@ import type { Order, Product, Sale, User, UserTransaction } from "@/lib/types";
 import { authConfig, verifySessionToken } from "@/lib/auth";
 import { ObjectId } from "mongodb";
 import { ConnectStripeCard } from "@/components/dashboard/connect-stripe-card";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
@@ -103,33 +104,13 @@ export default async function EarningsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b-2 border-foreground bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between px-6 lg:px-8">
-          <span className="font-serif text-xl font-black tracking-tight text-foreground uppercase">
-            Ganhos e Vendas
-          </span>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-2 border-foreground font-bold shadow-[2px_2px_0px_#000]"
-              asChild
-            >
-              <Link href="/marketplace">
-                Marketplace
-                <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader title="Ganhos e Vendas" />
 
       <main className="mx-auto max-w-7xl p-6 lg:p-8">
         <div className="mb-10">
           <ConnectStripeCard
-            stripeAccountId={user.stripeAccountId}
-            stripeOnboardingComplete={user.stripeOnboardingComplete}
+            stripeAccountId={user!.stripeAccountId}
+            stripeOnboardingComplete={user!.stripeOnboardingComplete}
           />
         </div>
 
@@ -167,7 +148,7 @@ export default async function EarningsPage() {
                 <div className="flex items-center gap-2 text-blue-600 font-black italic animate-pulse">
                   PROCESSANDO PAGAMENTO...
                 </div>
-              ) : user.stripeAccountId && user.stripeOnboardingComplete ? (
+              ) : user!.stripeAccountId && user!.stripeOnboardingComplete ? (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2 text-emerald-500 font-black">
                     <CheckCircle2 className="h-5 w-5 stroke-[3px]" />

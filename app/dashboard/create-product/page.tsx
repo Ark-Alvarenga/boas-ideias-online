@@ -36,6 +36,7 @@ import { ArrowUpRight, Loader2, UploadCloud } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 
 interface MeResponse {
   authenticated: boolean;
@@ -462,25 +463,20 @@ export default function CreateProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b-2 border-foreground bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between px-6 lg:px-8">
-          <span className="font-serif text-xl font-black tracking-tight text-foreground uppercase">
-            Criar Novo Produto
-          </span>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-2 border-foreground font-bold shadow-[2px_2px_0px_#000]"
-              asChild
-            >
-              <Link href="/dashboard/products">Voltar</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background text-foreground">
+      <DashboardHeader
+        title="Criar Produto"
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-2 border-foreground font-bold shadow-[2px_2px_0px_#000]"
+            asChild
+          >
+            <Link href="/dashboard/products">Meus Produtos</Link>
+          </Button>
+        }
+      />
 
       <main className="mx-auto max-w-5xl p-6 lg:p-8">
         <Card className="overflow-hidden rounded-3xl border-2 border-foreground bg-card shadow-[8px_8px_0px_#000] dark:shadow-[8px_8px_0px_#fff]">

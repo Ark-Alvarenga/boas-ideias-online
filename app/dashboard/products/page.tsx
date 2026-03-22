@@ -14,6 +14,7 @@ import { authConfig, verifySessionToken } from "@/lib/auth";
 import { getDatabase } from "@/lib/mongodb";
 import type { Product, User } from "@/lib/types";
 import { ObjectId } from "mongodb";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
@@ -45,12 +46,9 @@ export default async function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b-2 border-foreground bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between px-6 lg:px-8">
-          <span className="font-serif text-xl font-black tracking-tight text-foreground uppercase">
-            Meus Produtos
-          </span>
-
+      <DashboardHeader
+        title="Meus Produtos"
+        actions={
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
@@ -65,14 +63,14 @@ export default async function ProductsPage() {
             </Button>
             <Button
               size="sm"
-              className="border-2 border-foreground bg-primary font-black text-foreground shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff]"
+              className="border-2 border-foreground bg-accent font-black text-foreground shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff] hover:bg-accent/80"
               asChild
             >
-              <Link href="/dashboard/create-product">+ NOVO PRODUTO</Link>
+              <Link href="/dashboard/create-product">CRIAR PRODUTO</Link>
             </Button>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <main className="mx-auto max-w-7xl p-6 lg:p-8">
         {!user.stripeOnboardingComplete && (

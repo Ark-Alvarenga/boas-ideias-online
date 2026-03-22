@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { User, Lock, Bell, Shield, ChevronRight } from "lucide-react";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -14,17 +15,9 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="flex-1 space-y-8 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h2 className="font-serif text-3xl font-black tracking-tight">
-            Configurações
-          </h2>
-          <p className="text-muted-foreground">
-            Gerencie sua conta e preferências de aplicativos.
-          </p>
-        </div>
-      </div>
+    <div className="flex-1 bg-background">
+      <DashboardHeader title="Configurações" />
+      <div className="space-y-8 p-8 pt-6">
 
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
         {/* Sidebar Tabs */}
@@ -184,7 +177,8 @@ export default function SettingsPage() {
               </p>
             </div>
           )}
-        </div>
+      </div>
+      </div>
       </div>
     </div>
   );

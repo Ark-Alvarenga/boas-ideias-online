@@ -8,6 +8,7 @@ import { ObjectId } from "mongodb";
 import { Check, ArrowRight, ExternalLink, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConnectStripeCard } from "@/components/dashboard/connect-stripe-card";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
@@ -48,11 +49,10 @@ export default async function DashboardPage() {
   const firstProductSlug = hasProducts ? userProducts[0].slug : null;
 
   return (
-    <div className="mx-auto max-w-4xl p-8 pt-6">
-      <div className="mb-12">
-        <div className="mb-4 inline-flex rounded-full bg-primary/20 px-3 py-1 text-xs font-black uppercase tracking-widest text-primary border-2 border-primary shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff]">
-          DASHBOARD
-        </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <DashboardHeader title="Dashboard" />
+      <div className="mx-auto max-w-4xl p-8 pt-6">
+        <div className="mb-12">
         <h1 className="font-serif text-4xl font-black tracking-tight text-foreground sm:text-5xl lg:text-6xl">
           Sua jornada até a <br className="hidden md:block" />
           <span className="text-primary tracking-tighter italic">
@@ -254,6 +254,7 @@ export default async function DashboardPage() {
               </div>
             )}
           </div>
+        </div>
         </div>
       </div>
     </div>
