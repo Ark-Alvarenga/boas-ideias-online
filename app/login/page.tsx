@@ -63,6 +63,7 @@ function LoginContent() {
       toast({
         title: "Login realizado com sucesso",
         description: "Bem-vindo de volta! Redirecionando...",
+        variant: "success",
       });
       router.push(redirectPath);
     } catch (err) {

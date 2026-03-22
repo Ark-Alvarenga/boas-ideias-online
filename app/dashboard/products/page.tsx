@@ -113,7 +113,7 @@ export default async function ProductsPage() {
                 key={product._id?.toString() ?? product.slug}
                 className="group flex flex-col overflow-hidden rounded-2xl border-2 border-foreground bg-card shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[8px_8px_0px_#000] dark:shadow-[4px_4px_0px_#fff] dark:hover:shadow-[8px_8px_0px_#fff]"
               >
-                <div className="relative aspect-[16/10] w-full overflow-hidden border-b-2 border-foreground bg-muted">
+                <div className="relative aspect-[4/3] w-full overflow-hidden border-b-2 border-foreground bg-muted">
                   {product.coverImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img

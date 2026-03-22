@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { name: "Início", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Minhas Compras", href: "/dashboard/purchases", icon: Package },
   { name: "Meus Produtos", href: "/dashboard/products", icon: Package },
   {
     name: "Recebimentos e Vendas",
@@ -26,6 +27,7 @@ const navItems = [
   { name: "Afiliados", href: "/dashboard/affiliates", icon: Users },
 
   { name: "Criar Produto", href: "/dashboard/create-product", icon: Plus },
+  { name: "Marketplace", href: "/marketplace", icon: Package },
   { name: "Configurações", href: "/dashboard/settings", icon: Settings },
   { name: "Ajuda", href: "/dashboard/ajuda", icon: LifeBuoy },
   { name: "Sair", href: "/dashboard/logout", icon: LogOut },

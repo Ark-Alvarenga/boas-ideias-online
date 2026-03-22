@@ -4,6 +4,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Share2, Loader2, Check } from "lucide-react"
 
+import { useToast } from "@/hooks/use-toast"
+
 interface PromoteProductButtonProps {
   productId: string
   productSlug: string
@@ -25,6 +27,7 @@ export function PromoteProductButton({
   const [joined, setJoined] = useState(false)
   const [link, setLink] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
 
   if (!affiliateEnabled || isCreator) return null
 
@@ -39,16 +42,33 @@ export function PromoteProductButton({
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error ?? "Não foi possível entrar no programa.")
+        const message = data.error ?? "Não foi possível entrar no programa."
+        setError(message)
+        toast({
+          title: "Erro ao promover",
+          description: message,
+          variant: "destructive",
+        })
         return
       }
       setJoined(true)
       setLink(data.affiliateLink ?? null)
       if (data.affiliateLink) {
         navigator.clipboard.writeText(data.affiliateLink)
+        toast({
+          title: "Link de afiliado gerado! 🚀",
+          description: "O link foi copiado para sua área de transferência.",
+          variant: "success",
+        })
       }
     } catch (err) {
-      setError("Erro ao conectar.")
+      const message = "Erro ao conectar."
+      setError(message)
+      toast({
+        title: "Erro de conexão",
+        description: message,
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }

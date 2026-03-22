@@ -48,6 +48,7 @@ export function HeaderAuthActions({
       toast({
         title: "Sessão encerrada",
         description: "Você saiu com sucesso.",
+        variant: "success",
       });
 
       window.location.href = "/";

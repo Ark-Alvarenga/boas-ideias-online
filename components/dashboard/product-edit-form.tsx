@@ -54,7 +54,6 @@ interface ProductEditFormProps {
   status: "active" | "draft" | "archived";
   views: number;
   sales: number;
-  featured?: boolean;
   affiliateEnabled?: boolean;
   affiliateCommissionPercent?: number;
 }
@@ -68,7 +67,6 @@ export function ProductEditForm({
   status: initialStatus,
   views,
   sales,
-  featured = false,
   affiliateEnabled = false,
   affiliateCommissionPercent = 20,
 }: ProductEditFormProps) {
@@ -86,7 +84,6 @@ export function ProductEditForm({
   const [status, setStatus] = useState<"active" | "draft" | "archived">(
     initialStatus,
   );
-  const [isFeatured, setIsFeatured] = useState<boolean>(featured);
   const [isAffiliateEnabled, setIsAffiliateEnabled] =
     useState<boolean>(affiliateEnabled);
   const [commissionPercent, setCommissionPercent] = useState<number>(
@@ -198,7 +195,6 @@ export function ProductEditForm({
           description,
           priceCents,
           category,
-          featured: isFeatured,
           affiliateEnabled: isAffiliateEnabled,
           affiliateCommissionPercent: isAffiliateEnabled
             ? commissionPercent
@@ -227,6 +223,7 @@ export function ProductEditForm({
       toast({
         title: "Produto atualizado",
         description: "Suas alterações foram salvas com sucesso.",
+        variant: "success",
       });
       router.refresh();
     } catch (err) {
@@ -263,6 +260,7 @@ export function ProductEditForm({
       toast({
         title: "Produto despublicado",
         description: "Seu produto agora está como rascunho.",
+        variant: "success",
       });
       router.refresh();
     } catch (err) {
@@ -305,6 +303,7 @@ export function ProductEditForm({
       toast({
         title: "Produto arquivado",
         description: "Seu produto não aparecerá mais no marketplace.",
+        variant: "success",
       });
       router.refresh();
     } catch (err) {
@@ -341,6 +340,7 @@ export function ProductEditForm({
       toast({
         title: "Produto republicado",
         description: "Seu produto voltou a aparecer no marketplace.",
+        variant: "success",
       });
       router.refresh();
     } catch (err) {
@@ -377,6 +377,7 @@ export function ProductEditForm({
       toast({
         title: "Produto publicado",
         description: "Seu produto agora aparece no marketplace.",
+        variant: "success",
       });
       router.refresh();
     } catch (err) {
@@ -414,6 +415,7 @@ export function ProductEditForm({
       toast({
         title: "Produto excluído",
         description: "Seu produto foi removido do painel.",
+        variant: "success",
       });
       router.push("/dashboard/products");
       router.refresh();
@@ -673,7 +675,7 @@ export function ProductEditForm({
           <Button
             type="submit"
             disabled={isSaving || hasErrors}
-            className="h-14 flex-1 rounded-xl border-2 border-foreground bg-primary px-8 text-lg font-black uppercase tracking-widest text-foreground shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] disabled:bg-muted disabled:shadow-none"
+            className="h-14 flex-1 rounded-xl border-2 border-foreground bg-primary px-8 text-lg font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] disabled:bg-muted disabled:shadow-none"
           >
             {isSaving ? (
               <span className="flex items-center gap-3">
@@ -729,26 +731,6 @@ export function ProductEditForm({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">
-                  Destaque:
-                </span>
-                <span className="text-xs font-bold text-foreground">
-                  {isFeatured ? "EM DESTAQUE 🌟" : "NÃO DESTACADO"}
-                </span>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsFeatured((prev) => !prev)}
-                className="h-8 border-2 border-foreground text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0px_#000] hover:bg-primary"
-              >
-                MODIFICAR
-              </Button>
-            </div>
-
             <div className="border-t-2 border-foreground/10 pt-4 space-y-3">
               <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 Ações de Publicação:

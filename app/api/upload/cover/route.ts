@@ -46,9 +46,10 @@ export async function POST(request: Request) {
       )
     }
 
-    if (file.type !== 'image/png') {
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Only PNG files are allowed' },
+        { error: 'Apenas arquivos PNG, JPG e WEBP são permitidos' },
         { status: 400 },
       )
     }
@@ -71,7 +72,8 @@ export async function POST(request: Request) {
     }
 
     const userId = payload.userId
-    const key = `products/${userId}/covers/${Date.now()}-${randomUUID()}.png`
+    const extension = file.type.split('/')[1] === 'jpeg' ? 'jpg' : file.type.split('/')[1]
+    const key = `products/${userId}/covers/${Date.now()}-${randomUUID()}.${extension}`
 
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
@@ -81,7 +83,7 @@ export async function POST(request: Request) {
         Bucket: bucket,
         Key: key,
         Body: buffer,
-        ContentType: 'image/png',
+        ContentType: file.type,
       }),
     )
 

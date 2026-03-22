@@ -26,6 +26,7 @@ export default function LogoutPage() {
         toast({
           title: "Sessão encerrada",
           description: "Você saiu com sucesso.",
+          variant: "success",
         });
 
         // Use window.location.href for a full refresh to clear any state

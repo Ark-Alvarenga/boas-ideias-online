@@ -174,8 +174,9 @@ export default function CreateProductPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.type !== "image/png") {
-      setError("A imagem de capa deve ser um arquivo PNG.");
+    const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("A imagem de capa deve ser PNG, JPG ou WEBP.");
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
@@ -265,6 +266,7 @@ export default function CreateProductPage() {
       toast({
         title: "PDF enviado com sucesso",
         description: "Seu arquivo já pode ser vendido no marketplace.",
+        variant: "success",
       });
     } catch (err) {
       console.error("Upload error", err);
@@ -282,7 +284,9 @@ export default function CreateProductPage() {
 
   const handleCoverUpload = async () => {
     if (!coverFile) {
-      setError("Selecione uma imagem PNG antes de enviar a capa.");
+      setError(
+        "Selecione uma imagem (PNG, JPG ou WEBP) antes de enviar a capa.",
+      );
       return;
     }
 
@@ -316,6 +320,7 @@ export default function CreateProductPage() {
       toast({
         title: "Capa enviada com sucesso",
         description: "Sua capa já será usada na listagem do marketplace.",
+        variant: "success",
       });
     } catch (err) {
       console.error("Cover upload error", err);
@@ -438,6 +443,7 @@ export default function CreateProductPage() {
         title: "Produto criado com sucesso",
         description:
           "Agora você pode gerenciar e publicar seu produto no painel.",
+        variant: "success",
       });
       router.push("/dashboard/products");
     } catch (err) {
@@ -643,7 +649,7 @@ export default function CreateProductPage() {
                   <Button
                     type="submit"
                     disabled={!canSubmit}
-                    className="h-14 flex-1 rounded-xl border-2 border-foreground bg-primary px-8 text-lg font-black uppercase tracking-widest text-foreground shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] disabled:bg-muted disabled:shadow-none"
+                    className="h-14 flex-1 rounded-xl border-2 border-foreground bg-accent px-8 text-lg font-black uppercase tracking-widest text-foreground shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] disabled:bg-muted disabled:shadow-none hover:bg-accent/70"
                   >
                     {isSaving ? (
                       <span className="flex items-center gap-2">
@@ -657,7 +663,7 @@ export default function CreateProductPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-14 rounded-xl border-2 border-foreground bg-background px-8 text-lg font-black uppercase tracking-widest shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000]"
+                    className="h-14 rounded-xl border-2 border-foreground bg-background px-8 text-lg font-black te uppercase tracking-widest shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000]"
                     onClick={() => router.push("/dashboard/products")}
                   >
                     CANCELAR
@@ -677,7 +683,7 @@ export default function CreateProductPage() {
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
                     <div className="group relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-foreground bg-background py-10 text-center transition-all hover:bg-muted/50">
-                      <div className="mb-4 rounded-full border-2 border-foreground bg-primary p-3 shadow-[2px_2px_0px_#000]">
+                      <div className="mb-4 rounded-full border-2 border-foreground bg-accent p-3 shadow-[2px_2px_0px_#000]">
                         <UploadCloud className="h-6 w-6 text-foreground" />
                       </div>
                       <p className="text-base font-black uppercase tracking-widest text-foreground">
@@ -744,7 +750,7 @@ export default function CreateProductPage() {
                 <Card className="rounded-2xl border-2 border-foreground bg-muted/30 shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]">
                   <CardHeader className="pb-4 border-b-2 border-foreground/10 bg-muted/20">
                     <CardTitle className="font-serif text-lg font-black uppercase tracking-tight">
-                      Capa (PNG)
+                      Capa (PNG, JPG, WEBP)
                     </CardTitle>
                     <CardDescription className="font-bold text-muted-foreground">
                       Imagem de destaque (Recomendado: 800x800px).
@@ -763,7 +769,7 @@ export default function CreateProductPage() {
                       </p>
                       <Input
                         type="file"
-                        accept="image/png"
+                        accept="image/png,image/jpeg,image/webp"
                         onChange={handleCoverFileChange}
                         className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                       />
@@ -805,7 +811,7 @@ export default function CreateProductPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="aspect-[16/10] w-full border-b-2 border-foreground bg-muted">
+                    <div className="aspect-[4/3] w-full border-b-2 border-foreground bg-muted">
                       {coverUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img

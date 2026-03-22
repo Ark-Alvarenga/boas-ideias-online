@@ -112,7 +112,6 @@ export default async function DashboardProductDetailPage({
               status={product.status}
               views={product.views}
               sales={product.sales}
-              featured={product.featured}
               affiliateEnabled={product.affiliateEnabled}
               affiliateCommissionPercent={product.affiliateCommissionPercent}
             />

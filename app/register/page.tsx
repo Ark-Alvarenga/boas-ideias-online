@@ -66,6 +66,7 @@ function RegisterContent() {
       toast({
         title: "Conta criada com sucesso",
         description: "Bem-vindo! Redirecionando...",
+        variant: "success",
       });
       router.push(redirectPath);
     } catch (err) {
