@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { SidebarNav } from "@/components/dashboard/sidebar-nav";
+import { SidebarNav, MobileNav } from "@/components/dashboard/sidebar-nav";
 import { getDatabase } from "@/lib/mongodb";
 import type { User } from "@/lib/types";
 import { authConfig, verifySessionToken } from "@/lib/auth";
@@ -42,9 +42,11 @@ export default async function DashboardLayout({
 
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
-        {/* Mobile header (minimal) */}
-        <div className="flex h-16 shrink-0 items-center border-b-2 border-foreground bg-background px-4 lg:hidden">
+        {/* Mobile header with hamburger menu */}
+        <div className="flex h-16 shrink-0 items-center justify-between border-b-2 border-foreground bg-background px-4 lg:hidden">
+          <MobileNav userInitials={initials} />
           <span className="font-serif text-lg font-black">Boas Ideias</span>
+          <div className="w-10" /> {/* Spacer for centering */}
         </div>
 
         <main className="">{children}</main>

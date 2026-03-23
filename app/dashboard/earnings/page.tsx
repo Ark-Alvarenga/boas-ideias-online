@@ -194,7 +194,9 @@ export default async function EarningsPage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b-2 border-foreground bg-muted/30 text-left">
@@ -204,7 +206,7 @@ export default async function EarningsPage() {
                       <th className="px-6 py-4 text-xs font-black uppercase tracking-widest">
                         Produto
                       </th>
-                      <th className="hidden px-6 py-4 text-xs font-black uppercase tracking-widest md:table-cell">
+                      <th className="px-6 py-4 text-xs font-black uppercase tracking-widest">
                         Tipo
                       </th>
                       <th className="px-6 py-4 text-right text-xs font-black uppercase tracking-widest">
@@ -229,11 +231,8 @@ export default async function EarningsPage() {
                           <div className="font-bold text-foreground">
                             {tx.title}
                           </div>
-                          <div className="md:hidden mt-0.5 text-xs font-bold text-primary">
-                            {tx.typeLabel}
-                          </div>
                         </td>
-                        <td className="hidden px-6 py-4 md:table-cell">
+                        <td className="px-6 py-4">
                           <span
                             className={`inline-flex rounded-lg border-2 border-foreground px-2 py-0.5 text-[10px] font-black uppercase tracking-widest ${
                               tx.typeLabel === "Venda"
@@ -252,6 +251,39 @@ export default async function EarningsPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile cards */}
+              <div className="md:hidden divide-y-2 divide-foreground/10">
+                {recentTransactions.map((tx) => (
+                  <div key={tx.id} className="p-5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-foreground">{tx.title}</div>
+                      <span
+                        className={`inline-flex rounded-lg border-2 border-foreground px-2 py-0.5 text-[10px] font-black uppercase tracking-widest ${
+                          tx.typeLabel === "Venda"
+                            ? "bg-blue-400 text-foreground"
+                            : "bg-purple-400 text-foreground"
+                        }`}
+                      >
+                        {tx.typeLabel}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold tabular-nums text-muted-foreground">
+                        {new Date(tx.date).toLocaleDateString("pt-BR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })}
+                      </span>
+                      <span className="text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+                        R$ {tx.netEarnings.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </>
             )}
           </div>
         </div>

@@ -158,14 +158,16 @@ async function getPeoplePromotingData(userId: ObjectId) {
       .aggregate<{
         _id: ObjectId;
         count: number;
-        totalRevenueCents: number;
+        totalSaleCents: number;
+        totalCommissionCents: number;
       }>([
         { $match: { affiliateId: { $in: affiliateIds } } },
         {
           $group: {
             _id: "$affiliateId",
             count: { $sum: 1 },
-            totalRevenueCents: { $sum: "$saleAmountCents" },
+            totalSaleCents: { $sum: "$saleAmountCents" },
+            totalCommissionCents: { $sum: "$commissionAmountCents" },
           },
         },
       ])
@@ -176,9 +178,15 @@ async function getPeoplePromotingData(userId: ObjectId) {
   const salesMap = new Map(
     salesAgg.map((s) => [
       s._id.toString(),
-      { count: s.count, revenue: s.totalRevenueCents / 100 },
+      {
+        count: s.count,
+        totalSaleValue: s.totalSaleCents / 100,
+        affiliateEarnings: s.totalCommissionCents / 100,
+      },
     ]),
   );
+
+  const PLATFORM_FEE_RATE = 0.10; // 10% platform fee
 
   // Group by product
   const result = myProducts.map((product) => {
@@ -187,11 +195,17 @@ async function getPeoplePromotingData(userId: ObjectId) {
     );
     const affiliateRows = productAffiliates.map((aff) => {
       const stats = salesMap.get(aff._id!.toString());
+      const totalSaleValue = stats?.totalSaleValue ?? 0;
+      const affiliateEarnings = stats?.affiliateEarnings ?? 0;
+      const platformFee = totalSaleValue * PLATFORM_FEE_RATE;
+      const creatorEarnings = Math.max(0, totalSaleValue - affiliateEarnings - platformFee);
       return {
         affiliateName: usersById.get(aff.userId.toString()) ?? "Afiliado",
         clicks: clicksMap.get(aff._id!.toString()) ?? 0,
         sales: stats?.count ?? 0,
-        revenue: stats?.revenue ?? 0,
+        totalSaleValue,
+        affiliateEarnings,
+        creatorEarnings,
       };
     });
 
