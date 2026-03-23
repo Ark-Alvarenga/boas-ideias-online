@@ -6,6 +6,15 @@ import { StartSmallSection } from "@/components/landing/start-small-section"
 import { HowItWorksSection } from "@/components/landing/how-it-works-section"
 import { TrustSection } from "@/components/landing/trust-section"
 import { FinalCtaSection } from "@/components/landing/final-cta-section"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Boas Ideias Online | Transforme Conhecimento em Renda",
+  description: "O marketplace líder para criadores de infoprodutos. Venda seus cursos, guias e recursos digitais com facilidade e segurança.",
+  alternates: {
+    canonical: "/",
+  },
+}
 
 export default function HomePage() {
   return (

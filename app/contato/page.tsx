@@ -1,5 +1,14 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Contato | Suporte e Parcerias",
+  description: "Dúvidas, sugestões ou suporte? Entre em contato com a equipe do Boas Ideias Online.",
+  alternates: {
+    canonical: "/contato",
+  },
+}
 
 export default function ContatoPage() {
   return (

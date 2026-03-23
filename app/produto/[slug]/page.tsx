@@ -24,6 +24,56 @@ import { authConfig, verifySessionToken } from "@/lib/auth"
 import { ObjectId } from "mongodb"
 import { PromoteProductButton } from "@/components/product/promote-product-button"
 import { formatCentsToBRL } from "@/lib/currency"
+import { Metadata } from "next"
+import { JsonLd } from "@/components/seo/json-ld"
+
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
+  const resolved = await Promise.resolve(params)
+  const slug = resolved?.slug
+
+  const db = await getDatabase()
+  const product = await db.collection<Product>("products").findOne({ slug })
+
+  if (!product) {
+    return {
+      title: "Produto não encontrado",
+    }
+  }
+
+  const title = `${product.title} | Boas Ideias Online`
+  const description = product.description.slice(0, 160)
+  const url = `https://boasideias.online/produto/${product.slug}`
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "article",
+      images: [
+        {
+          url: product.coverImage || "/og-image.png",
+          width: 1200,
+          height: 630,
+          alt: product.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [product.coverImage || "/og-image.png"],
+    },
+  }
+}
 
 interface ProductPageProps {
   params: Promise<{ slug: string }> | { slug: string }
@@ -84,8 +134,34 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const relatedProducts = await relatedProductsCursor.toArray()
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.title,
+    "description": product.description,
+    "image": product.coverImage ? [product.coverImage] : [],
+    "sku": product._id?.toString(),
+    "brand": {
+      "@type": "Brand",
+      "name": "Boas Ideias Online"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `https://boasideias.online/produto/${product.slug}`,
+      "priceCurrency": "BRL",
+      "price": (product.priceCents / 100).toFixed(2),
+      "availability": "https://schema.org/InStock"
+    },
+    "aggregateRating": product.reviewCount > 0 ? {
+      "@type": "AggregateRating",
+      "ratingValue": product.rating,
+      "reviewCount": product.reviewCount
+    } : undefined
+  }
+
   return (
     <div className="min-h-screen bg-background">
+      <JsonLd data={productJsonLd} />
       <Header />
       
       <main className="py-8 lg:py-12">

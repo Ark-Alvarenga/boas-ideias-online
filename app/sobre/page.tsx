@@ -1,6 +1,15 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ArrowRight, BookOpen, Star, Users } from "lucide-react";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Sobre Nós | Nossa Missão e Valores",
+  description: "Conheça a história e a missão da Boas Ideias Online. Ajudamos criadores a transformarem conhecimento em produtos digitais de sucesso.",
+  alternates: {
+    canonical: "/sobre",
+  },
+};
 
 export default function SobrePage() {
   return (

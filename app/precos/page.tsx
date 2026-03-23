@@ -1,6 +1,15 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Preços | Taxas Simples e Justas",
+  description: "Entenda como funciona nossa estrutura de preços. Sem mensalidades, você só paga quando vende.",
+  alternates: {
+    canonical: "/precos",
+  },
+};
 
 export default function PrecosPage() {
   return (

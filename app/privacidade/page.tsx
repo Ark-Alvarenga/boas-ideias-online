@@ -1,5 +1,14 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Política de Privacidade | Segurança de Dados",
+  description: "Entenda como protegemos seus dados e garantimos sua privacidade na Boas Ideias Online.",
+  alternates: {
+    canonical: "/privacidade",
+  },
+}
 
 export default function PrivacidadePage() {
   return (

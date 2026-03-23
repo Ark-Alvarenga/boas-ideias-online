@@ -1,6 +1,15 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { HelpCircle, Mail, MessageCircleQuestion } from "lucide-react";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Central de Ajuda | FAQ e Suporte",
+  description: "Encontre respostas para as perguntas mais frequentes sobre como comprar e vender produtos digitais.",
+  alternates: {
+    canonical: "/ajuda",
+  },
+};
 
 export default function CentralDeAjudaPage() {
   return (

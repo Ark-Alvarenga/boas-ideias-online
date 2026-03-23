@@ -1,5 +1,14 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Termos de Uso | Diretrizes da Plataforma",
+  description: "Leia nossos termos de uso para entender seus direitos e responsabilidades ao usar a Boas Ideias Online.",
+  alternates: {
+    canonical: "/termos",
+  },
+}
 
 export default function TermosDeUsoPage() {
   return (
