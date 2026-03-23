@@ -6,7 +6,7 @@ export function FinalCtaSection() {
   return (
     <section className="border-t-2 border-foreground bg-primary py-24 lg:py-32">
       <div className="section-container flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
-        <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:w-[50%]">
+        <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:w-[45%]">
           <h2 className="font-serif text-5xl font-black tracking-tight text-primary-foreground sm:text-7xl">
             Sua <span className="text-green-500">primeira venda</span> está{" "}
             <br className="hidden sm:block" /> mais perto do que você imagina.
@@ -22,14 +22,14 @@ export function FinalCtaSection() {
             </Button>
           </div>
         </div>
-        <div className="w-full lg:w-[50%] flex justify-center lg:justify-end items-center mt-12 lg:mt-0">
-          <div className="relative w-full max-w-none aspect-video">
+        <div className="w-full lg:w-[55%] flex justify-center lg:justify-end items-center mt-12 lg:mt-0">
+          <div className="relative w-full max-w-none aspect-[4/3]">
             <Image
               src="/images/cta-image.webp"
               alt="Comece a vender hoje"
               fill
-              className="object-cover drop-shadow-2xl lg:translate-x-8"
-              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-contain drop-shadow-2xl lg:translate-x-8"
+              sizes="(max-width: 768px) 100vw, 55vw"
             />
           </div>
         </div>
