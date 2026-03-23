@@ -60,17 +60,20 @@ export async function GET(request: Request) {
     let sortOptions: Record<string, 1 | -1> = { createdAt: -1 }
     switch (sort) {
       case 'preco-menor':
-        sortOptions = { price: 1 }
+        sortOptions = { priceCents: 1 }
         break
       case 'preco-maior':
-        sortOptions = { price: -1 }
+        sortOptions = { priceCents: -1 }
         break
       case 'populares':
-        sortOptions = { sales: -1 }
+        sortOptions = { sales: -1, createdAt: -1 }
         break
       case 'recentes':
-      default:
         sortOptions = { createdAt: -1 }
+        break
+      case 'relevancia':
+      default:
+        sortOptions = { sales: -1, views: -1, createdAt: -1 }
     }
 
     const rawProducts = await collection

@@ -28,13 +28,13 @@ const categoryGradients: Record<string, string> = {
   "Toolkit": "from-violet-500/15 to-purple-500/15",
 }
 
-export function ProductCard({ 
+export function ProductCard({
   id,
-  title, 
-  description, 
-  priceCents, 
-  category, 
-  slug, 
+  title,
+  description,
+  priceCents,
+  category,
+  slug,
   creator,
   coverImage,
   sales,
@@ -51,7 +51,7 @@ export function ProductCard({
     !Number.isNaN(createdAtDate.getTime()) &&
     Date.now() - createdAtDate.getTime() <= 1000 * 60 * 60 * 24 * 14
   const isPopular = typeof sales === "number" && sales >= 10
-  
+
   return (
     <Card className="group h-full overflow-hidden border-border/50 bg-card hover:border-border hover:shadow-lg hover:shadow-primary/5">
       <div className={`relative aspect-[4/3] overflow-hidden bg-gradient-to-br ${gradient}`}>
@@ -85,7 +85,7 @@ export function ProductCard({
           )}
         </div>
       </div>
-      
+
       <CardContent className="flex flex-col p-5">
         <h3 className="line-clamp-2 font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
           {title}
@@ -93,7 +93,7 @@ export function ProductCard({
 
         {/* Price immediately under title */}
         <p className="mt-2 text-xl font-bold tracking-tight text-foreground">
-          R${formatCentsToBRL(priceCents)}
+          R$ {formatCentsToBRL(priceCents)}
         </p>
 
         <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-muted-foreground">
@@ -106,7 +106,7 @@ export function ProductCard({
             <span className="ml-2 text-xs text-muted-foreground">· {sales} vendas</span>
           )}
         </p>
-        
+
         <div className="mt-4 flex flex-col gap-3 border-t border-border/50 pt-4">
           <div className="flex items-center justify-between gap-3">
             <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
