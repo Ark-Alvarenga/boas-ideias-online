@@ -49,15 +49,26 @@ export async function GET(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? 'unknown'
     const userAgent = request.headers.get('user-agent') ?? ''
 
-    const clickDoc: AffiliateClick = {
+    // Dedup: skip if same (ip, affiliateId, productId) within the last hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+    const recentClick = await clicksCollection.findOne({
       affiliateId: affiliate._id!,
       productId: product._id!,
-      refUserId,
       ip,
-      userAgent,
-      createdAt: new Date(),
+      createdAt: { $gte: oneHourAgo },
+    })
+
+    if (!recentClick) {
+      const clickDoc: AffiliateClick = {
+        affiliateId: affiliate._id!,
+        productId: product._id!,
+        refUserId,
+        ip,
+        userAgent,
+        createdAt: new Date(),
+      }
+      await clicksCollection.insertOne(clickDoc)
     }
-    await clicksCollection.insertOne(clickDoc)
 
     const redirectUrl = new URL(`/produto/${slug}`, request.url)
     const response = NextResponse.redirect(redirectUrl)

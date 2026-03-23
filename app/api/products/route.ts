@@ -25,10 +25,21 @@ export async function GET(request: Request) {
     const query: Record<string, unknown> = {}
 
     if (userId && ObjectId.isValid(userId)) {
-      // When userId is provided, return that user's products (all statuses)
-      query.creatorId = new ObjectId(userId)
+      // When userId is provided, verify the requester owns this userId
+      const cookieStore = await (await import('next/headers')).cookies()
+      const token = cookieStore.get(authConfig.cookieName)?.value
+      const payload = token ? verifySessionToken(token) : null
+
+      if (payload && payload.userId === userId) {
+        // Authenticated owner — return all statuses
+        query.creatorId = new ObjectId(userId)
+      } else {
+        // Not the owner — only show active products
+        query.creatorId = new ObjectId(userId)
+        query.status = 'active'
+      }
     } else {
-      // Public marketplace: only show published (active) products so "Ver mais" links work
+      // Public marketplace: only show published (active) products
       query.status = 'active'
     }
 
@@ -37,9 +48,11 @@ export async function GET(request: Request) {
     }
 
     if (search) {
+      // Escape regex special characters to prevent ReDoS
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
+        { title: { $regex: escaped, $options: 'i' } },
+        { description: { $regex: escaped, $options: 'i' } },
       ]
     }
 

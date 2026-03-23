@@ -98,7 +98,7 @@ export default async function ProductsPage() {
               ideia em PDF hoje?
             </p>
             <Button
-              className="mt-8 h-12 rounded-xl border-2 border-foreground bg-primary px-8 font-black text-foreground shadow-[4px_4px_0px_#000]"
+              className="mt-8 h-12 rounded-xl border-2 border-foreground bg-primary px-8 font-white text-white shadow-[4px_4px_0px_#000]"
               asChild
             >
               <Link href="/dashboard/create-product">

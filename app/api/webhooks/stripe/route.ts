@@ -431,9 +431,16 @@ async function createSaleFromCheckoutData(
 
   // ── Financial Split ──
   const totalAmountCents = resolvePriceCents(product);
+  const SAFE_DEFAULT_FEE = 10; // 10% fallback if env var missing
+  const rawFee = process.env.PLATFORM_FEE_PERCENT;
+  if (!rawFee) {
+    console.error(
+      `[Stripe webhook] [CRITICAL] PLATFORM_FEE_PERCENT env var is NOT set! Falling back to ${SAFE_DEFAULT_FEE}%. Set this variable immediately.`,
+    );
+  }
   const platformFeePercent = Math.min(
     100,
-    Math.max(0, Number(process.env.PLATFORM_FEE_PERCENT) || 0),
+    Math.max(0, Number(rawFee) || SAFE_DEFAULT_FEE),
   );
   const platformFeeCents = Math.round(
     (totalAmountCents * platformFeePercent) / 100,
@@ -606,63 +613,59 @@ async function createSaleFromCheckoutData(
     }
   }
 
-  // ── Balance Accrual ──
-  // Idempotency: skip if sale was inserted by another concurrent webhook
-  const saleAlreadyInserted = await salesCollection.findOne({ stripeSessionId });
-  if (!saleAlreadyInserted) {
-    if (creatorShareCents > 0) {
-      await usersCollection.updateOne(
-        { _id: creatorId },
-        {
-          $inc: {
-            pendingBalanceCents: creatorShareCents,
-            totalEarningsCents: creatorShareCents,
-          },
-        }
-      );
-      await userTransactionsCollection.insertOne({
-        userId: creatorId,
-        amountCents: creatorShareCents,
-        type: "sale",
-        status: "pending",
-        saleId: saleId.toString(),
-        createdAt: new Date(),
-      });
-    }
-
-    if (affiliateUserId && affiliateShareCents > 0) {
-      await usersCollection.updateOne(
-        { _id: new ObjectId(affiliateUserId) },
-        {
-          $inc: {
-            pendingBalanceCents: affiliateShareCents,
-            totalEarningsCents: affiliateShareCents,
-          },
-        }
-      );
-      await userTransactionsCollection.insertOne({
-        userId: new ObjectId(affiliateUserId),
-        amountCents: affiliateShareCents,
-        type: "affiliate_commission",
-        status: "pending",
-        saleId: saleId.toString(),
-        createdAt: new Date(),
-      });
-    }
-  }
-
-  // ── Persist sale ──
+  // ── Persist sale FIRST (unique index on stripeSessionId prevents dupes) ──
   console.log("FINAL SALE CHARGE ID:", chargeId);
   try {
     await salesCollection.insertOne(sale);
   } catch (err: any) {
     if (err.code === 11000) {
       console.log(
-        `[Stripe webhook] [${stripeSessionId}] Race condition: Sale already inserted`,
+        `[Stripe webhook] [${stripeSessionId}] Race condition: Sale already inserted — skipping balance accrual`,
       );
       return;
     }
     throw err;
+  }
+
+  // ── Balance Accrual (only runs after successful insert — no double-count) ──
+  if (creatorShareCents > 0) {
+    await usersCollection.updateOne(
+      { _id: creatorId },
+      {
+        $inc: {
+          pendingBalanceCents: creatorShareCents,
+          totalEarningsCents: creatorShareCents,
+        },
+      }
+    );
+    await userTransactionsCollection.insertOne({
+      userId: creatorId,
+      amountCents: creatorShareCents,
+      type: "sale",
+      status: "pending",
+      saleId: saleId.toString(),
+      createdAt: new Date(),
+    });
+  }
+
+  if (affiliateUserId && affiliateShareCents > 0) {
+    await usersCollection.updateOne(
+      { _id: new ObjectId(affiliateUserId) },
+      {
+        $inc: {
+          pendingBalanceCents: affiliateShareCents,
+          totalEarningsCents: affiliateShareCents,
+        },
+      }
+    );
+    await userTransactionsCollection.insertOne({
+      userId: new ObjectId(affiliateUserId),
+      amountCents: affiliateShareCents,
+      type: "affiliate_commission",
+      status: "pending",
+      saleId: saleId.toString(),
+      createdAt: new Date(),
+    });
   }
 
   // ── Link sale back to order ──
@@ -726,6 +729,10 @@ async function upsertPendingSale(
 
 // ─────────────────────────────────────────────────────────────
 // Handle charge.refunded
+//
+// Reverses creator & affiliate balances and inserts negative
+// UserTransaction entries for audit trail. Idempotent via
+// checking sale.status before applying reversals.
 // ─────────────────────────────────────────────────────────────
 async function handleChargeRefunded(charge: StripeType.Charge) {
   const chargeId = charge.id;
@@ -742,6 +749,8 @@ async function handleChargeRefunded(charge: StripeType.Charge) {
   const db = await getDatabase();
   const salesCollection = db.collection<Sale>("sales");
   const ordersCollection = db.collection<Order>("orders");
+  const usersCollection = db.collection<User>("users");
+  const userTransactionsCollection = db.collection<UserTransaction>("userTransactions");
 
   const sale = await salesCollection.findOne({
     stripePaymentIntentId: { $in: [chargeId, paymentIntentId].filter(Boolean) },
@@ -750,6 +759,14 @@ async function handleChargeRefunded(charge: StripeType.Charge) {
     console.warn(
       "[Stripe webhook] No sale found for refunded payment_intent/charge:",
       { paymentIntentId, chargeId },
+    );
+    return;
+  }
+
+  // ── Idempotency: if already refunded, don't reverse balances again ──
+  if (sale.status === "refunded" || sale.status === "partially_refunded") {
+    console.log(
+      `[Stripe webhook] Sale ${sale._id?.toString()} already marked as ${sale.status}, skipping balance reversal`,
     );
     return;
   }
@@ -766,12 +783,62 @@ async function handleChargeRefunded(charge: StripeType.Charge) {
     { $set: { status: "refunded", updatedAt: new Date() } },
   );
 
+  // ── Reverse creator balance ──
+  if (sale.creatorId && sale.creatorShareCents > 0) {
+    await usersCollection.updateOne(
+      { _id: sale.creatorId },
+      {
+        $inc: {
+          pendingBalanceCents: -sale.creatorShareCents,
+          totalEarningsCents: -sale.creatorShareCents,
+        },
+      },
+    );
+    await userTransactionsCollection.insertOne({
+      userId: sale.creatorId,
+      amountCents: -sale.creatorShareCents,
+      type: "refund" as any,
+      status: "completed" as any,
+      saleId: sale._id!.toString(),
+      createdAt: new Date(),
+    });
+    console.log(
+      `[Stripe webhook] Reversed creator balance: -${sale.creatorShareCents} cents for user ${sale.creatorId.toString()}`,
+    );
+  }
+
+  // ── Reverse affiliate balance ──
+  if (sale.affiliateUserId && sale.affiliateShareCents > 0) {
+    await usersCollection.updateOne(
+      { _id: sale.affiliateUserId },
+      {
+        $inc: {
+          pendingBalanceCents: -sale.affiliateShareCents,
+          totalEarningsCents: -sale.affiliateShareCents,
+        },
+      },
+    );
+    await userTransactionsCollection.insertOne({
+      userId: sale.affiliateUserId,
+      amountCents: -sale.affiliateShareCents,
+      type: "refund" as any,
+      status: "completed" as any,
+      saleId: sale._id!.toString(),
+      createdAt: new Date(),
+    });
+    console.log(
+      `[Stripe webhook] Reversed affiliate balance: -${sale.affiliateShareCents} cents for user ${sale.affiliateUserId.toString()}`,
+    );
+  }
+
   console.log(
-    "[Stripe webhook] Refund processed:",
+    "[Stripe webhook] Refund processed with balance reversal:",
     JSON.stringify({
       saleId: sale._id?.toString(),
       paymentIntentId,
       status: refundStatus,
+      creatorReversed: sale.creatorShareCents,
+      affiliateReversed: sale.affiliateShareCents ?? 0,
     }),
   );
 }
