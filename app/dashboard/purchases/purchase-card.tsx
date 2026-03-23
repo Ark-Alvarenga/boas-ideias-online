@@ -6,6 +6,7 @@ import { Download, ExternalLink, FileText, Calendar, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import Image from "next/image"
 
 interface PurchaseCardProps {
   product: {
@@ -24,12 +25,14 @@ export function PurchaseCard({ product, orderId, purchaseDate }: PurchaseCardPro
 
   return (
     <Card className="group overflow-hidden rounded-3xl border-2 border-foreground bg-card shadow-[4px_4px_0px_#000] transition-all hover:-translate-y-1 hover:shadow-[8px_8px_0px_#000] dark:shadow-[4px_4px_0px_#fff] dark:hover:shadow-[8px_8px_0px_#fff]">
-      <div className="aspect-video w-full overflow-hidden border-b-2 border-foreground bg-muted">
+      <div className="aspect-video w-full overflow-hidden border-b-2 border-foreground bg-muted relative">
         {product.coverImage ? (
-          <img
+          <Image
             src={product.coverImage}
             alt={product.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            sizes="(max-width: 768px) 100vw, 400px"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-accent/20">

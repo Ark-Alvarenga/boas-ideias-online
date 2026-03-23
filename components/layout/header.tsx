@@ -8,6 +8,8 @@ import {
   HeaderAuthActionsMobile,
 } from "./header-auth-actions";
 
+import Image from "next/image";
+
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -16,10 +18,13 @@ export function Header() {
       <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-6 lg:px-8">
         {/* LOGO */}
         <Link href="/" className="flex items-center gap-3">
-          <img
-            src="/images/logo.png"
+          <Image
+            src="/images/logo.webp"
             alt="Boas Ideias Online"
-            className="h-10 w-auto mt-1"
+            width={40}
+            height={40}
+            className="mt-1"
+            priority
           />
 
           <div className="flex flex-col leading-tight">
@@ -83,11 +88,10 @@ export function Header() {
 
       {/* MOBILE MENU */}
       <div
-        className={`overflow-hidden border-t border-border/40 bg-background transition-all duration-300 md:hidden ${
-          mobileMenuOpen
-            ? "max-h-screen opacity-100"
-            : "max-h-0 opacity-0 border-t-0"
-        }`}
+        className={`overflow-hidden border-t border-border/40 bg-background transition-all duration-300 md:hidden ${mobileMenuOpen
+          ? "max-h-screen opacity-100"
+          : "max-h-0 opacity-0 border-t-0"
+          }`}
       >
         <nav className="flex flex-col gap-2 px-4 py-4">
           <Link

@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ProductCard } from "@/components/marketplace/product-card"
+import Image from "next/image"
 import {
   ShoppingCart,
   CheckCircle2,
@@ -192,11 +193,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
               {/* Product Cover */}
               <div className="relative aspect-video overflow-hidden rounded-2xl bg-linear-to-br from-blue-500/15 to-indigo-500/15">
                 {product.coverImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={product.coverImage}
                     alt={product.title}
-                    className="h-full w-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 800px"
+                    priority
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">

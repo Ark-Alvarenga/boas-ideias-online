@@ -15,6 +15,7 @@ import { getDatabase } from "@/lib/mongodb";
 import type { Product, User } from "@/lib/types";
 import { ObjectId } from "mongodb";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import Image from "next/image";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
@@ -115,11 +116,12 @@ export default async function ProductsPage() {
               >
                 <div className="relative aspect-[4/3] w-full overflow-hidden border-b-2 border-foreground bg-muted">
                   {product.coverImage ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={product.coverImage}
                       alt={product.title}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20 font-serif text-6xl font-black opacity-20">

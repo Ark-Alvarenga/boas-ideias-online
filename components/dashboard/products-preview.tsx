@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { formatCentsToBRL } from "@/lib/currency"
@@ -53,10 +54,12 @@ export function ProductsPreview({ products }: { products: Product[] }) {
               >
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
                   {product.coverImage ? (
-                    <img
+                    <Image
                       src={product.coverImage}
                       alt={product.title}
-                      className="h-full w-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center bg-gradient-to-br from-blue-500/15 to-indigo-500/15">

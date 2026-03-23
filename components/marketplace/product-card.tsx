@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, Zap } from "lucide-react"
 import { formatCentsToBRL } from "@/lib/currency"
 import { PromoteProductButton } from "@/components/product/promote-product-button"
+import Image from "next/image"
 
 interface ProductCardProps {
   id: string
@@ -56,11 +57,12 @@ export function ProductCard({
     <Card className="group h-full overflow-hidden border-border/50 bg-card hover:border-border hover:shadow-lg hover:shadow-primary/5">
       <div className={`relative aspect-[4/3] overflow-hidden bg-gradient-to-br ${gradient}`}>
         {coverImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={coverImage}
             alt={title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 400px"
           />
         ) : (
           <div className="flex h-full items-center justify-center">

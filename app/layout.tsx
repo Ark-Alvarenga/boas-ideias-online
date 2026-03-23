@@ -95,7 +95,7 @@ export default function RootLayout({
     "@type": "Organization",
     "name": "Boas Ideias Online",
     "url": "https://boasideias.online",
-    "logo": "https://boasideias.online/images/logo.png",
+    "logo": "https://boasideias.online/images/logo.webp",
     "sameAs": [
       "https://twitter.com/boasideiasonline",
       "https://instagram.com/boasideiasonline"

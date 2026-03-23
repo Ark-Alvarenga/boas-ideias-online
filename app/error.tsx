@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { RefreshCw, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -17,10 +18,11 @@ export default function Error({
         <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <img
-                src="/images/logo.png"
+              <Image
+                src="/images/logo.webp"
                 alt="Boas Ideias Online"
-                className="h-8 w-8"
+                width={32}
+                height={32}
               />
             </div>
             <span className="font-serif text-lg font-semibold tracking-tight text-foreground">

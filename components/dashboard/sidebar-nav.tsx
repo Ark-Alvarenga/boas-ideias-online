@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -42,10 +43,12 @@ export function SidebarNav({ userInitials }: { userInitials: string }) {
     <div className="flex h-full w-64 flex-col border-r-2 border-foreground bg-background">
       <div className="flex h-20 shrink-0 items-center border-b-2 border-foreground px-6 bg-muted/20">
         <Link href="/" className="flex items-center gap-3">
-          <img
-            src="/images/logo.png"
+          <Image
+            src="/images/logo.webp"
             alt="Boas Ideias Online"
-            className="h-10 w-auto mt-1"
+            width={40}
+            height={40}
+            className="mt-1"
           />
           <div className="flex flex-col leading-tight">
             <span className="font-serif text-lg font-black tracking-tight text-foreground">
@@ -139,10 +142,11 @@ export function MobileNav({ userInitials }: { userInitials: string }) {
       >
         <div className="flex h-16 items-center justify-between border-b-2 border-foreground px-4 bg-muted/20">
           <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
-            <img
-              src="/images/logo.png"
+            <Image
+              src="/images/logo.webp"
               alt="Boas Ideias Online"
-              className="h-8 w-auto"
+              width={32}
+              height={32}
             />
             <span className="font-serif text-base font-black tracking-tight text-foreground">
               Boas Ideias

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -813,11 +814,13 @@ export default function CreateProductPage() {
                   <CardContent className="p-0">
                     <div className="aspect-[4/3] w-full border-b-2 border-foreground bg-muted">
                       {coverUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <Image
                           src={coverUrl}
                           alt="Capa"
-                          className="h-full w-full object-cover"
+                          fill
+                          className="object-cover"
+                          unoptimized={coverUrl.startsWith("blob:")}
+                          sizes="400px"
                         />
                       )}
                     </div>

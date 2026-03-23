@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-background py-20 lg:py-32">
+    <section className="relative overflow-hidden bg-background py-5 lg:py-8">
       <div className="section-container relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
         {/* TEXT */}
         <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:w-[45%]">
@@ -49,11 +50,14 @@ export function HeroSection() {
 
         {/* IMAGE */}
         <div className="w-full lg:w-[55%] flex justify-center lg:justify-end items-center mt-8 lg:mt-0">
-          <div className="relative w-full max-w-[500px] lg:max-w-none">
-            <img
-              src="images/hero-image.png"
+          <div className="relative w-full max-w-[500px] lg:max-w-none aspect-[4/3]">
+            <Image
+              src="/images/hero-image.webp"
               alt="Venda online simplificada"
-              className="w-full h-auto scale-105 sm:scale-110 lg:scale-140 lg:translate-x-12 drop-shadow-2xl transition-transform duration-700"
+              fill
+              className="object-contain scale-105 sm:scale-110 lg:scale-140 lg:translate-x-12 drop-shadow-2xl transition-transform duration-700"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
+              priority
             />
           </div>
         </div>

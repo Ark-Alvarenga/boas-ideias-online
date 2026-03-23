@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const footerLinks = {
   produtos: [
@@ -27,14 +28,14 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5 lg:gap-8">
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <img
-                  src="/images/logo.png"
-                  alt="Boas Ideias Online"
-                  className="h-8 w-8"
-                />
-              </div>
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/images/logo.webp"
+                alt="Boas Ideias Online"
+                width={32}
+                height={32}
+                className="opacity-80 transition-opacity hover:opacity-100"
+              />
               <div className="flex flex-col">
                 <span className="font-serif text-lg font-semibold leading-tight tracking-tight text-foreground">
                   Boas Ideias

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { ArrowUpRight, Users, DollarSign, TrendingUp } from "lucide-react";
@@ -58,15 +59,15 @@ export default async function ProductAffiliatesPage() {
   const [affiliateUsers, products] = await Promise.all([
     affiliateUserIds.length > 0
       ? usersCollection
-          .find({
-            _id: { $in: affiliateUserIds.map((id) => new ObjectId(id)) },
-          })
-          .toArray()
+        .find({
+          _id: { $in: affiliateUserIds.map((id) => new ObjectId(id)) },
+        })
+        .toArray()
       : [],
     productIds.length > 0
       ? productsCollection
-          .find({ _id: { $in: productIds.map((id) => new ObjectId(id)) } })
-          .toArray()
+        .find({ _id: { $in: productIds.map((id) => new ObjectId(id)) } })
+        .toArray()
       : [],
   ]);
   const usersById = new Map(affiliateUsers.map((u) => [u._id!.toString(), u]));
@@ -98,10 +99,11 @@ export default async function ProductAffiliatesPage() {
         <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between px-6 lg:px-8">
           <Link href="/dashboard" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <img
-                src="/images/logo.png"
+              <Image
+                src="/images/logo.webp"
                 alt="Boas Ideias Online"
-                className="h-8 w-8"
+                width={32}
+                height={32}
               />
             </div>
             <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
