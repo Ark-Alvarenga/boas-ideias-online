@@ -23,12 +23,12 @@ export function FinalCtaSection() {
           </div>
         </div>
         <div className="w-full lg:w-[55%] flex justify-center lg:justify-end items-center mt-12 lg:mt-0">
-          <div className="relative w-full max-w-none h-[400px] lg:h-[500px]">
+          <div className="relative w-full h-[450px] lg:h-[500px] overflow-visible ">
             <Image
               src="/images/cta-image.webp"
               alt="Comece a vender hoje"
               fill
-              className="object-cover object-center drop-shadow-2xl lg:translate-x-8"
+              className="object-cover -top-20 lg:-top-32 scale-110"
               sizes="(max-width: 768px) 100vw, 55vw"
             />
           </div>
