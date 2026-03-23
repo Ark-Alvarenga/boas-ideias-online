@@ -25,10 +25,10 @@ export function FinalCtaSection() {
         <div className="w-full lg:w-[50%] flex justify-center lg:justify-end items-center mt-12 lg:mt-0">
           <div className="relative w-full max-w-none aspect-video">
             <Image
-              src="/images/cta-images.webp"
+              src="/images/cta-image.webp"
               alt="Comece a vender hoje"
               fill
-              className="object-contain scale-110 lg:scale-125 drop-shadow-2xl transition-transform duration-700 hover:scale-[1.02]"
+              className="object-contain scale-130 lg:scale-125 drop-shadow-2xl transition-transform duration-700 hover:scale-[1.02]"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>

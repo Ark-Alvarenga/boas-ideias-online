@@ -55,7 +55,7 @@ export function HeroSection() {
               src="/images/hero-image.webp"
               alt="Venda online simplificada"
               fill
-              className="object-contain scale-105 sm:scale-110 lg:scale-140 lg:translate-x-12 drop-shadow-2xl transition-transform duration-700"
+              className="object-contain scale-130 sm:scale-110 lg:scale-140 lg:translate-x-12 drop-shadow-2xl transition-transform duration-700"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
               priority
             />
