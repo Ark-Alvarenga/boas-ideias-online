@@ -27,7 +27,8 @@ export function FinalCtaSection() {
             <Image
               src="/images/cta-image.webp"
               alt="Comece a vender hoje"
-              fill
+              width={800}
+              height={800}
               className="object-cover -top-20 lg:-top-32 scale-110"
               sizes="(max-width: 768px) 100vw, 55vw"
             />
