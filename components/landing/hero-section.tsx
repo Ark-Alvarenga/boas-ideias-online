@@ -50,12 +50,12 @@ export function HeroSection() {
 
         {/* IMAGE */}
         <div className="w-full lg:w-[55%] flex justify-center lg:justify-end items-center mt-8 lg:mt-0">
-          <div className="relative w-full max-w-[600px] lg:max-w-none aspect-[4/3]">
+          <div className="relative w-full max-w-[600px] lg:max-w-none h-[500px] lg:h-[650px]">
             <Image
               src="/images/hero-image.webp"
               alt="Venda online simplificada"
               fill
-              className="object-contain drop-shadow-2xl lg:translate-x-8"
+              className="object-cover object-top drop-shadow-2xl lg:translate-x-8"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
               priority
             />
