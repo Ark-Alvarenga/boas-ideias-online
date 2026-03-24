@@ -812,13 +812,13 @@ export default function CreateProductPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="aspect-[4/3] w-full border-b-2 border-foreground bg-muted">
+                    <div className="relative aspect-[4/3] w-full border-b-2 border-foreground bg-muted">
                       {coverUrl && (
                         <Image
                           src={coverUrl}
                           alt="Capa"
                           fill
-                          className="object-cover"
+                          className="object-contain"
                           unoptimized={coverUrl.startsWith("blob:")}
                           sizes="400px"
                         />

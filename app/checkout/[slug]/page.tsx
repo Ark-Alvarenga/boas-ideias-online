@@ -1,4 +1,4 @@
- "use client"
+"use client"
 
 import { useEffect, useState, Suspense } from "react"
 import Link from "next/link"
@@ -117,7 +117,7 @@ function CheckoutContent() {
 
     setError(null)
     setIsProcessing(true)
-    
+
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -154,12 +154,12 @@ function CheckoutContent() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="py-10 lg:py-16">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
           <nav className="mb-10">
-            <Link 
+            <Link
               href={`/produto/${slug}`}
               className="inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
@@ -182,145 +182,142 @@ function CheckoutContent() {
               {error || "Não foi possível encontrar este produto para checkout."}
             </div>
           ) : (
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-10">
-            {/* Checkout Form */}
-            <div className="lg:col-span-3">
-              <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-10">
+              {/* Checkout Form */}
+              <div className="lg:col-span-3">
+                <form onSubmit={handleSubmit}>
+                  <Card className="border-border/50 bg-card shadow-sm">
+                    <CardContent className="p-6 lg:p-8">
+                      <div className="mb-6 flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                          <CreditCard className="h-5 w-5 text-primary" />
+                        </div>
+                        <h2 className="text-lg font-semibold text-foreground">
+                          Informações de Pagamento
+                        </h2>
+                      </div>
+
+                      <FieldGroup>
+                        <Field>
+                          <FieldLabel htmlFor="name">Nome completo</FieldLabel>
+                          <Input
+                            id="name"
+                            placeholder="Seu nome completo"
+                            value={formData.name}
+                            onChange={(e) => handleInputChange("name", e.target.value)}
+                            className="h-11 border-border/50 bg-background"
+                            required
+                          />
+                        </Field>
+
+                        <Field>
+                          <FieldLabel htmlFor="email">Email</FieldLabel>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="seu@email.com"
+                            value={formData.email}
+                            onChange={(e) => handleInputChange("email", e.target.value)}
+                            className="h-11 border-border/50 bg-background"
+                            required
+                          />
+                        </Field>
+
+                        {/* Stripe coleta os dados do cartão na página segura dele */}
+                      </FieldGroup>
+
+                      <Button
+                        type="submit"
+                        size="lg"
+                        className="mt-8 h-12 w-full shadow-sm"
+                        disabled={isProcessing}
+                      >
+                        {isProcessing ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Processando...
+                          </span>
+                        ) : (
+                          <>
+                            <Lock className="mr-2 h-4 w-4" />
+                            Pagar {(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </>
+                        )}
+                      </Button>
+
+                      <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <Shield className="h-4 w-4" />
+                        Pagamento 100% seguro
+                      </div>
+                    </CardContent>
+                  </Card>
+                </form>
+              </div>
+
+              {/* Order Summary */}
+              <div className="lg:col-span-2">
                 <Card className="border-border/50 bg-card shadow-sm">
                   <CardContent className="p-6 lg:p-8">
-                    <div className="mb-6 flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                        <CreditCard className="h-5 w-5 text-primary" />
-                      </div>
-                      <h2 className="text-lg font-semibold text-foreground">
-                        Informações de Pagamento
-                      </h2>
-                    </div>
-                    
-                    <FieldGroup>
-                      <Field>
-                        <FieldLabel htmlFor="name">Nome completo</FieldLabel>
-                        <Input
-                          id="name"
-                          placeholder="Seu nome completo"
-                          value={formData.name}
-                          onChange={(e) => handleInputChange("name", e.target.value)}
-                          className="h-11 border-border/50 bg-background"
-                          required
-                        />
-                      </Field>
+                    <h2 className="mb-6 text-lg font-semibold text-foreground">
+                      Resumo do Pedido
+                    </h2>
 
-                      <Field>
-                        <FieldLabel htmlFor="email">Email</FieldLabel>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="seu@email.com"
-                          value={formData.email}
-                          onChange={(e) => handleInputChange("email", e.target.value)}
-                          className="h-11 border-border/50 bg-background"
-                          required
-                        />
-                      </Field>
-
-                      {/* Stripe coleta os dados do cartão na página segura dele */}
-                    </FieldGroup>
-
-                    <Button 
-                      type="submit"
-                      size="lg"
-                      className="mt-8 h-12 w-full shadow-sm"
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? (
-                        <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Processando...
+                    <div className="flex gap-4">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500/15 to-indigo-500/15">
+                        <span className="font-serif text-xl font-semibold text-foreground/30">
+                          {product.title.charAt(0)}
                         </span>
-                      ) : (
-                        <>
-                          <Lock className="mr-2 h-4 w-4" />
-                          Pagar {(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </>
-                      )}
-                    </Button>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="mb-1 inline-flex rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          {product.category}
+                        </span>
+                        <h3 className="line-clamp-2 font-semibold text-foreground">
+                          {product.title}
+                        </h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          por {product.creatorName}
+                        </p>
+                      </div>
+                    </div>
 
-                    <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <Shield className="h-4 w-4" />
-                      Pagamento 100% seguro
+                    <div className="my-6 h-px bg-border/50" />
+
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Subtotal</span>
+                        <span className="text-foreground">{(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Desconto</span>
+                        <span className="text-foreground">R$0</span>
+                      </div>
+                    </div>
+
+                    <div className="my-4 h-px bg-border/50" />
+
+                    <div className="flex items-baseline justify-between">
+                      <span className="font-semibold text-foreground">Total</span>
+                      <span className="text-2xl font-semibold tracking-tight text-foreground">
+                        {(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </span>
+                    </div>
+
+                    <div className="mt-6 space-y-3">
+                      <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        Acesso imediato após confirmação
+                      </div>
+
+                      <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        Suporte incluído
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
-              </form>
+              </div>
             </div>
-
-            {/* Order Summary */}
-            <div className="lg:col-span-2">
-              <Card className="border-border/50 bg-card shadow-sm">
-                <CardContent className="p-6 lg:p-8">
-                  <h2 className="mb-6 text-lg font-semibold text-foreground">
-                    Resumo do Pedido
-                  </h2>
-                  
-                    <div className="flex gap-4">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500/15 to-indigo-500/15">
-                      <span className="font-serif text-xl font-semibold text-foreground/30">
-                        {product.title.charAt(0)}
-                      </span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <span className="mb-1 inline-flex rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                        {product.category}
-                      </span>
-                      <h3 className="line-clamp-2 font-semibold text-foreground">
-                        {product.title}
-                      </h3>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        por {product.creatorName}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="my-6 h-px bg-border/50" />
-
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span className="text-foreground">{(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Desconto</span>
-                      <span className="text-foreground">R$0</span>
-                    </div>
-                  </div>
-
-                  <div className="my-4 h-px bg-border/50" />
-
-                  <div className="flex items-baseline justify-between">
-                    <span className="font-semibold text-foreground">Total</span>
-                    <span className="text-2xl font-semibold tracking-tight text-foreground">
-                      {(product.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </span>
-                  </div>
-
-                  <div className="mt-6 space-y-3">
-                    <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      Acesso imediato após confirmação
-                    </div>
-                    <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      Garantia de 7 dias
-                    </div>
-                    <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      Suporte incluído
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
           )}
 
           {error && product && (

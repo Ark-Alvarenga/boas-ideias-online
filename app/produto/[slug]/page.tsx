@@ -164,13 +164,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <div className="min-h-screen bg-background">
       <JsonLd data={productJsonLd} />
       <Header />
-      
+
       <main className="py-8 lg:py-12">
         <div className="section-container">
           {/* Breadcrumb */}
           <nav className="mb-8">
-            <Link 
-              href="/marketplace" 
+            <Link
+              href="/marketplace"
               className="inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -197,7 +197,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     src={product.coverImage}
                     alt={product.title}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                     sizes="(max-width: 1024px) 100vw, 800px"
                     priority
                   />
@@ -310,8 +310,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                       </span>
                     </div>
 
-                    <Button 
-                      size="xl" 
+                    <Button
+                      size="xl"
                       className="mt-6 w-full shadow-sm"
                       asChild
                     >
@@ -337,10 +337,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                         <Infinity className="h-4 w-4 text-primary" />
                         <span>Acesso vitalício ao conteúdo</span>
                       </li>
-                      <li className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <Shield className="h-4 w-4 text-primary" />
-                        <span>Garantia de 7 dias</span>
-                      </li>
+
                       <li className="flex items-center gap-3 text-sm text-muted-foreground">
                         <Lock className="h-4 w-4 text-primary" />
                         <span>Pagamento seguro via Stripe</span>
