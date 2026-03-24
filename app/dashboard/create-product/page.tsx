@@ -759,7 +759,7 @@ export default function CreateProductPage() {
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
                     <div className="group relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-foreground bg-background py-10 text-center transition-all hover:bg-muted/50">
-                      <div className="mb-4 rounded-full border-2 border-foreground bg-secondary p-3 shadow-[2px_2px_0px_#000]">
+                      <div className="mb-4 rounded-full border-2 border-foreground bg-accent p-3 shadow-[2px_2px_0px_#000]">
                         <UploadCloud className="h-6 w-6 text-foreground" />
                       </div>
                       <p className="text-base font-black uppercase tracking-widest text-foreground">
