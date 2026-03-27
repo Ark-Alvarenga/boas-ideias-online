@@ -5,10 +5,10 @@ export function GuaranteeSection() {
     <section className="bg-[#222222] py-16 md:py-24">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
+
           {/* Badge */}
           <div className="flex-shrink-0">
             <div className="relative w-48 h-48 md:w-64 md:h-64">
-              {/* Outer ring with scalloped edge */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <svg viewBox="0 0 200 200" className="w-full h-full">
                   <path
@@ -19,28 +19,35 @@ export function GuaranteeSection() {
                   />
                 </svg>
               </div>
-              {/* Inner content */}
+
               <div className="absolute inset-8 flex flex-col items-center justify-center text-center">
                 <Check className="w-8 h-8 text-cyan-500 mb-2" />
-                <span className="text-cyan-500 text-xs md:text-sm font-bold tracking-wider">SATISFAÇÃO</span>
-                <span className="text-cyan-500 text-4xl md:text-5xl font-bold">100%</span>
-                <span className="text-cyan-500 text-xs md:text-sm font-bold tracking-wider">GARANTIDA</span>
+                <span className="text-cyan-500 text-xs md:text-sm font-bold tracking-wider">RISCO</span>
+                <span className="text-cyan-500 text-4xl md:text-5xl font-bold">ZERO</span>
+                <span className="text-cyan-500 text-xs md:text-sm font-bold tracking-wider">TOTAL</span>
               </div>
             </div>
           </div>
 
           {/* Content */}
           <div className="flex-1 text-center md:text-left">
+
             <h2 className="text-cyan-500 text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
-              Sua satisfação ou seu dinheiro de volta
+              Teste por 7 dias. Se não gostar, devolvemos seu dinheiro.
             </h2>
-            <p className="text-gray-400 leading-relaxed">
-              Como temos certeza que você vai ganhar muito com este ebook,
-              estamos oferecendo uma super garantia de 7 dias! Se você não ficar
-              satisfeito(a) com o ebook A Bíblia para o Milhão, basta nos avisar
-              dentro de 7 dias, nos mandando um e-mail que devolvemos todo o seu
-              investimento.
+
+            <p className="text-gray-400 leading-relaxed mb-4">
+              Você pode acessar todo o conteúdo, aplicar as estratégias e ver por conta própria.
             </p>
+
+            <p className="text-gray-300 leading-relaxed mb-4">
+              Se por qualquer motivo você achar que não vale a pena, basta pedir reembolso dentro de 7 dias e devolvemos 100% do seu dinheiro.
+            </p>
+
+            <p className="text-white font-semibold">
+              Sem perguntas. Sem burocracia. Sem risco.
+            </p>
+
           </div>
         </div>
       </div>

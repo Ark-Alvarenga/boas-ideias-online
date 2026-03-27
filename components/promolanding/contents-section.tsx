@@ -2,30 +2,30 @@ export function ContentsSection() {
   const items = [
     {
       number: 1,
-      title: "Como funciona\na mente dos campeões",
+      title: "Como começar do zero\nna internet",
       description:
-        "Descubra quais são as 12 principais características que as pessoas de sucesso têm em comum e o que você precisa fazer para conquistar também.",
+        "Descubra exatamente por onde começar, mesmo sem experiência, sem dinheiro e sem saber nada sobre ganhar dinheiro online.",
       position: "left",
     },
     {
       number: 2,
-      title: "Quais são os\npilares para o sucesso",
+      title: "As formas mais rápidas\nde ganhar dinheiro online",
       description:
-        "Aprenda tudo sobre as 15 principais habilidades dos milionários que começaram do zero.",
+        "Conheça os métodos mais usados hoje para gerar renda na internet e escolha o melhor para começar ainda hoje.",
       position: "right",
     },
     {
       number: 3,
-      title: "Como ganhar\nmuito dinheiro",
+      title: "Como ganhar dinheiro\nsem aparecer",
       description:
-        "Tudo o que você precisa saber sobre os três grandes pilares que os ricos utilizam para a construção de riqueza.",
+        "Aprenda estratégias que permitem faturar online sem precisar gravar vídeos, mostrar o rosto ou ter seguidores.",
       position: "left",
     },
     {
       number: 4,
-      title: "Como dar o\nprimeiro passo",
+      title: "Como escalar e viver\nda internet",
       description:
-        "Um passo a passo com tudo o que você precisa fazer para iniciar a sua jornada rumo ao primeiro Milhão.",
+        "Entenda como transformar sua primeira renda em algo consistente e construir múltiplas fontes de dinheiro online.",
       position: "right",
     },
   ]
@@ -36,7 +36,9 @@ export function ContentsSection() {
         <h2 className="text-center mb-16">
           <span className="text-gray-400 text-2xl md:text-3xl italic">O QUE VOCÊ</span>
           <br />
-          <span className="text-cyan-500 text-3xl md:text-4xl font-bold">ENCONTRARÁ NO LIVRO?</span>
+          <span className="text-cyan-500 text-3xl md:text-4xl font-bold">
+            VAI APRENDER NO GUIA?
+          </span>
         </h2>
 
         <div className="relative">
@@ -57,14 +59,20 @@ export function ContentsSection() {
                       <h3 className="text-cyan-500 text-xl md:text-2xl font-bold whitespace-pre-line mb-3">
                         {item.title}
                       </h3>
-                      <p className="text-gray-400 text-sm md:text-base">{item.description}</p>
+                      <p className="text-gray-400 text-sm md:text-base">
+                        {item.description}
+                      </p>
                     </div>
+
                     {/* Number circle */}
                     <div className="relative z-10 order-1 md:order-2">
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-cyan-500 bg-[#1a1a1a] flex items-center justify-center">
-                        <span className="text-cyan-500 text-2xl md:text-3xl font-bold">{item.number}</span>
+                        <span className="text-cyan-500 text-2xl md:text-3xl font-bold">
+                          {item.number}
+                        </span>
                       </div>
                     </div>
+
                     {/* Empty right space */}
                     <div className="flex-1 hidden md:block order-3" />
                   </>
@@ -72,18 +80,24 @@ export function ContentsSection() {
                   <>
                     {/* Empty left space */}
                     <div className="flex-1 hidden md:block order-1" />
+
                     {/* Number circle */}
                     <div className="relative z-10 order-1 md:order-2">
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-cyan-500 bg-[#1a1a1a] flex items-center justify-center">
-                        <span className="text-cyan-500 text-2xl md:text-3xl font-bold">{item.number}</span>
+                        <span className="text-cyan-500 text-2xl md:text-3xl font-bold">
+                          {item.number}
+                        </span>
                       </div>
                     </div>
+
                     {/* Right content */}
                     <div className="flex-1 text-center md:text-left order-2 md:order-3">
                       <h3 className="text-cyan-500 text-xl md:text-2xl font-bold whitespace-pre-line mb-3">
                         {item.title}
                       </h3>
-                      <p className="text-gray-400 text-sm md:text-base">{item.description}</p>
+                      <p className="text-gray-400 text-sm md:text-base">
+                        {item.description}
+                      </p>
                     </div>
                   </>
                 )}
