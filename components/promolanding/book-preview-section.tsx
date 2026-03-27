@@ -1,6 +1,6 @@
 export function BookPreviewSection() {
   return (
-    <section className="bg-[#1a1a1a] py-16 md:py-24">
+    <section className="bg-[#1a1a1a] py-6 md:py-10">
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-8 md:gap-12">
 

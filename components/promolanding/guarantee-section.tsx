@@ -2,7 +2,7 @@ import { Check } from "lucide-react"
 
 export function GuaranteeSection() {
   return (
-    <section className="bg-[#222222] py-16 md:py-24">
+    <section className="bg-[#222222] py-6 md:py-10">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
 

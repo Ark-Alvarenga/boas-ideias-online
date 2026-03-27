@@ -15,7 +15,7 @@ export function PromoHeroSection() {
   ]
 
   return (
-    <section className="bg-[#0f0f0f] py-10 md:py-20">
+    <section className="bg-[#0f0f0f] py-5 md:py-8">
       <div className="max-w-6xl mx-auto px-4">
 
         {/* Logo / Branding */}

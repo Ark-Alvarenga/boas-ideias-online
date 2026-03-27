@@ -2,7 +2,7 @@ import { CTAButton } from "./cta-button"
 
 export function PriceSection() {
   return (
-    <section className="bg-[#1a1a1a] py-16 md:py-24">
+    <section className="bg-[#1a1a1a] py-6 md:py-10">
       <div className="max-w-4xl mx-auto px-4 text-center">
 
         {/* Trigger mental */}
