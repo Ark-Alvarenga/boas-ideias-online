@@ -96,8 +96,8 @@ export function SocialProofToast() {
   return (
     <div
       className={`fixed bottom-24 md:bottom-4 left-4 z-50 max-w-xs sm:max-w-sm transition-all duration-500 ease-out ${isVisible
-          ? "translate-x-0 opacity-100"
-          : "-translate-x-full opacity-0 pointer-events-none"
+        ? "translate-x-0 opacity-100"
+        : "-translate-x-full opacity-0 pointer-events-none"
         }`}
       role="status"
       aria-live="polite"
@@ -113,7 +113,7 @@ export function SocialProofToast() {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-white leading-snug">
+          <p className="text-sm text-gray-900 leading-snug">
             <span className="font-semibold text-cyan-400">{notification.name}</span>
             {" "}de{" "}
             <span className="font-medium text-gray-300">{notification.city}</span>

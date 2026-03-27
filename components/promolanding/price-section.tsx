@@ -2,14 +2,14 @@ import { CTAButton } from "./cta-button"
 
 export function PriceSection() {
   return (
-    <section className="bg-[#1a1a1a] py-6 md:py-10">
+    <section className="bg-white-50 py-6 md:py-10">
       <div className="max-w-4xl mx-auto px-4 text-center">
 
         {/* Trigger mental */}
         <p className="text-gray-400 text-sm md:text-base mb-4">
           A diferença entre quem vive da internet e quem continua tentando…
           <br />
-          <span className="text-white font-semibold">
+          <span className="text-gray-900 font-semibold">
             é ter o conhecimento certo e agir.
           </span>
         </p>
@@ -34,7 +34,7 @@ export function PriceSection() {
           Você pode continuar onde está…
         </p>
 
-        <p className="text-white text-xl md:text-2xl font-bold mb-4">
+        <p className="text-gray-900 text-xl md:text-2xl font-bold mb-4">
           ou começar hoje a construir sua renda online.
         </p>
 

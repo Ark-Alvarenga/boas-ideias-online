@@ -1,6 +1,6 @@
 export function PhoneSection() {
   return (
-    <section className="bg-[#1a1a1a] py-6 md:py-10">
+    <section className="bg-white-50 py-6 md:py-10">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
 
@@ -10,7 +10,7 @@ export function PhoneSection() {
               <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl p-2 shadow-2xl">
                 <div className="bg-cyan-900 rounded-2xl aspect-[9/16] flex flex-col items-center justify-center p-4">
                   <div className="bg-white/20 rounded-lg w-full h-32 mb-4 flex items-center justify-center">
-                    <span className="text-white/50 text-xs">Viver da Internet</span>
+                    <span className="text-gray-900/50 text-xs">Viver da Internet</span>
                   </div>
                   <div className="space-y-2 w-full">
                     <div className="bg-white/10 h-2 rounded w-full"></div>
@@ -29,7 +29,7 @@ export function PhoneSection() {
               ACESSE DE QUALQUER LUGAR
             </h2>
 
-            <p className="text-white text-lg mb-4 font-semibold">
+            <p className="text-gray-900 text-lg mb-4 font-semibold">
               Tudo direto no seu celular, sem complicação.
             </p>
 

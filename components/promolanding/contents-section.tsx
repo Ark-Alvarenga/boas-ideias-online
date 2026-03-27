@@ -31,7 +31,7 @@ export function ContentsSection() {
   ]
 
   return (
-    <section className="bg-[#1a1a1a] py-6 md:py-10">
+    <section className="bg-white-50 py-6 md:py-10">
       <div className="max-w-4xl mx-auto px-4">
         <h2 className="text-center mb-16">
           <span className="text-gray-400 text-2xl md:text-3xl italic">O QUE VOCÊ</span>
@@ -66,7 +66,7 @@ export function ContentsSection() {
 
                     {/* Number circle */}
                     <div className="relative z-10 order-1 md:order-2">
-                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-cyan-500 bg-[#1a1a1a] flex items-center justify-center">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-cyan-500 bg-white-50 flex items-center justify-center">
                         <span className="text-cyan-500 text-2xl md:text-3xl font-bold">
                           {item.number}
                         </span>
@@ -83,7 +83,7 @@ export function ContentsSection() {
 
                     {/* Number circle */}
                     <div className="relative z-10 order-1 md:order-2">
-                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-cyan-500 bg-[#1a1a1a] flex items-center justify-center">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-cyan-500 bg-white-50 flex items-center justify-center">
                         <span className="text-cyan-500 text-2xl md:text-3xl font-bold">
                           {item.number}
                         </span>

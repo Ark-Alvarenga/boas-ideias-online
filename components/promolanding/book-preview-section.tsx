@@ -1,13 +1,13 @@
 export function BookPreviewSection() {
   return (
-    <section className="bg-[#1a1a1a] py-6 md:py-10">
+    <section className="bg-white-50 py-6 md:py-10">
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-8 md:gap-12">
 
           {/* Index Page */}
           <div className="bg-white rounded-lg overflow-hidden shadow-xl">
             <div className="bg-cyan-500 py-4 px-6">
-              <h3 className="text-white text-xl md:text-2xl font-bold text-center">
+              <h3 className="text-gray-900 text-xl md:text-2xl font-bold text-center">
                 O QUE VOCÊ VAI APRENDER
               </h3>
             </div>

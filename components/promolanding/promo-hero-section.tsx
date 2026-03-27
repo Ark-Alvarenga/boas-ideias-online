@@ -20,7 +20,7 @@ export function PromoHeroSection() {
 
         {/* Logo / Branding */}
         <div className="mb-8 md:mb-12">
-          <div className="text-white">
+          <div className="text-gray-900">
             <span className="text-sm font-bold tracking-wider text-cyan-400">GUIA</span>
             <div className="text-3xl font-bold">ONLINE</div>
             <div className="flex gap-1 mt-1">
@@ -39,18 +39,18 @@ export function PromoHeroSection() {
             <div className="relative">
               <div className="bg-gradient-to-br from-cyan-700 to-blue-950 rounded-xl p-8 aspect-[3/4] flex flex-col justify-center items-center shadow-2xl transform rotate-y-[-5deg]">
 
-                <span className="text-xs text-white/80 tracking-widest mb-2">GUIA</span>
-                <span className="text-xl font-bold text-white mb-3">ONLINE</span>
+                <span className="text-xs text-gray-900 tracking-widest mb-2">GUIA</span>
+                <span className="text-xl font-bold text-gray-900 mb-3">ONLINE</span>
 
-                <div className="text-center text-white/80 text-xs mb-3">
+                <div className="text-center text-gray-900 text-xs mb-3">
                   COMO GANHAR DINHEIRO NA INTERNET DO ZERO
                 </div>
 
-                <h3 className="text-2xl md:text-3xl font-bold text-white text-center mb-4">
+                <h3 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-4">
                   VIVER DA<br />INTERNET
                 </h3>
 
-                <p className="text-xs text-white/70 text-center mb-4">
+                <p className="text-xs text-gray-900/70 text-center mb-4">
                   O MÉTODO PRÁTICO PARA CONSTRUIR RENDA ONLINE
                 </p>
 
@@ -60,7 +60,7 @@ export function PromoHeroSection() {
                   ))}
                 </div>
 
-                <p className="text-xs text-white/60 text-center">
+                <p className="text-xs text-gray-900/60 text-center">
                   DO ZERO ATÉ SUA PRIMEIRA RENDA ONLINE
                 </p>
 
@@ -77,7 +77,7 @@ export function PromoHeroSection() {
             </h1>
 
             {/* Subheadline */}
-            <h2 className="text-xl md:text-3xl text-white font-bold mb-6 leading-snug">
+            <h2 className="text-xl md:text-3xl text-gray-900 font-bold mb-6 leading-snug">
               Pare de perder tempo e descubra como ganhar dinheiro online mesmo começando do zero.
             </h2>
 

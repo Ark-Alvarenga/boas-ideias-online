@@ -57,7 +57,7 @@ export function CountdownSection() {
           {/* Texto */}
           <div className="text-center lg:text-left max-w-xl">
 
-            <h2 className="text-white text-2xl md:text-3xl font-bold mb-3">
+            <h2 className="text-gray-900 text-2xl md:text-3xl font-bold mb-3">
               <span className="text-cyan-500">OFERTA POR TEMPO LIMITADO</span>
               <br />
               O PREÇO PROMOCIONAL VAI
@@ -82,7 +82,7 @@ export function CountdownSection() {
               { value: time.seconds, label: "SEG" },
             ].map((item, index) => (
               <div key={index} className="text-center">
-                <div className="bg-cyan-500 text-white text-2xl md:text-5xl font-bold w-14 md:w-20 h-14 md:h-20 flex items-center justify-center rounded-lg shadow-lg shadow-cyan-500/20 transition-all">
+                <div className="bg-cyan-500 text-gray-900 text-2xl md:text-5xl font-bold w-14 md:w-20 h-14 md:h-20 flex items-center justify-center rounded-lg shadow-lg shadow-cyan-500/20 transition-all">
                   {mounted ? formatNumber(item.value) : "00"}
                 </div>
                 <div className="text-gray-400 text-[10px] md:text-xs mt-2 font-medium">

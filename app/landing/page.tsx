@@ -16,7 +16,7 @@ import { StickyMobileCTA } from "@/components/promolanding/sticky-mobile-cta"
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[#1a1a1a] pb-20 md:pb-0">
+    <main className="min-h-screen bg-white-50 pb-20 md:pb-0">
       {/* Social Proof Toast Notification */}
       <SocialProofToast />
 
@@ -26,7 +26,7 @@ export default function LandingPage() {
       <PromoHeroSection />
 
       {/* First CTA Button */}
-      <section className="bg-[#1a1a1a] py-8 md:py-12">
+      <section className="bg-white-50 py-8 md:py-12">
         <div className="max-w-4xl mx-auto px-4">
           <CTAButton />
         </div>

@@ -29,7 +29,7 @@ export function PromoFooter() {
             <span className="text-xs font-bold tracking-wider text-gray-400">
               VIVER DA
             </span>
-            <div className="text-2xl font-bold text-white">INTERNET</div>
+            <div className="text-2xl font-bold text-gray-900">INTERNET</div>
             <div className="flex gap-1 mt-1 justify-center">
               <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full"></span>
               <span className="w-1.5 h-1.5 bg-cyan-300 rounded-full"></span>

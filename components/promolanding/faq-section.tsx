@@ -42,14 +42,14 @@ export function FAQSection() {
   ]
 
   return (
-    <section className="bg-[#1a1a1a] py-6 md:py-10">
+    <section className="bg-white-50 py-6 md:py-10">
       <div className="max-w-3xl mx-auto px-4">
 
         <h2 className="text-center mb-12">
           <span className="text-cyan-500 text-2xl md:text-3xl font-bold">
             DÚVIDAS FREQUENTES
           </span>
-          <span className="text-white text-2xl md:text-3xl font-bold">
+          <span className="text-gray-900 text-2xl md:text-3xl font-bold">
             {" "}ANTES DE COMEÇAR
           </span>
         </h2>
@@ -61,7 +61,7 @@ export function FAQSection() {
               value={`item-${index}`}
               className="bg-[#2a2a2a] rounded-lg px-6 border-none"
             >
-              <AccordionTrigger className="text-white text-left font-medium hover:no-underline py-6">
+              <AccordionTrigger className="text-gray-900 text-left font-medium hover:no-underline py-6">
                 {faq.question}
               </AccordionTrigger>
               <AccordionContent className="text-gray-400 pb-6">

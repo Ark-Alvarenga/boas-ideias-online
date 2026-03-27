@@ -44,7 +44,7 @@ export function GuaranteeSection() {
               Se por qualquer motivo você achar que não vale a pena, basta pedir reembolso dentro de 7 dias e devolvemos 100% do seu dinheiro.
             </p>
 
-            <p className="text-white font-semibold">
+            <p className="text-gray-900 font-semibold">
               Sem perguntas. Sem burocracia. Sem risco.
             </p>
 

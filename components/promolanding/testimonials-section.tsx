@@ -59,10 +59,10 @@ export function TestimonialsSection() {
   ]
 
   return (
-    <section className="bg-[#1a1a1a] py-6 md:py-10">
+    <section className="bg-white-50 py-6 md:py-10">
       <div className="max-w-6xl mx-auto px-4">
 
-        <h2 className="text-white text-2xl md:text-3xl font-bold text-center mb-4">
+        <h2 className="text-gray-900 text-2xl md:text-3xl font-bold text-center mb-4">
           RESULTADOS DE QUEM DECIDIU COMEÇAR:
         </h2>
 
@@ -76,7 +76,7 @@ export function TestimonialsSection() {
               {testimonial.isEmail ? (
                 <div className="p-3">
                   <div className="flex items-center gap-2 mb-2 border-b pb-2">
-                    <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white text-xs font-bold">
+                    <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-gray-900 text-xs font-bold">
                       C
                     </div>
                     <div className="flex-1">
@@ -90,7 +90,7 @@ export function TestimonialsSection() {
                 <div className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 rounded-full bg-white/20" />
-                    <div className="text-white text-xs font-bold">
+                    <div className="text-gray-900 text-xs font-bold">
                       user.online <span className="font-normal opacity-75">12min</span>
                     </div>
                     <button className="ml-auto text-white">×</button>
@@ -98,7 +98,7 @@ export function TestimonialsSection() {
                   <div className="bg-black/20 rounded-lg p-3 mb-2">
                     <div className="text-white text-lg font-bold mb-2">Primeira venda 💰</div>
                     <div className="aspect-video bg-gray-300/50 rounded flex items-center justify-center">
-                      <span className="text-white/50 text-xs">Print de resultado</span>
+                      <span className="text-gray-900 text-xs">Print de resultado</span>
                     </div>
                   </div>
                   <p className="text-white text-xs leading-relaxed">{testimonial.text}</p>

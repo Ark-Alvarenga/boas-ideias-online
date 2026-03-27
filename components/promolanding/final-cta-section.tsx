@@ -3,7 +3,7 @@ import { Shield, Clock, CreditCard } from "lucide-react"
 
 export function FinalCTASection() {
   return (
-    <section className="bg-[#1a1a1a] py-6 md:py-10">
+    <section className="bg-white-50 py-6 md:py-10">
       <div className="max-w-4xl mx-auto px-4 text-center">
 
         {/* Headline */}
@@ -12,7 +12,7 @@ export function FinalCTASection() {
         </h2>
 
         {/* Subheadline */}
-        <p className="text-white text-lg md:text-xl font-semibold mb-4">
+        <p className="text-gray-900 text-lg md:text-xl font-semibold mb-4">
           A decisão é sua.
         </p>
 
