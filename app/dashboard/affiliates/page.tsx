@@ -24,6 +24,7 @@ import { AffiliatesTable } from "./affiliates-table";
 import { PeoplePromotingTable } from "./people-promoting-table";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { PlusCircle, Users } from "lucide-react";
+import { TrackPageView } from "@/components/track-page-view";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
@@ -252,6 +253,7 @@ export default async function AffiliatesDashboardPage() {
       />
 
       <main className="mx-auto max-w-7xl p-6 lg:p-8 space-y-12">
+        <TrackPageView event="affiliate_dashboard_viewed" />
         {/* Section 1: Products You Promote */}
         <section>
           <div className="mb-6">

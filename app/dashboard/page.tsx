@@ -9,6 +9,7 @@ import { Check, ArrowRight, ExternalLink, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConnectStripeCard } from "@/components/dashboard/connect-stripe-card";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { TrackPageView } from "@/components/track-page-view";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
@@ -51,6 +52,16 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <DashboardHeader title="Dashboard" />
+      <TrackPageView
+        event="dashboard_viewed"
+        properties={{
+          has_products: hasProducts,
+          is_stripe_connected: isStripeConnected,
+          has_first_sale: hasFirstSale,
+          total_sales: totalSales,
+          product_count: userProducts.length,
+        }}
+      />
       <div className="mx-auto max-w-4xl p-8 pt-6">
         <div className="mb-12">
           <h1 className="font-serif text-4xl font-black tracking-tight text-foreground sm:text-5xl lg:text-6xl">

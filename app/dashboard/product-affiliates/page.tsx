@@ -15,6 +15,7 @@ import { getDatabase } from "@/lib/mongodb";
 import type { AffiliateSale, Product, User } from "@/lib/types";
 import { authConfig, verifySessionToken } from "@/lib/auth";
 import { ObjectId } from "mongodb";
+import { TrackPageView } from "@/components/track-page-view";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
@@ -125,6 +126,7 @@ export default async function ProductAffiliatesPage() {
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-10 lg:px-8 lg:py-12">
+        <TrackPageView event="product_affiliates_viewed" />
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Card className="border-border/50 bg-card shadow-sm">
             <CardHeader className="pb-2">

@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { CheckCircle2, Loader2, CreditCard } from "lucide-react";
+import { trackEvent } from "@/lib/amplitude";
 
 interface ConnectStripeCardProps {
   stripeAccountId?: string | null;
@@ -56,6 +57,7 @@ export function ConnectStripeCard({
 
   const handleConnect = async () => {
     setIsLoading(true);
+    trackEvent("stripe_connect_started");
     try {
       const res = await fetch("/api/stripe/connect/create-account", {
         method: "POST",

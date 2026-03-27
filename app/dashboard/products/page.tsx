@@ -16,6 +16,7 @@ import type { Product, User } from "@/lib/types";
 import { ObjectId } from "mongodb";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import Image from "next/image";
+import { TrackPageView } from "@/components/track-page-view";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
@@ -71,6 +72,10 @@ export default async function ProductsPage() {
             </Button>
           </div>
         }
+      />
+      <TrackPageView
+        event="products_list_viewed"
+        properties={{ product_count: products.length }}
       />
 
       <main className="mx-auto max-w-7xl p-6 lg:p-8">

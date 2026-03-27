@@ -17,6 +17,7 @@ import {
   Loader2,
 } from "lucide-react"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { trackEvent } from "@/lib/amplitude"
 
 interface CheckoutProduct {
   _id?: string
@@ -108,6 +109,16 @@ function CheckoutContent() {
     }
   }, [slug])
 
+  // Track checkout page view when product is loaded
+  useEffect(() => {
+    if (product) {
+      trackEvent("checkout_started", {
+        product_slug: slug,
+        price_brl: product.priceCents / 100,
+      })
+    }
+  }, [product, slug])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!product?._id) {
@@ -131,13 +142,20 @@ function CheckoutContent() {
         }),
       })
 
+      trackEvent("checkout_submitted", {
+        product_id: product._id,
+        price_brl: product.priceCents / 100,
+      })
+
       const json = await res.json()
 
       if (!res.ok || !json.success || !json.url) {
         setError(json.error || "Falha ao processar o pedido.")
+        trackEvent("checkout_failed", { error_message: json.error || "Unknown error" })
         return
       }
 
+      trackEvent("checkout_redirected_to_stripe", { product_id: product._id })
       window.location.href = json.url as string
     } catch (err) {
       console.error("Checkout error", err)

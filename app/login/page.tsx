@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/layout/header";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { toast } from "@/hooks/use-toast";
+import { trackEvent, identifyUser } from "@/lib/amplitude";
 
 function LoginContent() {
   const router = useRouter();
@@ -30,6 +31,11 @@ function LoginContent() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Track login page view
+  useEffect(() => {
+    trackEvent("login_started", { redirect_path: redirectPath });
+  }, [redirectPath]);
 
   const handleChange = (field: "email" | "password", value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -57,6 +63,7 @@ function LoginContent() {
           description: message,
           variant: "destructive",
         });
+        trackEvent("login_failed", { error_message: message });
         return;
       }
 
@@ -65,6 +72,13 @@ function LoginContent() {
         description: "Bem-vindo de volta! Redirecionando...",
         variant: "success",
       });
+
+      // Identify user and track login completion
+      if (json.user?.id) {
+        identifyUser(json.user.id, { email: formData.email });
+      }
+      trackEvent("login_completed", { redirect_path: redirectPath });
+
       router.push(redirectPath);
     } catch (err) {
       console.error("Login error", err);

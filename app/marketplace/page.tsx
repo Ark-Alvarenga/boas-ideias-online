@@ -8,6 +8,7 @@ import { ProductCard } from "@/components/marketplace/product-card";
 import { MarketplaceFilters } from "@/components/marketplace/marketplace-filters";
 import type { Product } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
+import { trackEvent } from "@/lib/amplitude";
 
 interface ApiProduct extends Omit<
   Product,
@@ -53,6 +54,11 @@ function MarketplaceContent() {
   const updateFilters = (params: Record<string, string | null>) => {
     const qs = createQueryString(params);
     router.replace(`${pathname}?${qs}`, { scroll: false });
+  };
+
+  const handleFilterChange = (params: Record<string, string | null>, filterType: string, value: string | null) => {
+    updateFilters(params);
+    trackEvent("marketplace_filtered", { filter_type: filterType, value: value ?? "cleared" });
   };
 
   const loadProducts = async () => {
@@ -110,11 +116,22 @@ function MarketplaceContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, category, sort, page]);
 
+  // Track marketplace view
+  useEffect(() => {
+    trackEvent("marketplace_viewed", {
+      search_query: search,
+      category,
+      sort,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const handleChangePage = (nextPage: number) => {
     const safePage = Math.min(Math.max(nextPage, 1), totalPages);
     updateFilters({ page: safePage > 1 ? String(safePage) : null });
+    trackEvent("marketplace_page_changed", { page_number: safePage });
   };
 
   return (
@@ -146,20 +163,20 @@ function MarketplaceContent() {
               initialCategory={category}
               initialSort={sort}
               onSearch={(value) => {
-                updateFilters({ search: value || null, page: null });
-              }}
-              onCategoryChange={(value) => {
-                updateFilters({
-                  category: value === "todos" ? null : value,
-                  page: null,
-                });
-              }}
-              onSortChange={(value) => {
-                updateFilters({
-                  sort: value === "relevancia" ? null : value,
-                  page: null,
-                });
-              }}
+              handleFilterChange({ search: value || null, page: null }, "search", value);
+            }}
+            onCategoryChange={(value) => {
+              handleFilterChange({
+                category: value === "todos" ? null : value,
+                page: null,
+              }, "category", value);
+            }}
+            onSortChange={(value) => {
+              handleFilterChange({
+                sort: value === "relevancia" ? null : value,
+                page: null,
+              }, "sort", value);
+            }}
               onClear={() => {
                 updateFilters({
                   search: null,

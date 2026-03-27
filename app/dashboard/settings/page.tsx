@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { toast } from "@/hooks/use-toast";
+import { trackEvent } from "@/lib/amplitude";
 
 interface UserData {
   id: string;
@@ -86,6 +87,12 @@ export default function SettingsPage() {
     fetchUser();
   }, [fetchUser]);
 
+  // Track settings page view
+  useEffect(() => {
+    trackEvent("settings_viewed", { active_tab: activeTab });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Countdown timer for resend
   useEffect(() => {
     if (countdown <= 0) return;
@@ -108,6 +115,7 @@ export default function SettingsPage() {
       }
       setOriginalBio(bio);
       toast({ title: "Biografia atualizada com sucesso!" });
+      trackEvent("profile_updated", { field: "bio" });
     } catch (error) {
       toast({
         title: "Erro",
@@ -145,6 +153,7 @@ export default function SettingsPage() {
         title: "Código enviado!",
         description: `Verifique seu e-mail ${user?.email ?? ""}.`,
       });
+      trackEvent(type === "name" ? "name_change_requested" : "password_change_requested");
     } catch (error) {
       toast({
         title: "Erro",
@@ -184,11 +193,13 @@ export default function SettingsPage() {
       if (data.type === "name") {
         setOriginalName(name);
         toast({ title: "Nome atualizado com sucesso!" });
+        trackEvent("settings_change_confirmed", { type: "name" });
       } else if (data.type === "password") {
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
         toast({ title: "Senha atualizada com sucesso!" });
+        trackEvent("settings_change_confirmed", { type: "password" });
       }
 
       // Refresh the user data

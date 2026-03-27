@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -5,6 +7,7 @@ import { ArrowRight, Zap } from "lucide-react"
 import { formatCentsToBRL } from "@/lib/currency"
 import { PromoteProductButton } from "@/components/product/promote-product-button"
 import Image from "next/image"
+import { trackEvent } from "@/lib/amplitude"
 
 interface ProductCardProps {
   id: string
@@ -54,7 +57,16 @@ export function ProductCard({
   const isPopular = typeof sales === "number" && sales >= 10
 
   return (
-    <Card className="group h-full overflow-hidden border-border/50 bg-card hover:border-border hover:shadow-lg hover:shadow-primary/5">
+    <Card
+      className="group h-full overflow-hidden border-border/50 bg-card hover:border-border hover:shadow-lg hover:shadow-primary/5"
+      onClick={() => {
+        trackEvent("product_card_clicked", {
+          product_id: id,
+          product_slug: slug || id,
+          source: "marketplace",
+        })
+      }}
+    >
       <div className={`relative aspect-[4/3] overflow-hidden bg-gradient-to-br ${gradient}`}>
         {coverImage ? (
           <Image

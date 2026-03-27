@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
+import { trackEvent, resetAmplitude } from "@/lib/amplitude";
 
 export default function LogoutPage() {
   const router = useRouter();
@@ -28,6 +29,9 @@ export default function LogoutPage() {
           description: "Você saiu com sucesso.",
           variant: "success",
         });
+
+        trackEvent("logout");
+        resetAmplitude();
 
         // Use window.location.href for a full refresh to clear any state
         window.location.href = "/";

@@ -38,6 +38,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { trackEvent } from "@/lib/amplitude";
 
 interface MeResponse {
   authenticated: boolean;
@@ -122,6 +123,11 @@ export default function CreateProductPage() {
     void checkAuth();
   }, [router]);
 
+  // Track create product page view
+  useEffect(() => {
+    trackEvent("create_product_started");
+  }, []);
+
   const handleChange = useCallback(
     (field: keyof typeof formData, value: string) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
@@ -167,6 +173,10 @@ export default function CreateProductPage() {
     setPdfFile(file);
     setPdfUrl(null);
     setUploadProgress(0);
+    trackEvent("product_pdf_selected", {
+      file_size_mb: Number((file.size / (1024 * 1024)).toFixed(2)),
+      file_name: file.name,
+    });
   };
 
   const handleCoverFileChange = (
@@ -190,6 +200,7 @@ export default function CreateProductPage() {
     // Show a local preview immediately
     const objectUrl = URL.createObjectURL(file);
     setCoverUrl(objectUrl);
+    trackEvent("product_cover_selected", { file_type: file.type });
   };
 
   const handleUpload = async () => {
@@ -269,6 +280,9 @@ export default function CreateProductPage() {
         description: "Seu arquivo já pode ser vendido no marketplace.",
         variant: "success",
       });
+      trackEvent("product_pdf_uploaded", {
+        file_size_mb: Number((pdfFile.size / (1024 * 1024)).toFixed(2)),
+      });
     } catch (err) {
       console.error("Upload error", err);
       const message = "Ocorreu um erro ao enviar o arquivo.";
@@ -323,6 +337,7 @@ export default function CreateProductPage() {
         description: "Sua capa já será usada na listagem do marketplace.",
         variant: "success",
       });
+      trackEvent("product_cover_uploaded");
     } catch (err) {
       console.error("Cover upload error", err);
       const message = "Ocorreu um erro ao enviar a capa.";
@@ -445,6 +460,12 @@ export default function CreateProductPage() {
         description:
           "Agora você pode gerenciar e publicar seu produto no painel.",
         variant: "success",
+      });
+      trackEvent("product_created", {
+        title: formData.title,
+        category: formData.category,
+        price_brl: Number(formData.price),
+        has_cover: !!finalCoverUrl,
       });
       router.push("/dashboard/products");
     } catch (err) {

@@ -27,6 +27,7 @@ import { PromoteProductButton } from "@/components/product/promote-product-butto
 import { formatCentsToBRL } from "@/lib/currency"
 import { Metadata } from "next"
 import { JsonLd } from "@/components/seo/json-ld"
+import { TrackPageView } from "@/components/track-page-view"
 
 export async function generateMetadata({
   params,
@@ -163,6 +164,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <div className="min-h-screen bg-background">
       <JsonLd data={productJsonLd} />
+      <TrackPageView
+        event="product_viewed"
+        properties={{
+          product_id: product._id?.toString(),
+          product_slug: product.slug,
+          category: product.category,
+          price_brl: product.priceCents / 100,
+          creator_name: product.creatorName,
+        }}
+      />
       <Header />
 
       <main className="py-8 lg:py-12">

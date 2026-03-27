@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { LayoutWrapper } from "@/components/layout/layout-wrapper";
 import { JsonLd } from "@/components/seo/json-ld";
+import { AmplitudeProvider } from "@/components/amplitude-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -123,9 +124,11 @@ export default function RootLayout({
         <JsonLd data={jsonLd} />
         <JsonLd data={websiteJsonLd} />
         {/* CONTENT */}
-        <LayoutWrapper>
-          <main>{children}</main>
-        </LayoutWrapper>
+        <AmplitudeProvider>
+          <LayoutWrapper>
+            <main>{children}</main>
+          </LayoutWrapper>
+        </AmplitudeProvider>
 
         <Toaster />
         <Analytics />

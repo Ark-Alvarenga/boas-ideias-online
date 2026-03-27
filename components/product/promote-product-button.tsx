@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Share2, Loader2, Check } from "lucide-react"
 
 import { useToast } from "@/hooks/use-toast"
+import { trackEvent } from "@/lib/amplitude"
 
 interface PromoteProductButtonProps {
   productId: string
@@ -60,6 +61,10 @@ export function PromoteProductButton({
           description: "O link foi copiado para sua área de transferência.",
           variant: "success",
         })
+        trackEvent("affiliate_link_generated", {
+          product_id: productId,
+          product_slug: productSlug,
+        })
       }
     } catch (err) {
       const message = "Erro ao conectar."
@@ -68,6 +73,10 @@ export function PromoteProductButton({
         title: "Erro de conexão",
         description: message,
         variant: "destructive",
+      })
+      trackEvent("affiliate_link_generate_failed", {
+        product_id: productId,
+        error_message: message,
       })
     } finally {
       setLoading(false)

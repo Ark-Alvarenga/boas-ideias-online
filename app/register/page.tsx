@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/layout/header";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { toast } from "@/hooks/use-toast";
+import { trackEvent, identifyUser } from "@/lib/amplitude";
 
 function RegisterContent() {
   const router = useRouter();
@@ -30,6 +31,11 @@ function RegisterContent() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Track signup page view
+  useEffect(() => {
+    trackEvent("signup_started", { redirect_path: redirectPath });
+  }, [redirectPath]);
 
   const handleChange = (
     field: "name" | "email" | "password",
@@ -60,6 +66,7 @@ function RegisterContent() {
           description: message,
           variant: "destructive",
         });
+        trackEvent("signup_failed", { error_message: message });
         return;
       }
 
@@ -68,6 +75,13 @@ function RegisterContent() {
         description: "Bem-vindo! Redirecionando...",
         variant: "success",
       });
+
+      // Identify user and track signup completion
+      if (json.user?.id) {
+        identifyUser(json.user.id, { email: formData.email, name: formData.name });
+      }
+      trackEvent("signup_completed", { redirect_path: redirectPath });
+
       router.push(redirectPath);
     } catch (err) {
       console.error("Register error", err);

@@ -9,6 +9,7 @@ import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { CheckCircle2, Download, ArrowRight } from "lucide-react"
+import { trackEvent } from "@/lib/amplitude"
 
 interface OrderLookupResult {
   success?: boolean
@@ -44,6 +45,11 @@ function PurchaseSuccessContent() {
           setOrderInfo({ success: false, error: data.error || "Não foi possível localizar seu pedido ainda." })
         } else {
           setOrderInfo(data)
+          trackEvent("purchase_completed", {
+            session_id: sessionId,
+            order_id: data.orderId,
+            product_title: data.productTitle,
+          })
         }
       } catch (error) {
         console.error("Failed to resolve order by session:", error)
@@ -126,7 +132,10 @@ function PurchaseSuccessContent() {
                   {orderInfo?.success && orderInfo.orderId && (
                     <Button
                       className="h-12 w-full"
-                      onClick={() => router.push(`/download/${orderInfo.orderId}`)}
+                      onClick={() => {
+                      trackEvent("download_clicked", { order_id: orderInfo.orderId })
+                      router.push(`/download/${orderInfo.orderId}`)
+                    }}
                     >
                       <Download className="mr-2 h-4 w-4" />
                       Baixar agora
