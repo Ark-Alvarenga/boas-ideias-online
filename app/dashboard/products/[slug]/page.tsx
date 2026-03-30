@@ -16,6 +16,7 @@ import type { Product, User } from "@/lib/types";
 import { ObjectId } from "mongodb";
 import { ProductEditForm } from "@/components/dashboard/product-edit-form";
 import { resolvePriceCents } from "@/lib/currency";
+import { TrackPageView } from "@/components/track-page-view";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
@@ -58,6 +59,10 @@ export default async function DashboardProductDetailPage({
 
   return (
     <div className="min-h-screen bg-background">
+      <TrackPageView
+        event="product_edit_viewed"
+        properties={{ product_slug: product.slug, product_id: product._id?.toString() }}
+      />
       <header className="sticky top-0 z-50 border-b-2 border-foreground bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between px-6 lg:px-8">
           <Link href="/dashboard/products" className="flex items-center gap-3">

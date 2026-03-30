@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export function PromoHeroSection() {
   const features = [
     "Como ganhar dinheiro na internet começando do zero.",
@@ -12,65 +14,29 @@ export function PromoHeroSection() {
     "Como criar múltiplas fontes de renda online.",
     "Mentalidade prática para viver da internet.",
     "O caminho mais curto entre você e sua liberdade financeira.",
-  ]
+  ];
 
   return (
-    <section className="bg-[#0f0f0f] py-5 md:py-8">
+    <section className="bg-gray-100 py-5 md:py-8">
       <div className="max-w-6xl mx-auto px-4">
-
-        {/* Logo / Branding */}
-        <div className="mb-8 md:mb-12">
-          <div className="text-gray-900">
-            <span className="text-sm font-bold tracking-wider text-cyan-400">GUIA</span>
-            <div className="text-3xl font-bold">ONLINE</div>
-            <div className="flex gap-1 mt-1">
-              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-              <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-            </div>
-          </div>
-        </div>
-
         {/* Conteúdo principal */}
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-center">
-
           {/* Mockup do Ebook */}
           <div className="w-full max-w-sm lg:max-w-md flex-shrink-0">
             <div className="relative">
               <div className="bg-gradient-to-br from-cyan-700 to-blue-950 rounded-xl p-8 aspect-[3/4] flex flex-col justify-center items-center shadow-2xl transform rotate-y-[-5deg]">
-
-                <span className="text-xs text-gray-900 tracking-widest mb-2">GUIA</span>
-                <span className="text-xl font-bold text-gray-900 mb-3">ONLINE</span>
-
-                <div className="text-center text-gray-900 text-xs mb-3">
-                  COMO GANHAR DINHEIRO NA INTERNET DO ZERO
-                </div>
-
-                <h3 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-4">
-                  VIVER DA<br />INTERNET
-                </h3>
-
-                <p className="text-xs text-gray-900/70 text-center mb-4">
-                  O MÉTODO PRÁTICO PARA CONSTRUIR RENDA ONLINE
-                </p>
-
-                <div className="flex gap-1 mb-3">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span key={star} className="text-yellow-400 text-lg">★</span>
-                  ))}
-                </div>
-
-                <p className="text-xs text-gray-900/60 text-center">
-                  DO ZERO ATÉ SUA PRIMEIRA RENDA ONLINE
-                </p>
-
+                <Image
+                  src="/images/ebook-cover.png"
+                  alt="Ebook Cover"
+                  width={500}
+                  height={500}
+                />
               </div>
             </div>
           </div>
 
           {/* Texto */}
           <div className="flex-1 text-center lg:text-left">
-
             {/* Headline */}
             <h1 className="text-3xl md:text-5xl font-bold mb-3">
               <span className="text-cyan-400">VIVER DA INTERNET</span>
@@ -78,26 +44,34 @@ export function PromoHeroSection() {
 
             {/* Subheadline */}
             <h2 className="text-xl md:text-3xl text-gray-900 font-bold mb-6 leading-snug">
-              Pare de perder tempo e descubra como ganhar dinheiro online mesmo começando do zero.
+              Pare de perder tempo e descubra como ganhar dinheiro online mesmo
+              começando do zero.
             </h2>
 
             {/* Trigger emocional */}
-            <p className="text-gray-400 mb-4 text-sm md:text-base">
+            <p className="text-gray-600 mb-4 text-sm md:text-base">
               Você não precisa de sorte, nem de milhões de seguidores…
             </p>
 
             {/* Parágrafo principal */}
-            <p className="text-gray-300 mb-4 leading-relaxed">
-              O guia <span className="text-cyan-400 font-semibold">"Viver da Internet"</span> foi criado para quem quer sair do zero e começar a gerar renda online de verdade — usando estratégias simples, atuais e que realmente funcionam.
+            <p className="text-gray-700 mb-4 leading-relaxed">
+              O guia{" "}
+              <span className="text-cyan-400 font-semibold">
+                "Viver da Internet"
+              </span>{" "}
+              foi criado para quem quer sair do zero e começar a gerar renda
+              online de verdade — usando estratégias simples, atuais e que
+              realmente funcionam.
             </p>
 
             {/* Reforço */}
-            <p className="text-gray-300 mb-6 leading-relaxed">
-              Aqui você vai aprender exatamente o que fazer, passo a passo, mesmo que nunca tenha ganhado R$1 na internet:
+            <p className="text-gray-700 mb-6 leading-relaxed">
+              Aqui você vai aprender exatamente o que fazer, passo a passo,
+              mesmo que nunca tenha ganhado R$1 na internet:
             </p>
 
             {/* Lista */}
-            <ol className="text-gray-300 space-y-2 text-left mb-8">
+            <ol className="text-gray-700 space-y-2 text-left mb-8">
               {features.map((feature, index) => (
                 <li key={index} className="flex items-start gap-2">
                   <span className="text-cyan-400 font-bold">{index + 1}.</span>
@@ -125,14 +99,13 @@ export function PromoHeroSection() {
                 QUERO COMEÇAR AGORA 🚀
               </button>
 
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-600 text-sm">
                 Acesso imediato • Comece hoje mesmo
               </p>
             </div>
-
           </div>
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -8,6 +8,7 @@ import { ObjectId } from "mongodb";
 import type { Order, Product, User } from "@/lib/types";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { Button } from "@/components/ui/button";
+import { TrackPageView } from "@/components/track-page-view";
 import { Card, CardContent } from "@/components/ui/card";
 import { PurchaseCard, PurchaseCardSkeleton } from "./purchase-card";
 import { Suspense } from "react";
@@ -77,6 +78,10 @@ export default async function PurchasesPage() {
             <Link href="/marketplace">Marketplace</Link>
           </Button>
         }
+      />
+      <TrackPageView
+        event="purchases_viewed"
+        properties={{ purchases_count: purchases.length }}
       />
 
       <main className="mx-auto max-w-7xl p-6 lg:p-8">

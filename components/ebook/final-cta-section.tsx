@@ -3,7 +3,7 @@ import { Shield, Clock, CreditCard } from "lucide-react"
 
 export function FinalCTASection() {
   return (
-    <section className="bg-white-50 py-6 md:py-10">
+    <section className="bg-gray-100 py-6 md:py-10">
       <div className="max-w-4xl mx-auto px-4 text-center">
 
         {/* Headline */}
@@ -16,7 +16,7 @@ export function FinalCTASection() {
           A decisão é sua.
         </p>
 
-        <p className="text-gray-400 text-sm md:text-base mb-8 max-w-xl mx-auto">
+        <p className="text-gray-600 text-sm md:text-base mb-8 max-w-xl mx-auto">
           Você pode sair dessa página e continuar tentando sozinho…
           <br />
           ou começar agora com um método simples e direto para ganhar dinheiro na internet.
@@ -24,15 +24,15 @@ export function FinalCTASection() {
 
         {/* Trust badges */}
         <div className="flex flex-wrap justify-center gap-6 mb-8">
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
+          <div className="flex items-center gap-2 text-gray-600 text-sm">
             <Shield className="w-5 h-5 text-cyan-500" />
             <span>Compra 100% segura</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
+          <div className="flex items-center gap-2 text-gray-600 text-sm">
             <Clock className="w-5 h-5 text-cyan-500" />
             <span>Acesso imediato após pagamento</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
+          <div className="flex items-center gap-2 text-gray-600 text-sm">
             <CreditCard className="w-5 h-5 text-cyan-500" />
             <span>Parcelamento em até 12x</span>
           </div>

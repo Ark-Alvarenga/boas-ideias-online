@@ -16,6 +16,7 @@ import { authConfig, verifySessionToken } from "@/lib/auth";
 import { ObjectId } from "mongodb";
 import { ConnectStripeCard } from "@/components/dashboard/connect-stripe-card";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { TrackPageView } from "@/components/track-page-view";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
@@ -105,6 +106,7 @@ export default async function EarningsPage() {
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader title="Ganhos e Vendas" />
+      <TrackPageView event="earnings_viewed" />
 
       <main className="mx-auto max-w-7xl p-6 lg:p-8">
         <div className="mb-10">

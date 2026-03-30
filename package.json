@@ -9,7 +9,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@amplitude/analytics-browser": "^2.37.2",
+    "@amplitude/analytics-browser": "^2.38.0",
     "@aws-sdk/client-s3": "^3.1008.0",
     "@aws-sdk/s3-request-presigner": "^3.1008.0",
     "@hookform/resolvers": "^3.9.1",

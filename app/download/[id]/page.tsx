@@ -8,6 +8,8 @@ import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowLeft, Download, FileText, Loader2 } from "lucide-react"
+import { trackEvent } from "@/lib/amplitude"
+import { TrackPageView } from "@/components/track-page-view"
 
 interface DownloadResponse {
   success?: boolean
@@ -67,6 +69,7 @@ export default function DownloadPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <TrackPageView event="download_page_viewed" properties={{ order_id: orderId }} />
       <Header />
 
       <main className="py-12 lg:py-16">
@@ -118,6 +121,12 @@ export default function DownloadPage() {
                       asChild
                       size="lg"
                       className="h-11 w-full sm:w-auto"
+                      onClick={() => {
+                        trackEvent("download_started", {
+                          order_id: orderId,
+                          product_title: data.productTitle,
+                        })
+                      }}
                     >
                       <a href={data.downloadUrl ?? "#"} target="_blank">
                         <Download className="mr-2 h-4 w-4" />

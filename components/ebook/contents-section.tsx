@@ -31,10 +31,10 @@ export function ContentsSection() {
   ]
 
   return (
-    <section className="bg-white-50 py-6 md:py-10">
+    <section className="bg-gray-100 py-6 md:py-10">
       <div className="max-w-4xl mx-auto px-4">
         <h2 className="text-center mb-16">
-          <span className="text-gray-400 text-2xl md:text-3xl italic">O QUE VOCÊ</span>
+          <span className="text-gray-500 text-2xl md:text-3xl italic">O QUE VOCÊ</span>
           <br />
           <span className="text-cyan-500 text-3xl md:text-4xl font-bold">
             VAI APRENDER NO GUIA?
@@ -43,7 +43,7 @@ export function ContentsSection() {
 
         <div className="relative">
           {/* Vertical dashed line */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-px border-l-2 border-dashed border-gray-600 -translate-x-1/2 hidden md:block" />
+          <div className="absolute left-1/2 top-0 bottom-0 w-px border-l-2 border-dashed border-gray-300 -translate-x-1/2 hidden md:block z-0" />
 
           <div className="space-y-12 md:space-y-0">
             {items.map((item, index) => (
@@ -59,14 +59,14 @@ export function ContentsSection() {
                       <h3 className="text-cyan-500 text-xl md:text-2xl font-bold whitespace-pre-line mb-3">
                         {item.title}
                       </h3>
-                      <p className="text-gray-400 text-sm md:text-base">
+                      <p className="text-gray-600 text-sm md:text-base">
                         {item.description}
                       </p>
                     </div>
 
                     {/* Number circle */}
                     <div className="relative z-10 order-1 md:order-2">
-                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-cyan-500 bg-white-50 flex items-center justify-center">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-cyan-500 bg-gray-100 flex items-center justify-center">
                         <span className="text-cyan-500 text-2xl md:text-3xl font-bold">
                           {item.number}
                         </span>
@@ -83,7 +83,7 @@ export function ContentsSection() {
 
                     {/* Number circle */}
                     <div className="relative z-10 order-1 md:order-2">
-                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-cyan-500 bg-white-50 flex items-center justify-center">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-cyan-500 bg-gray-100 flex items-center justify-center">
                         <span className="text-cyan-500 text-2xl md:text-3xl font-bold">
                           {item.number}
                         </span>
@@ -95,7 +95,7 @@ export function ContentsSection() {
                       <h3 className="text-cyan-500 text-xl md:text-2xl font-bold whitespace-pre-line mb-3">
                         {item.title}
                       </h3>
-                      <p className="text-gray-400 text-sm md:text-base">
+                      <p className="text-gray-600 text-sm md:text-base">
                         {item.description}
                       </p>
                     </div>
