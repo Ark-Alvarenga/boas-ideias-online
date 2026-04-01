@@ -119,7 +119,7 @@ export interface Sale {
   stripeTransferIdAffiliate?: string
 
   // Status
-  status: 'completed' | 'refunded' | 'partially_refunded'
+  status: 'completed' | 'refunded' | 'partially_refunded' | 'pending'
 
   // Payout tracking
   creatorPayoutStatus: 'pending' | 'paid'

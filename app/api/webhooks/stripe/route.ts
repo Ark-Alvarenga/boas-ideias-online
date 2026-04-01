@@ -429,6 +429,14 @@ async function createSaleFromCheckoutData(
     }
   }
 
+  // ── Resolve creator ──
+  const creatorId =
+    creatorIdStr && ObjectId.isValid(creatorIdStr)
+      ? new ObjectId(creatorIdStr)
+      : product.creatorId;
+
+  const creator = await usersCollection.findOne({ _id: creatorId });
+
   // ── Financial Split ──
   const totalAmountCents = resolvePriceCents(product);
   const SAFE_DEFAULT_FEE = 10; // 10% fallback if env var missing
@@ -442,9 +450,22 @@ async function createSaleFromCheckoutData(
     100,
     Math.max(0, Number(rawFee) || SAFE_DEFAULT_FEE),
   );
+  
+  let baseFee = Math.round((totalAmountCents * platformFeePercent) / 100) + 299;
+
+  if (creator?.referredBy) {
+    const originalBaseFee = baseFee;
+    baseFee = baseFee - 100;
+    console.log("[REFERRAL DISCOUNT APPLIED]", {
+      creatorId: creator._id,
+      originalFee: originalBaseFee,
+      discountedFee: baseFee
+    });
+  }
+
   const platformFeeCents = Math.min(
     totalAmountCents,
-    Math.round((totalAmountCents * platformFeePercent) / 100) + 299
+    Math.max(0, baseFee)
   );
 
   // ── Resolve affiliate ──
@@ -496,13 +517,7 @@ async function createSaleFromCheckoutData(
     totalAmountCents - platformFeeCents - affiliateShareCents,
   );
 
-  // ── Resolve creator ──
-  const creatorId =
-    creatorIdStr && ObjectId.isValid(creatorIdStr)
-      ? new ObjectId(creatorIdStr)
-      : product.creatorId;
-
-  const creator = await usersCollection.findOne({ _id: creatorId });
+  // Creator was already resolved earlier to calculate fee discounts
 
   // ── Resolve referrer ──
   let referralShareCents = 0;
@@ -549,19 +564,28 @@ async function createSaleFromCheckoutData(
     stripeSessionId,
     stripePaymentIntentId: stripePaymentIntentId || chargeId,
     stripeChargeId: chargeId,
-    status: "completed",
+    status: "pending",
     creatorPayoutStatus: "pending",
-    affiliatePayoutStatus: affiliateRecord
-      ? affiliateUser?.stripeAccountId && affiliateUser?.stripeOnboardingComplete
-        ? "paid"
-        : "pending"
-      : "not_applicable",
-    referralPayoutStatus: referrerUserId ? "pending" : "not_applicable",
+    affiliatePayoutStatus: "pending",
+    referralPayoutStatus: "pending",
     availableAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     createdAt: new Date(),
   };
 
-  // ── Transfer to creator ──
+  // ── STEP 1: Persist sale FIRST as "pending" (with unique index on stripeSessionId prevents dupes) ──
+  // This prevents "Ghost Payouts" (money sent but no record in DB)
+  try {
+    await salesCollection.insertOne(sale);
+    console.log(`[Stripe webhook] [${stripeSessionId}] Sale record created (pending).`);
+  } catch (err: any) {
+    if (err.code === 11000) {
+      console.log(`[Stripe webhook] [${stripeSessionId}] Race condition: Sale already exists — skipping processing.`);
+      return;
+    }
+    throw err;
+  }
+
+  // ── STEP 2: Transfer to creator ──
   if (creator?.stripeAccountId && creatorShareCents > 0) {
     try {
       const creatorTransfer = await stripeClient.transfers.create(
@@ -579,32 +603,25 @@ async function createSaleFromCheckoutData(
         },
         { idempotencyKey: `transfer_creator_${stripeSessionId}` },
       );
-      sale.stripeTransferIdCreator = creatorTransfer.id;
-      sale.creatorPayoutStatus = "paid";
-      console.log(
-        `[Stripe webhook] [${stripeSessionId}] Creator transfer created:`,
-        JSON.stringify({
-          transferId: creatorTransfer.id,
-          amount: creatorShareCents,
-          destination: creator.stripeAccountId,
-          transferGroup,
-          sourceTransaction: chargeId,
-        }),
+      
+      await salesCollection.updateOne(
+        { _id: saleId },
+        { 
+          $set: { 
+            stripeTransferIdCreator: creatorTransfer.id,
+            creatorPayoutStatus: "paid"
+          } 
+        }
       );
+
+      console.log(`[Stripe webhook] [${stripeSessionId}] Creator transfer completed: ${creatorTransfer.id}`);
     } catch (err) {
-      console.error(
-        `[Stripe webhook] [${stripeSessionId}] [REQUIRES_MANUAL_INTERVENTION] Creator transfer failed:`,
-        err,
-      );
-      sale.creatorPayoutStatus = "pending";
+      console.error(`[Stripe webhook] [${stripeSessionId}] [AUTO_RETRY_ENABLED] Creator transfer failed:`, err);
+      // Status remains "pending" for the cron to pick up
     }
-  } else {
-    console.warn(
-      `[Stripe webhook] [${stripeSessionId}] Creator transfer skipped: no Stripe account or zero-amount`,
-    );
   }
 
-  // ── Transfer to affiliate ──
+  // ── STEP 3: Transfer to affiliate ──
   if (
     affiliateRecord &&
     affiliateShareCents > 0 &&
@@ -628,33 +645,32 @@ async function createSaleFromCheckoutData(
         },
         { idempotencyKey: `transfer_affiliate_${stripeSessionId}` },
       );
-      sale.stripeTransferIdAffiliate = affiliateTransfer.id;
-      sale.affiliatePayoutStatus = "paid";
-      sale.affiliatePaidAt = new Date();
+
+      await salesCollection.updateOne(
+        { _id: saleId },
+        { 
+          $set: { 
+            stripeTransferIdAffiliate: affiliateTransfer.id,
+            affiliatePayoutStatus: "paid",
+            affiliatePaidAt: new Date()
+          } 
+        }
+      );
+
+      console.log(`[Stripe webhook] [${stripeSessionId}] Affiliate transfer completed: ${affiliateTransfer.id}`);
     } catch (err) {
-      console.error(
-        `[Stripe webhook] [${stripeSessionId}] [REQUIRES_MANUAL_INTERVENTION] Affiliate transfer failed:`,
-        err,
-      );
-      sale.affiliatePayoutStatus = "pending";
+      console.error(`[Stripe webhook] [${stripeSessionId}] [AUTO_RETRY_ENABLED] Affiliate transfer failed:`, err);
+      // Status remains "pending" for the cron
     }
   }
 
-  // ── Persist sale FIRST (unique index on stripeSessionId prevents dupes) ──
-  console.log("FINAL SALE CHARGE ID:", chargeId);
-  try {
-    await salesCollection.insertOne(sale);
-  } catch (err: any) {
-    if (err.code === 11000) {
-      console.log(
-        `[Stripe webhook] [${stripeSessionId}] Race condition: Sale already inserted — skipping balance accrual`,
-      );
-      return;
-    }
-    throw err;
-  }
+  // ── STEP 4: Mark sale as "completed" (means logic was executed) ──
+  await salesCollection.updateOne(
+    { _id: saleId },
+    { $set: { status: "completed" } }
+  );
 
-  // ── Balance Accrual (only runs after successful insert — no double-count) ──
+  // ── STEP 5: Balance Accrual & Transactions ──
   if (creatorShareCents > 0) {
     await usersCollection.updateOne(
       { _id: creatorId },
@@ -668,8 +684,8 @@ async function createSaleFromCheckoutData(
     await userTransactionsCollection.insertOne({
       userId: creatorId,
       amountCents: creatorShareCents,
-      type: "sale",
-      status: "pending",
+      type: "sale" as any,
+      status: "pending" as any,
       saleId: saleId.toString(),
       createdAt: new Date(),
     });
@@ -688,8 +704,8 @@ async function createSaleFromCheckoutData(
     await userTransactionsCollection.insertOne({
       userId: new ObjectId(affiliateUserId),
       amountCents: affiliateShareCents,
-      type: "affiliate_commission",
-      status: "pending",
+      type: "affiliate_commission" as any,
+      status: "pending" as any,
       saleId: saleId.toString(),
       createdAt: new Date(),
     });
@@ -708,8 +724,8 @@ async function createSaleFromCheckoutData(
     await userTransactionsCollection.insertOne({
       userId: referrerUserId,
       amountCents: referralShareCents,
-      type: "referral_commission",
-      status: "pending",
+      type: "referral_commission" as any,
+      status: "pending" as any,
       saleId: saleId.toString(),
       createdAt: new Date(),
     });

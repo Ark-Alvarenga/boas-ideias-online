@@ -8,10 +8,15 @@ export async function GET(request: Request) {
   try {
     // SECURITY: Require Bearer CRON_SECRET header
     const authHeader = request.headers.get('authorization')
+    
+    if (!process.env.CRON_SECRET) {
+      console.error('[CRON ERROR] Missing CRON_SECRET environment variable!');
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+    }
+
     const expectedToken = `Bearer ${process.env.CRON_SECRET}`
 
-    // If env CRON_SECRET is not set, we shouldn't allow the endpoint to run openly
-    if (!process.env.CRON_SECRET || authHeader !== expectedToken) {
+    if (authHeader !== expectedToken) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -26,14 +31,17 @@ export async function GET(request: Request) {
     // Include users mapped by any pending payout status to correctly heal invisible sums
     const pendingCreatorIds = await salesCollection.distinct("creatorId", { creatorPayoutStatus: "pending", creatorId: { $ne: null } });
     const pendingAffiliateIds = await salesCollection.distinct("affiliateUserId", { affiliatePayoutStatus: "pending", affiliateUserId: { $ne: null } });
+    const pendingReferrerIds = await salesCollection.distinct("referrerUserId", { referralPayoutStatus: "pending", referrerUserId: { $ne: null } });
 
     const combinedSet = new Set<string>()
     pendingCreatorIds.forEach(id => combinedSet.add(id.toString()))
     pendingAffiliateIds.forEach(id => combinedSet.add(id.toString()))
+    pendingReferrerIds.forEach(id => combinedSet.add(id.toString()))
 
     const uniqueObjIds = Array.from(combinedSet).map(id => new ObjectId(id))
 
     // Find users ready for payout, incorporating self-healing checks on missing balances
+    // CRITICAL FIX: Ensure ALL users with pendingBalanceCents > 0 are considered.
     const pendingUsers = await usersCollection.find({
       $or: [
         { _id: { $in: uniqueObjIds } },
@@ -41,7 +49,7 @@ export async function GET(request: Request) {
       ],
       stripeAccountId: { $exists: true, $type: 'string' },
       stripeOnboardingComplete: true,
-      payoutProcessing: { $ne: true }
+      payoutLockedAt: { $exists: false } // Only process unlocked users
     }).toArray()
 
     let processedCount = 0

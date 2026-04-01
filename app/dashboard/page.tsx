@@ -50,13 +50,14 @@ export default async function DashboardPage() {
 
   const firstProductSlug = hasProducts ? userProducts[0].slug : null;
 
-  const userTransactionsCollection = db.collection<UserTransaction>("userTransactions");
+  const userTransactionsCollection =
+    db.collection<UserTransaction>("userTransactions");
   const referralTxs = await userTransactionsCollection
     .find({ userId: user._id, type: "referral_commission" })
     .toArray();
   const totalReferralEarningsCents = referralTxs.reduce(
     (acc, tx) => acc + tx.amountCents,
-    0
+    0,
   );
 
   const referredUsersCount = await db
@@ -89,6 +90,15 @@ export default async function DashboardPage() {
             cliques de distância para quem começa hoje.
           </p>
         </div>
+
+        {user.referredBy && (
+          <div className="mb-6 rounded-xl border-2 border-foreground bg-emerald-100 p-4 text-sm font-bold text-emerald-950 shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_#fff]">
+            <p>🔥 Taxa reduzida ativa — você entrou por indicação</p>
+            <p className="mt-1 text-xs font-semibold text-emerald-800">
+              Continue vendendo para aproveitar sua taxa reduzida 💸
+            </p>
+          </div>
+        )}
 
         {user.referralCode && (
           <ReferralCard

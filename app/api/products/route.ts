@@ -84,7 +84,7 @@ export async function GET(request: Request) {
       .toArray()
 
     const products = rawProducts.map((product) => {
-      const { price, ...rest } = product
+      const { price, pdfUrl, ...rest } = product
       return {
         ...rest,
         priceCents: resolvePriceCents(product),

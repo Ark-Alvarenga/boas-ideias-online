@@ -53,14 +53,17 @@ export async function GET(
       .limit(3)
       .toArray()
 
+    // Filter the product to remove critical fields like pdfUrl
+    const { pdfUrl, ...safeProduct } = product;
+
     return NextResponse.json({
       product: {
-        ...product,
+        ...safeProduct,
         priceCents: resolvePriceCents(product),
         _id: product._id?.toString(),
       },
       relatedProducts: relatedProducts.map((related) => {
-        const { price, ...rest } = related;
+        const { price, pdfUrl, ...rest } = related;
         return {
           ...rest,
           priceCents: resolvePriceCents(related),
