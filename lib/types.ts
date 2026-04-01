@@ -11,7 +11,10 @@ export interface User {
   stripeOnboardingComplete: boolean
   pendingBalanceCents: number
   totalEarningsCents: number
-  payoutProcessing: boolean
+  payoutProcessing?: boolean // legacy, use payoutLockedAt for new logic
+  payoutLockedAt?: Date
+  referralCode?: string
+  referredBy?: ObjectId
   createdAt: Date
   updatedAt: Date
 }
@@ -82,7 +85,7 @@ export interface Order {
   userId: ObjectId
   buyerEmail: string
   buyerName: string
-  status: 'pending' | 'paid' | 'refunded'
+  status: 'pending' | 'paid' | 'refunded' | 'partially_refunded'
   createdAt: Date
   updatedAt: Date
   stripeSessionId?: string
@@ -99,12 +102,14 @@ export interface Sale {
   buyerId: ObjectId
   creatorId: ObjectId
   affiliateUserId?: ObjectId
+  referrerUserId?: ObjectId
 
   // All amounts in integer CENTS (BRL centavos)
   totalAmountCents: number
   platformFeeCents: number
   affiliateShareCents: number
   creatorShareCents: number
+  referralShareCents?: number
 
   // Stripe references
   stripeSessionId: string
@@ -120,6 +125,13 @@ export interface Sale {
   creatorPayoutStatus: 'pending' | 'paid'
   affiliatePayoutStatus: AffiliatePayoutStatus
   affiliatePaidAt?: Date
+  referralPayoutStatus?: 'not_applicable' | 'pending' | 'paid'
+
+  // Added safety for partial refunds
+  refundedAmountCents?: number
+
+  // Anti-chargeback hold period
+  availableAt?: Date
 
   createdAt: Date
 }
@@ -128,7 +140,7 @@ export interface UserTransaction {
   _id?: ObjectId
   userId: ObjectId
   amountCents: number
-  type: 'sale' | 'affiliate_commission' | 'payout'
+  type: 'sale' | 'affiliate_commission' | 'payout' | 'referral_commission' | 'refund'
   status: 'pending' | 'paid'
   stripeTransferId?: string
   saleId?: string

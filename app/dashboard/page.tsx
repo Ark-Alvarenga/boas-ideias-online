@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getDatabase } from "@/lib/mongodb";
-import type { Product, User } from "@/lib/types";
+import type { Product, User, UserTransaction } from "@/lib/types";
 import { authConfig, verifySessionToken } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ConnectStripeCard } from "@/components/dashboard/connect-stripe-card";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { TrackPageView } from "@/components/track-page-view";
+import { ReferralCard } from "@/components/dashboard/referral-card";
 
 async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
@@ -49,6 +50,19 @@ export default async function DashboardPage() {
 
   const firstProductSlug = hasProducts ? userProducts[0].slug : null;
 
+  const userTransactionsCollection = db.collection<UserTransaction>("userTransactions");
+  const referralTxs = await userTransactionsCollection
+    .find({ userId: user._id, type: "referral_commission" })
+    .toArray();
+  const totalReferralEarningsCents = referralTxs.reduce(
+    (acc, tx) => acc + tx.amountCents,
+    0
+  );
+
+  const referredUsersCount = await db
+    .collection<User>("users")
+    .countDocuments({ referredBy: user._id });
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <DashboardHeader title="Dashboard" />
@@ -75,6 +89,14 @@ export default async function DashboardPage() {
             cliques de distância para quem começa hoje.
           </p>
         </div>
+
+        {user.referralCode && (
+          <ReferralCard
+            referralCode={user.referralCode}
+            totalEarningsCents={totalReferralEarningsCents}
+            referredUsersCount={referredUsersCount}
+          />
+        )}
 
         <div className="flex flex-col gap-8">
           {/* Step 1: Create Product */}

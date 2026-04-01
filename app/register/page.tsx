@@ -23,6 +23,7 @@ function RegisterContent() {
   const searchParams = useSearchParams();
   const redirectPath =
     searchParams.get("redirect") || searchParams.get("next") || "/dashboard";
+  const refCode = searchParams.get("ref");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -50,10 +51,11 @@ function RegisterContent() {
     setError(null);
 
     try {
+      const payload = { ...formData, ...(refCode && { ref: refCode }) };
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();

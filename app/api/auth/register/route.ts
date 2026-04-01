@@ -3,11 +3,13 @@ import { cookies } from 'next/headers'
 import { getDatabase } from '@/lib/mongodb'
 import type { User } from '@/lib/types'
 import { authConfig, createSessionToken, hashPassword } from '@/lib/auth'
+import crypto from 'crypto'
 
 interface RegisterBody {
   name: string
   email: string
   password: string
+  ref?: string
 }
 
 export async function POST(request: Request) {
@@ -35,6 +37,16 @@ export async function POST(request: Request) {
       )
     }
 
+    let referredBy;
+    if (body.ref) {
+      const referrer = await users.findOne({ referralCode: body.ref });
+      if (referrer) {
+        referredBy = referrer._id;
+      }
+    }
+
+    const referralCode = crypto.randomBytes(5).toString('hex');
+
     const passwordHash = await hashPassword(password)
 
     const now = new Date()
@@ -49,6 +61,8 @@ export async function POST(request: Request) {
       payoutProcessing: false,
       stripeOnboardingComplete: false,
       stripeAccountId: undefined,
+      referralCode,
+      referredBy,
 
       createdAt: now,
       updatedAt: now,

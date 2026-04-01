@@ -442,8 +442,9 @@ async function createSaleFromCheckoutData(
     100,
     Math.max(0, Number(rawFee) || SAFE_DEFAULT_FEE),
   );
-  const platformFeeCents = Math.round(
-    (totalAmountCents * platformFeePercent) / 100,
+  const platformFeeCents = Math.min(
+    totalAmountCents,
+    Math.round((totalAmountCents * platformFeePercent) / 100) + 299
   );
 
   // ── Resolve affiliate ──
@@ -471,8 +472,15 @@ async function createSaleFromCheckoutData(
         affiliateRecord.commissionPercent ??
         product.affiliateCommissionPercent ??
         0;
-      affiliateShareCents = Math.round(
+      
+      const rawAffiliateShare = Math.round(
         (totalAmountCents * commissionPercent) / 100,
+      );
+
+      // ── Clamp: ensuring platformFee + affiliateShare <= totalAmountCents
+      affiliateShareCents = Math.min(
+        rawAffiliateShare,
+        Math.max(0, totalAmountCents - platformFeeCents)
       );
 
       affiliateUser = await usersCollection.findOne({
@@ -496,12 +504,27 @@ async function createSaleFromCheckoutData(
 
   const creator = await usersCollection.findOne({ _id: creatorId });
 
+  // ── Resolve referrer ──
+  let referralShareCents = 0;
+  let referrerUserId: ObjectId | undefined;
+
+  if (creator?.referredBy) {
+    referrerUserId = creator.referredBy;
+    const rawReferralShare = Math.round(platformFeeCents * 0.30);
+    // Safety Clamp: referralShareCents <= platformFeeCents AND leave at least 50 cents margin
+    referralShareCents = Math.min(
+      rawReferralShare,
+      Math.max(0, platformFeeCents - 50)
+    );
+  }
+
   // ── Log financial split for traceability ──
   console.log(`[Stripe webhook] [${stripeSessionId}] Financial split:`, {
     totalAmountCents,
     platformFeeCents,
     creatorShareCents,
     affiliateShareCents,
+    referralShareCents,
     sumCheck: platformFeeCents + creatorShareCents + affiliateShareCents === totalAmountCents,
     chargeId,
   });
@@ -517,10 +540,12 @@ async function createSaleFromCheckoutData(
     affiliateUserId: affiliateRecord
       ? new ObjectId(affiliateUserId!)
       : undefined,
+    referrerUserId,
     totalAmountCents,
     platformFeeCents,
     affiliateShareCents,
     creatorShareCents,
+    referralShareCents,
     stripeSessionId,
     stripePaymentIntentId: stripePaymentIntentId || chargeId,
     stripeChargeId: chargeId,
@@ -531,6 +556,8 @@ async function createSaleFromCheckoutData(
         ? "paid"
         : "pending"
       : "not_applicable",
+    referralPayoutStatus: referrerUserId ? "pending" : "not_applicable",
+    availableAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     createdAt: new Date(),
   };
 
@@ -668,6 +695,26 @@ async function createSaleFromCheckoutData(
     });
   }
 
+  if (referrerUserId && referralShareCents > 0) {
+    await usersCollection.updateOne(
+      { _id: referrerUserId },
+      {
+        $inc: {
+          pendingBalanceCents: referralShareCents,
+          totalEarningsCents: referralShareCents,
+        },
+      }
+    );
+    await userTransactionsCollection.insertOne({
+      userId: referrerUserId,
+      amountCents: referralShareCents,
+      type: "referral_commission",
+      status: "pending",
+      saleId: saleId.toString(),
+      createdAt: new Date(),
+    });
+  }
+
   // ── Link sale back to order ──
   await ordersCollection.updateOne(
     { _id: orderId },
@@ -763,82 +810,122 @@ async function handleChargeRefunded(charge: StripeType.Charge) {
     return;
   }
 
-  // ── Idempotency: if already refunded, don't reverse balances again ──
-  if (sale.status === "refunded" || sale.status === "partially_refunded") {
+  // ── Idempotency & Safe Partial Refunds ──
+  const currentRefundedCents = charge.amount_refunded || 0;
+  const previousRefundedCents = sale.refundedAmountCents || 0;
+
+  if (currentRefundedCents <= previousRefundedCents) {
     console.log(
-      `[Stripe webhook] Sale ${sale._id?.toString()} already marked as ${sale.status}, skipping balance reversal`,
+      `[Stripe webhook] Sale ${sale._id?.toString()} refund already processed. Current: ${currentRefundedCents}, Previous: ${previousRefundedCents}`,
     );
     return;
   }
+
+  const newlyRefundedCents = currentRefundedCents - previousRefundedCents;
+  const refundRatio = newlyRefundedCents / charge.amount;
 
   const refundStatus = charge.refunded ? "refunded" : "partially_refunded";
 
   await salesCollection.updateOne(
     { _id: sale._id },
-    { $set: { status: refundStatus } },
+    { 
+      $set: { 
+        status: refundStatus,
+        refundedAmountCents: currentRefundedCents
+      } 
+    },
   );
 
   await ordersCollection.updateOne(
     { _id: sale.orderId },
-    { $set: { status: "refunded", updatedAt: new Date() } },
+    { $set: { status: refundStatus, updatedAt: new Date() } },
   );
 
-  // ── Reverse creator balance ──
-  if (sale.creatorId && sale.creatorShareCents > 0) {
+  const creatorAdjustment = Math.round(sale.creatorShareCents * refundRatio);
+  const affiliateAdjustment = sale.affiliateShareCents ? Math.round(sale.affiliateShareCents * refundRatio) : 0;
+  const referralAdjustment = sale.referralShareCents ? Math.round(sale.referralShareCents * refundRatio) : 0;
+
+  // ── Reverse creator balance proportionally ──
+  if (sale.creatorId && creatorAdjustment > 0) {
     await usersCollection.updateOne(
       { _id: sale.creatorId },
       {
         $inc: {
-          pendingBalanceCents: -sale.creatorShareCents,
-          totalEarningsCents: -sale.creatorShareCents,
+          pendingBalanceCents: -creatorAdjustment,
+          totalEarningsCents: -creatorAdjustment,
         },
       },
     );
     await userTransactionsCollection.insertOne({
       userId: sale.creatorId,
-      amountCents: -sale.creatorShareCents,
+      amountCents: -creatorAdjustment,
       type: "refund" as any,
       status: "completed" as any,
       saleId: sale._id!.toString(),
       createdAt: new Date(),
     });
     console.log(
-      `[Stripe webhook] Reversed creator balance: -${sale.creatorShareCents} cents for user ${sale.creatorId.toString()}`,
+      `[Stripe webhook] Reversed creator balance: -${creatorAdjustment} cents for user ${sale.creatorId.toString()}`,
     );
   }
 
-  // ── Reverse affiliate balance ──
-  if (sale.affiliateUserId && sale.affiliateShareCents > 0) {
+  // ── Reverse affiliate balance proportionally ──
+  if (sale.affiliateUserId && affiliateAdjustment > 0) {
     await usersCollection.updateOne(
       { _id: sale.affiliateUserId },
       {
         $inc: {
-          pendingBalanceCents: -sale.affiliateShareCents,
-          totalEarningsCents: -sale.affiliateShareCents,
+          pendingBalanceCents: -affiliateAdjustment,
+          totalEarningsCents: -affiliateAdjustment,
         },
       },
     );
     await userTransactionsCollection.insertOne({
       userId: sale.affiliateUserId,
-      amountCents: -sale.affiliateShareCents,
+      amountCents: -affiliateAdjustment,
       type: "refund" as any,
       status: "completed" as any,
       saleId: sale._id!.toString(),
       createdAt: new Date(),
     });
     console.log(
-      `[Stripe webhook] Reversed affiliate balance: -${sale.affiliateShareCents} cents for user ${sale.affiliateUserId.toString()}`,
+      `[Stripe webhook] Reversed affiliate balance: -${affiliateAdjustment} cents for user ${sale.affiliateUserId.toString()}`,
+    );
+  }
+
+  // ── Reverse referrer balance proportionally ──
+  if (sale.referrerUserId && referralAdjustment > 0) {
+    await usersCollection.updateOne(
+      { _id: sale.referrerUserId },
+      {
+        $inc: {
+          pendingBalanceCents: -referralAdjustment,
+          totalEarningsCents: -referralAdjustment,
+        },
+      },
+    );
+    await userTransactionsCollection.insertOne({
+      userId: sale.referrerUserId,
+      amountCents: -referralAdjustment,
+      type: "refund" as any,
+      status: "completed" as any,
+      saleId: sale._id!.toString(),
+      createdAt: new Date(),
+    });
+    console.log(
+      `[Stripe webhook] Reversed referrer balance: -${referralAdjustment} cents for user ${sale.referrerUserId.toString()}`,
     );
   }
 
   console.log(
-    "[Stripe webhook] Refund processed with balance reversal:",
+    "[Stripe webhook] Refund processed with balance proportional reversal:",
     JSON.stringify({
       saleId: sale._id?.toString(),
       paymentIntentId,
       status: refundStatus,
-      creatorReversed: sale.creatorShareCents,
-      affiliateReversed: sale.affiliateShareCents ?? 0,
+      creatorReversed: creatorAdjustment,
+      affiliateReversed: affiliateAdjustment,
+      referralReversed: referralAdjustment,
     }),
   );
 }

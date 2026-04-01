@@ -109,6 +109,29 @@ export function ProductEditForm({
     affiliateCommissionPercent?: number;
   }>(productUpdateSchema);
 
+  // Earnings calculation
+  const parsedPriceCents = isNaN(Number(price)) ? 0 : Math.round(Number(price) * 100);
+  const platformFeeCents = Math.min(
+    parsedPriceCents,
+    Math.round((parsedPriceCents * 10) / 100) + 299
+  );
+  
+  let affiliateShareCents = 0;
+  if (isAffiliateEnabled && commissionPercent > 0) {
+    const rawAffiliateShare = Math.round(
+      (parsedPriceCents * commissionPercent) / 100
+    );
+    affiliateShareCents = Math.min(
+      rawAffiliateShare,
+      Math.max(0, parsedPriceCents - platformFeeCents)
+    );
+  }
+  
+  const creatorShareCents = Math.max(
+    0,
+    parsedPriceCents - platformFeeCents - affiliateShareCents
+  );
+
   const handleValidateField = useCallback(
     (field: string, value: unknown) => {
       if (field === "price") {
@@ -533,7 +556,13 @@ export function ProductEditForm({
                 </FieldError>
               ) : (
                 <FieldDescription className="font-medium text-muted-foreground text-xs uppercase tracking-tight">
-                  Valor justo pelo conteúdo
+                  {parsedPriceCents >= 1000 ? (
+                    <span className="text-emerald-600 block mt-1 font-bold">
+                      ↳ Estimativa de ganhos: R$ {(creatorShareCents / 100).toFixed(2).replace('.', ',')} (após taxa da plataforma e comissões)
+                    </span>
+                  ) : (
+                    "O preço mínimo é R$ 10,00"
+                  )}
                 </FieldDescription>
               )}
             </Field>

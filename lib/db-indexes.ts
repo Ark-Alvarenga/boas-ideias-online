@@ -15,7 +15,7 @@ export async function ensureIndexes(db: Db): Promise<void> {
     )
 
     const products = db.collection('products')
-    await products.createIndex({ slug: 1 }, { background: true })
+    await products.createIndex({ slug: 1 }, { unique: true, background: true })
     await products.createIndex({ status: 1 }, { background: true })
     await products.createIndex({ creatorId: 1 }, { background: true })
 
@@ -30,6 +30,10 @@ export async function ensureIndexes(db: Db): Promise<void> {
 
     const sales = db.collection('sales')
     await sales.createIndex({ orderId: 1 }, { unique: true, background: true })
+    await sales.createIndex({ stripeSessionId: 1 }, { unique: true, background: true })
+    await sales.createIndex({ creatorId: 1 }, { background: true })
+    await sales.createIndex({ affiliateUserId: 1 }, { background: true })
+    await sales.createIndex({ referrerUserId: 1 }, { background: true })
     await sales.createIndex({ creatorId: 1, createdAt: -1 }, { background: true })
     await sales.createIndex({ affiliateUserId: 1, createdAt: -1 }, { background: true })
     await sales.createIndex({ stripePaymentIntentId: 1 }, { background: true })

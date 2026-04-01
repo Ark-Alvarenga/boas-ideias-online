@@ -38,15 +38,23 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
       return false
     }
 
-    if (payoutProcessing) {
+    // Check standard boolean or time lock
+    const now = new Date()
+    if (user.payoutLockedAt && user.payoutLockedAt >= new Date(now.getTime() - 60 * 60 * 1000)) {
       console.log("EXIT: PAYOUT LOCKED")
       return false
     }
 
     // STEP 2: Lock
     const lockResult = await usersCollection.updateOne(
-      { _id: userObjectId, payoutProcessing: { $ne: true } },
-      { $set: { payoutProcessing: true } }
+      { 
+        _id: userObjectId,
+        $or: [
+          { payoutLockedAt: { $exists: false } },
+          { payoutLockedAt: { $lt: new Date(now.getTime() - 60 * 60 * 1000) } }
+        ]
+      },
+      { $set: { payoutLockedAt: now, payoutProcessing: true } }
     )
 
     if (lockResult.modifiedCount === 0) {
@@ -56,9 +64,20 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
 
     // ── 1. HARD RECONCILIATION AT START ──
     const allSales = await salesCollection.find({
-      $or: [
-        { creatorId: userObjectId },
-        { affiliateUserId: userObjectId }
+      $and: [
+        {
+          $or: [
+            { creatorId: userObjectId },
+            { affiliateUserId: userObjectId },
+            { referrerUserId: userObjectId }
+          ]
+        },
+        {
+          $or: [
+            { availableAt: { $exists: false } },
+            { availableAt: { $lte: new Date() } }
+          ]
+        }
       ]
     }).toArray()
 
@@ -99,6 +118,23 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
           if (res.modifiedCount > 0) console.error(`[INCONSISTENCY FIXED] Sale ${saleIdStr} affiliate pending, but tx was paid.`)
         }
       }
+
+      // Referral side
+      if (sale.referrerUserId && sale.referrerUserId.toString() === userObjectId.toString()) {
+        if (sale.referralPayoutStatus === 'paid') {
+          const res = await userTransactionsCollection.updateMany(
+            { userId: userObjectId, saleId: saleIdStr, type: 'referral_commission', status: 'pending' },
+            { $set: { status: 'paid' } }
+          )
+          if (res.modifiedCount > 0) console.error(`[INCONSISTENCY FIXED] Sale ${saleIdStr} referral paid, but tx was pending.`)
+        } else if (sale.referralPayoutStatus === 'pending') {
+          const res = await userTransactionsCollection.updateMany(
+            { userId: userObjectId, saleId: saleIdStr, type: 'referral_commission', status: 'paid' },
+            { $set: { status: 'pending' } }
+          )
+          if (res.modifiedCount > 0) console.error(`[INCONSISTENCY FIXED] Sale ${saleIdStr} referral pending, but tx was paid.`)
+        }
+      }
     }
 
     // ── 2. RECALCULATE BALANCE AFTER RECONCILING ──
@@ -111,7 +147,7 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
     // Exit if there is NO true balance remaining
     if (trueBalanceCents <= 0) {
       console.log("EXIT: NO VALID BALANCE AFTER RECONCILIATION")
-      await usersCollection.updateOne({ _id: userObjectId }, { $set: { payoutProcessing: false } })
+      await usersCollection.updateOne({ _id: userObjectId }, { $unset: { payoutLockedAt: "" }, $set: { payoutProcessing: false } })
       return false
     }
 
@@ -121,7 +157,8 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
         {
           $or: [
             { creatorId: userObjectId, creatorPayoutStatus: "pending" },
-            { affiliateUserId: userObjectId, affiliatePayoutStatus: "pending" }
+            { affiliateUserId: userObjectId, affiliatePayoutStatus: "pending" },
+            { referrerUserId: userObjectId, referralPayoutStatus: "pending" }
           ]
         },
         {
@@ -129,13 +166,19 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
             { stripeChargeId: { $regex: /^ch_/ } },
             { stripePaymentIntentId: { $regex: /^ch_/ } }
           ]
+        },
+        {
+          $or: [
+            { availableAt: { $exists: false } },
+            { availableAt: { $lte: new Date() } }
+          ]
         }
       ]
     }).toArray()
     
     if (pendingSales.length === 0) {
       console.log("EXIT: NO VALID PENDING SALES WITH PAYMENT INTENTS FOUND, UNLOCKING")
-      await usersCollection.updateOne({ _id: userObjectId }, { $set: { payoutProcessing: false } })
+      await usersCollection.updateOne({ _id: userObjectId }, { $unset: { payoutLockedAt: "" }, $set: { payoutProcessing: false } })
       return false
     }
 
@@ -147,10 +190,12 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
       let amountToTransfer = 0;
       let isCreator = false;
       let isAffiliate = false;
+      let isReferral = false;
 
       // Extract isolated role balances logically mapping object identities
       const creatorMatch = sale.creatorId && sale.creatorId.toString() === userObjectId.toString();
       const affiliateMatch = sale.affiliateUserId && sale.affiliateUserId.toString() === userObjectId.toString();
+      const referralMatch = sale.referrerUserId && sale.referrerUserId.toString() === userObjectId.toString();
 
       if (creatorMatch && sale.creatorPayoutStatus === "pending" && sale.creatorShareCents > 0) {
         amountToTransfer += sale.creatorShareCents;
@@ -162,29 +207,46 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
         isAffiliate = true;
       }
 
+      if (referralMatch && sale.referralPayoutStatus === "pending" && sale.referralShareCents !== undefined && sale.referralShareCents > 0) {
+        amountToTransfer += sale.referralShareCents;
+        isReferral = true;
+      }
+
       const chargeId = sale.stripeChargeId || sale.stripePaymentIntentId
 
       if (amountToTransfer > 0 && chargeId) {
+        const roles = []
+        if (isCreator) roles.push('creator')
+        if (isAffiliate) roles.push('affiliate')
+        if (isReferral) roles.push('referral')
+        const roleString = roles.join('_')
+        const idempotencyKey = `transfer_${sale._id}_${chargeId}_${roleString}`
+
         console.log("CREATING STRIPE TRANSFER", {
           amount: amountToTransfer,
           destination: stripeAccountId,
           source_transaction: chargeId,
-          saleId: sale._id?.toString()
+          saleId: sale._id?.toString(),
+          idempotencyKey
         })
 
         try {
           // BRL Stripe accounts mandate `source_transaction`
-          const transfer = await stripeClient.transfers.create({
-            amount: amountToTransfer,
-            currency: "brl",
-            destination: stripeAccountId,
-            source_transaction: chargeId,
-            metadata: {
-              reason: 'delayed_payout_brasil',
-              userId: userObjectId.toString(),
-              saleId: sale._id!.toString()
-            }
-          })
+          const transfer = await stripeClient.transfers.create(
+            {
+              amount: amountToTransfer,
+              currency: "brl",
+              destination: stripeAccountId,
+              source_transaction: chargeId,
+              metadata: {
+                reason: 'delayed_payout_brasil',
+                userId: userObjectId.toString(),
+                saleId: sale._id!.toString(),
+                roles: roleString
+              }
+            },
+            { idempotencyKey }
+          )
 
           console.log("PAYOUT SUCCESS", transfer.id)
           successfullyTransferredCents += amountToTransfer;
@@ -198,6 +260,10 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
           if (isAffiliate) {
             updateQuery.affiliatePayoutStatus = "paid"
             updateQuery.stripeTransferIdAffiliate = transfer.id
+          }
+          if (isReferral) {
+            updateQuery.referralPayoutStatus = "paid"
+            updateQuery.stripeTransferIdReferral = transfer.id
           }
 
           // Complete safety: Update sale, then user, then transactions synchronously
@@ -241,7 +307,7 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
     const pendingTransactions = await userTransactionsCollection.find({
       userId: userObjectId,
       status: 'pending',
-      type: { $in: ['sale', 'affiliate_commission'] }
+      type: { $in: ['sale', 'affiliate_commission', 'referral_commission'] }
     }).toArray()
 
     for (const tx of pendingTransactions) {
@@ -255,6 +321,9 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
         shouldMarkPaid = true
       }
       if (tx.type === 'affiliate_commission' && parentSale.affiliatePayoutStatus === 'paid') {
+        shouldMarkPaid = true
+      }
+      if (tx.type === 'referral_commission' && parentSale.referralPayoutStatus === 'paid') {
         shouldMarkPaid = true
       }
 
@@ -272,6 +341,7 @@ export async function processUserPayout(userId: string | ObjectId): Promise<bool
     await usersCollection.updateOne(
       { _id: userObjectId },
       { 
+        $unset: { payoutLockedAt: "" },
         $set: { 
           pendingBalanceCents: finalPendingBalanceCents,
           payoutProcessing: false
